@@ -21,14 +21,15 @@
     h1{font-size:22px; margin:0; font-weight:800;}
     .controls{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
     select, input[type="text"]{
-      padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink);
+      padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; color:#0F172A;
     }
     .btn{appearance:none; border:0; padding:10px 14px; border-radius:10px; color:#fff; font-weight:700; cursor:pointer;}
     .btn.primary{background:var(--accent)}
     .btn.success{background:var(--success)}
     .btn.neutral{background:#334155}
     .btn.danger{background:var(--danger)}
-    .btn.warn{background:var(--warn); color:#fff}
+    .btn.warn{background:var(--warn)}
+    .btn:disabled{opacity:.6; cursor:not-allowed}
     .pill{display:inline-block; padding:2px 10px; border-radius:999px; background:#EEF2FF; color:#3730A3; font-weight:700; font-size:12px;}
     .timer{font-size:56px; font-weight:800; color:var(--accent); margin:4px 0 8px}
     .prompt{font-size:30px; font-weight:800; margin:8px 0 6px}
@@ -38,7 +39,7 @@
     .row{display:flex; gap:16px; flex-wrap:wrap; align-items:center}
     .spacer{flex:1}
     .legend{color:var(--muted); font-size:12px}
-    .scores .team{min-width:260px; border-radius:16px; padding:14px; border:1px solid var(--line); background:#fff;}
+    .scores .team{min-width:260px; border-radius:16px; padding:14px; border:1px solid var(--line); background:#fff; transition:background .2s,border-color .2s}
     .scores .team-title{font-size:18px; font-weight:800; margin-bottom:6px}
     .scores .score{font-size:26px; font-weight:800; margin:6px 0}
     .scores .grid{display:flex; gap:6px; flex-wrap:wrap}
@@ -52,13 +53,9 @@
     .hidden{display:none !important}
     .confetti{position:fixed; left:0; top:0; width:100%; height:100%; pointer-events:none; overflow:hidden}
     .piece{position:absolute; width:8px; height:12px; opacity:.9; transform:translate3d(0,0,0); animation:fall 1400ms linear forwards;}
-    @keyframes fall{
-      0%{ transform:translate3d(var(--x),-10vh,0) rotate(0deg); }
-      100%{ transform:translate3d(calc(var(--x) + var(--dx)),110vh,0) rotate(360deg); opacity:.7; }
-    }
+    @keyframes fall{0%{transform:translate3d(var(--x),-10vh,0) rotate(0deg);}100%{transform:translate3d(calc(var(--x) + var(--dx)),110vh,0) rotate(360deg);opacity:.7;}}
     .games-card .big{font-size:18px; font-weight:800}
     .note{font-size:12px; color:var(--muted)}
-    /* Modal overlay */
     .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:50}
     .modal{background:#fff; border-radius:16px; padding:20px; max-width:640px; width:92%; border:1px solid var(--line); text-align:center}
     .modal h2{margin-top:0; font-size:24px}
@@ -96,13 +93,13 @@
 
     <div class="timer" id="timerLabel">30 sec</div>
 
-    <div class="prompt" id="promptLabel"><!-- English prompt only --></div>
-    <div class="food" id="foodLabel"><!-- Bonus: English food only --></div>
-    <div class="answer" id="answerLabel"><!-- Syriac answer only --></div>
+    <div class="prompt" id="promptLabel"></div>
+    <div class="food" id="foodLabel"></div>
+    <div class="answer" id="answerLabel"></div>
 
     <div class="row">
-      <button class="btn success" id="showAnswerBtn" title="Reveal Syriac answer and stop the timer">Show Answer</button>
-      <button class="btn primary" id="nextBtn" title="Next random prompt (auto-starts timer)">Next Question</button>
+      <button class="btn success" id="showAnswerBtn" title="Reveal Syriac answer and stop the timer" disabled>Show Answer</button>
+      <button class="btn primary" id="nextBtn" title="Next random prompt (auto-starts timer)" disabled>Next Question</button>
       <span id="bonusPill" class="pill hidden">BONUS ROUND (+2)</span>
       <div class="spacer"></div>
       <div class="note">Shortcuts: Space=Start/Pause • Enter=Next • A=Show • 1/2=+1 • Shift+1/2=−1 • B/N=+2 (bonus)</div>
@@ -178,23 +175,18 @@ const PHRASES = {
   "I will order (masc.)": "ܛܵܠܒܹܢ ܒܸܕ",
   "I order (fem.)": "ܛܵܠܒܵܢ",
   "I will order (fem.)": "ܛܵܠܒܵܢ ܒܸܕ",
-
   "you order (masc.)": "ܛܵܠܒܹܬ",
   "you will order (masc.)": "ܛܵܠܒܹܬ ܒܸܕ",
   "you order (fem.)": "ܛܵܠܒܵܬܝ",
   "you will order (fem.)": "ܛܵܠܒܵܬܝ ܒܸܕ",
-
   "he orders": "ܛܵܠܹܒ",
   "he will order": "ܛܵܠܹܒ ܒܸܕ",
   "she orders": "ܛܵܠܒܵܐ",
   "she will order": "ܛܵܠܒܵܐ ܒܸܕ",
-
   "we order": "ܛܵܠܒܲܚ",
   "we will order": "ܛܵܠܒܲܚ ܒܸܕ",
-
   "they order": "ܛܵܠܒܝܼ",
   "they will order": "ܛܵܠܒܝܼ ܒܸܕ",
-
   "y’all order": "ܛܵܠܒܝܼܬܘܿܢ",
   "y’all will order": "ܛܵܠܒܝܼܬܘܿܢ ܒܸܕ",
 };
@@ -211,397 +203,376 @@ const PRONOUNS = {
   they:    "ܐܵܢܝܼ",
 };
 
-// English foods
-const FOODS_EN = [
-  "potatoes","rice","beans","stew","kabobs","chicken","steak","lamb",
-  "fish","fries","water","fizzy drinks","yogurt drink","lemonade",
-  "orange juice","dolma","red rice","okra stew","yogurt",
-  "Assyrian egg rolls","tea","coffee","hummus","baba ganosh",
-  "salad","pickles","meatballs"
-];
+// foods EN/SY aligned
+const FOODS_EN = ["potatoes","rice","beans","stew","kabobs","chicken","steak","lamb","fish","fries","water","fizzy drinks","yogurt drink","lemonade","orange juice","dolma","red rice","okra stew","yogurt","Assyrian egg rolls","tea","coffee","hummus","baba ganosh","salad","pickles","meatballs"];
+const FOODS_SY = ["ܟܸܪܬܘܿܦܹ̈ܐ","ܪܸܙܵܐ","ܚܲܒ̣ܨܹ̈ܐ","ܫܘܼܪܒ̣ܵܐ","ܟܵܒܵܒܹ̈ܐ","ܟܬܵܝܬܵܐ","ܒܸܣܪܵܐ","ܥܸܪܒܵܐ","ܢܘܼܢܵܐ","ܟܸܪܬܘܿܦܹ̈ܐ ܩܸܠܝܹ̈ܐ","ܡܝܼܵܐ","ܫܬܵܝܬܵܐ ܒܲܩܒܸܩܵܢܵܐ","ܕܲܘܹ̈ܐ","ܡܝܼܵܐ ܕܠܝܼܡܘܿܢܹ̈ܐ","ܡܝܼܵܐ ܕܦܘܼܪ̈ܬܩܵܠܹܐ","ܕܘܿܠܡܵܐ","ܪܸܙܵܐ ܣܡܘܿܩܵܐ","ܒܲܡܝܹ̈ܐ","ܡܲܣܬܵܐ","ܒܘܼܪܲܟ","ܟ̰ܵܐܝ","ܩܲܗܘܵܐ","ܚܲܪ̈ܛܡܵܢܹܐ ܓܪ̈ܝܼܣܹܐ","ܒܵܕܸܡܓ̰ܵܢܹ̈ܐ ܓܪ̈ܝܼܣܹܐ","ܣܲܠܵܛܵܐ","ܛܘܼܪ̈ܫܝܹܐ","ܟܸܦܬܹ̈ܐ"];
 
-// Syriac foods aligned to FOODS_EN
-const FOODS_SY = [
-  "ܟܸܪܬܘܿܦܹ̈ܐ","ܪܸܙܵܐ","ܚܲܒ̣ܨܹ̈ܐ","ܫܘܼܪܒ̣ܵܐ","ܟܵܒܵܒܹ̈ܐ","ܟܬܵܝܬܵܐ","ܒܸܣܪܵܐ","ܥܸܪܒܵܐ",
-  "ܢܘܼܢܵܐ","ܟܸܪܬܘܿܦܹ̈ܐ ܩܸܠܝܹ̈ܐ","ܡܝܼܵܐ","ܫܬܵܝܬܵܐ ܒܲܩܒܸܩܵܢܵܐ","ܕܲܘܹ̈ܐ","ܡܝܼܵܐ ܕܠܝܼܡܘܿܢܹ̈ܐ",
-  "ܡܝܼܵܐ ܕܦܘܼܪ̈ܬܩܵܠܹܐ","ܕܘܿܠܡܵܐ","ܪܸܙܵܐ ܣܡܘܿܩܵܐ","ܒܲܡܝܹ̈ܐ","ܡܲܣܬܵܐ",
-  "ܒܘܼܪܲܟ","ܟ̰ܵܐܝ","ܩܲܗܘܵܐ","ܚܲܪ̈ܛܡܵܢܹܐ ܓܪ̈ܝܼܣܹܐ","ܒܵܕܸܡܓ̰ܵܢܹ̈ܐ ܓܪ̈ܝܼܣܹܐ",
-  "ܣܲܠܵܛܵܐ","ܛܘܼܪ̈ܫܝܹܐ","ܟܸܦܬܹ̈ܐ"
-];
-
-/* ------------- DOM refs ------------- */
-const timerLabel   = document.getElementById('timerLabel');
-const promptLabel  = document.getElementById('promptLabel');
-const foodLabel    = document.getElementById('foodLabel');
-const answerLabel  = document.getElementById('answerLabel');
-const nextBtn      = document.getElementById('nextBtn');
-const showAnswerBtn= document.getElementById('showAnswerBtn');
-const timerSelect  = document.getElementById('timerSelect');
-const roundsSelect = document.getElementById('roundsSelect');
-const noRepeat     = document.getElementById('noRepeat');
-const fullscreenBtn= document.getElementById('fullscreenBtn');
+/* DOM refs */
+const timerLabel=document.getElementById('timerLabel');
+const promptLabel=document.getElementById('promptLabel');
+const foodLabel=document.getElementById('foodLabel');
+const answerLabel=document.getElementById('answerLabel');
+const nextBtn=document.getElementById('nextBtn');
+const showAnswerBtn=document.getElementById('showAnswerBtn');
+const timerSelect=document.getElementById('timerSelect');
+const roundsSelect=document.getElementById('roundsSelect');
+const noRepeat=document.getElementById('noRepeat');
+const fullscreenBtn=document.getElementById('fullscreenBtn');
 const resetScoresBtn=document.getElementById('resetScoresBtn');
-const bonusPill    = document.getElementById('bonusPill');
-const endNote      = document.getElementById('endNote');
+const bonusPill=document.getElementById('bonusPill');
+const endNote=document.getElementById('endNote');
 
-const t1ScoreEl = document.getElementById('t1Score');
-const t2ScoreEl = document.getElementById('t2Score');
-const t1Plus = document.getElementById('t1Plus');
-const t1Minus= document.getElementById('t1Minus');
-const t1Bonus= document.getElementById('t1Bonus');
-const t2Plus = document.getElementById('t2Plus');
-const t2Minus= document.getElementById('t2Minus');
-const t2Bonus= document.getElementById('t2Bonus');
-const t1Color= document.getElementById('t1Color');
-const t2Color= document.getElementById('t2Color');
-const t1Bar  = document.getElementById('t1Bar');
-const t2Bar  = document.getElementById('t2Bar');
-const t1Card = document.getElementById('t1Card');
-const t2Card = document.getElementById('t2Card');
-const t1Title= document.getElementById('t1Title');
-const t2Title= document.getElementById('t2Title');
-const t1Name = document.getElementById('t1Name');
-const t2Name = document.getElementById('t2Name');
-const t1StreakEl = document.getElementById('t1Streak');
-const t2StreakEl = document.getElementById('t2Streak');
+const t1ScoreEl=document.getElementById('t1Score');
+const t2ScoreEl=document.getElementById('t2Score');
+const t1Plus=document.getElementById('t1Plus');
+const t1Minus=document.getElementById('t1Minus');
+const t1Bonus=document.getElementById('t1Bonus');
+const t2Plus=document.getElementById('t2Plus');
+const t2Minus=document.getElementById('t2Minus');
+const t2Bonus=document.getElementById('t2Bonus');
+const t1Color=document.getElementById('t1Color');
+const t2Color=document.getElementById('t2Color');
+const t1Bar=document.getElementById('t1Bar');
+const t2Bar=document.getElementById('t2Bar');
+const t1Card=document.getElementById('t1Card');
+const t2Card=document.getElementById('t2Card');
+const t1Title=document.getElementById('t1Title');
+const t2Title=document.getElementById('t2Title');
+const t1Name=document.getElementById('t1Name');
+const t2Name=document.getElementById('t2Name');
+const t1StreakEl=document.getElementById('t1Streak');
+const t2StreakEl=document.getElementById('t2Streak');
 
-const roundNowEl = document.getElementById('roundNow');
-const roundTotalEl = document.getElementById('roundTotal');
-const roundFillEl = document.getElementById('roundFill');
-const banner = document.getElementById('banner');
-const gamesTally = document.getElementById('gamesTally');
-const gameLeader = document.getElementById('gameLeader');
+const roundNowEl=document.getElementById('roundNow');
+const roundTotalEl=document.getElementById('roundTotal');
+const roundFillEl=document.getElementById('roundFill');
+const banner=document.getElementById('banner');
+const gamesTally=document.getElementById('gamesTally');
+const gameLeader=document.getElementById('gameLeader');
 
-const modalWrap = document.getElementById('modalWrap');
-const modalTitle = document.getElementById('modalTitle');
-const modalBody = document.getElementById('modalBody');
-const modalClose = document.getElementById('modalClose');
+const modalWrap=document.getElementById('modalWrap');
+const modalTitle=document.getElementById('modalTitle');
+const modalBody=document.getElementById('modalBody');
+const modalClose=document.getElementById('modalClose');
 
-const confettiLayer = document.getElementById('confetti');
+const confettiLayer=document.getElementById('confetti');
 
-/* ------------- State ------------- */
-let timerSeconds = 30;
-let currentTime = timerSeconds;
-let timerId = null;
-let timerRunning = false;
+/* State */
+let timerSeconds=30;
+let currentTime=timerSeconds;
+let timerId=null;
+let timerRunning=false;
 
-let currentPrompt = '';
-let isBonus = false;
-let currentFoodIndex = null; // index into FOODS_EN/SY
+let currentPrompt='';
+let isBonus=false;
+let currentFoodIndex=null;
 
-let score1 = 0, score2 = 0;
-let streak1 = 0, streak2 = 0;
+let score1=0, score2=0;
+let streak1=0, streak2=0;
 
-let totalRounds = 10;
-let currentRound = 1;
-let promptsPool = Object.keys(PHRASES);
-let unusedPrompts = [...promptsPool];
-let roundStartScores = {t1:0, t2:0};
+let totalRounds=10;
+let currentRound=1;
+let promptsPool=Object.keys(PHRASES);
+let unusedPrompts=[...promptsPool];
+let roundStartScores={t1:0, t2:0};
 
-let gamesWon1 = 0, gamesWon2 = 0;
-let justFinishedGame = false;
+let gamesWon1=0, gamesWon2=0;
+let justFinishedGame=false;
 
-/* ------------- Utilities ------------- */
+/* Answer gating */
+let canShowAnswer=false;
+let answerUnlockTimeout=null;
+
+/* Utils */
 function hexToRgba(hex, alpha){
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if(!m) return `rgba(0,0,0,${alpha})`;
-  const r = parseInt(m[1],16), g = parseInt(m[2],16), b = parseInt(m[3],16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  const r=parseInt(m[1],16), g=parseInt(m[2],16), b=parseInt(m[3],16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
-/* ------------- Helpers ------------- */
+/* Helpers */
 function randomPromptFromPool(){
   if(noRepeat.checked){
-    if(unusedPrompts.length===0) unusedPrompts = [...promptsPool];
-    const i = Math.floor(Math.random()*unusedPrompts.length);
+    if(unusedPrompts.length===0) unusedPrompts=[...promptsPool];
+    const i=Math.floor(Math.random()*unusedPrompts.length);
     return unusedPrompts.splice(i,1)[0];
   }
-  const keys = promptsPool;
+  const keys=promptsPool;
   return keys[Math.floor(Math.random()*keys.length)];
 }
 function isFuture(prompt){ return prompt.toLowerCase().includes('will'); }
 function stripBed(s){ return s.replace(/\s*ܒܸܕ\s*$/,'').trim(); }
-
 function detectPronoun(prompt){
-  const p = prompt.toLowerCase();
-  if(p.startsWith('i '))       return p.includes('(fem') ? PRONOUNS.i_fem : PRONOUNS.i_masc;
-  if(p.startsWith('you '))     return p.includes('(fem') ? PRONOUNS.you_fem : PRONOUNS.you_masc;
-  if(p.startsWith('he '))      return PRONOUNS.he;
-  if(p.startsWith('she '))     return PRONOUNS.she;
-  if(p.startsWith('we '))      return PRONOUNS.we;
-  if(p.startsWith('they '))    return PRONOUNS.they;
-  if(p.startsWith('y’all'))    return PRONOUNS.yall;
+  const p=prompt.toLowerCase();
+  if(p.startsWith('i ')) return p.includes('(fem')?PRONOUNS.i_fem:PRONOUNS.i_masc;
+  if(p.startsWith('you ')) return p.includes('(fem')?PRONOUNS.you_fem:PRONOUNS.you_masc;
+  if(p.startsWith('he ')) return PRONOUNS.he;
+  if(p.startsWith('she ')) return PRONOUNS.she;
+  if(p.startsWith('we ')) return PRONOUNS.we;
+  if(p.startsWith('they ')) return PRONOUNS.they;
+  if(p.startsWith('y’all')) return PRONOUNS.yall;
   return '';
 }
 
+/* Timer */
 function updateTimerLabel(){
-  timerLabel.textContent = isBonus ? '--' : `${currentTime} sec`;
+  timerLabel.textContent=isBonus?'--':`${currentTime} sec`;
 }
-function setBonusUI(on){
-  isBonus = on;
-  bonusPill.classList.toggle('hidden', !on);
-  t1Bonus.disabled = !on;
-  t2Bonus.disabled = !on;
-  updateTimerLabel();
-}
-
-/* ------------- Timer ------------- */
 function stopTimer(){
-  if(timerId){ clearInterval(timerId); timerId = null; }
-  timerRunning = false;
+  if(timerId){ clearInterval(timerId); timerId=null; }
+  timerRunning=false;
 }
 function startTimer(){
   if(isBonus) return;
   stopTimer();
-  timerRunning = true;
-  timerId = setInterval(()=>{
+  timerRunning=true;
+  timerId=setInterval(()=>{
     if(currentTime>0){
-      currentTime--;
-      updateTimerLabel();
-    } else {
-      stopTimer();
-    }
+      currentTime--; updateTimerLabel();
+      // unlock Show Answer after 10s if not already
+      if(!canShowAnswer && currentTime<=timerSeconds-10){ unlockShowAnswer(); }
+    } else { stopTimer(); }
   },1000);
 }
 
-/* ------------- Confetti ------------- */
-function confettiBurst(colorA, colorB){
-  const COUNT = 80;
+/* Confetti */
+function confettiBurst(colorA,colorB){
+  const COUNT=80;
   for(let i=0;i<COUNT;i++){
-    const d = document.createElement('div');
-    d.className = 'piece';
-    const x = Math.random()*100+'vw';
-    const dx = (Math.random()*40 - 20)+'vw';
-    d.style.setProperty('--x', x);
-    d.style.setProperty('--dx', dx);
-    d.style.left = Math.random()*100+'%';
-    d.style.background = Math.random()<0.5 ? colorA : colorB;
+    const d=document.createElement('div');
+    d.className='piece';
+    const x=Math.random()*100+'vw';
+    const dx=(Math.random()*40-20)+'vw';
+    d.style.setProperty('--x',x);
+    d.style.setProperty('--dx',dx);
+    d.style.left=Math.random()*100+'%';
+    d.style.background=Math.random()<0.5?colorA:colorB;
     confettiLayer.appendChild(d);
-    setTimeout(()=>d.remove(), 1600);
+    setTimeout(()=>d.remove(),1600);
   }
 }
 
-/* ------------- Scores / Streaks ------------- */
+/* Scores / Streaks */
 function renderScores(){
-  t1ScoreEl.textContent = String(score1);
-  t2ScoreEl.textContent = String(score2);
-  const total = Math.max(1, score1 + score2);
-  t1Bar.style.width = (score1/total*100).toFixed(0) + '%';
-  t2Bar.style.width = (score2/total*100).toFixed(0) + '%';
+  t1ScoreEl.textContent=String(score1);
+  t2ScoreEl.textContent=String(score2);
+  const total=Math.max(1,score1+score2);
+  t1Bar.style.width=(score1/total*100).toFixed(0)+'%';
+  t2Bar.style.width=(score2/total*100).toFixed(0)+'%';
 }
-function updateStreak(team, deltaPositive){
+function updateStreak(team,deltaPositive){
   if(team===1){
-    streak1 = deltaPositive ? streak1+1 : 0;
-    t1StreakEl.textContent = `Streak: ${streak1}`;
+    streak1=deltaPositive?streak1+1:0;
+    t1StreakEl.textContent=`Streak: ${streak1}`;
     if(streak1>=3){ score1+=1; streak1=0; t1StreakEl.textContent=`Streak: ${streak1} (bonus applied)`; renderScores(); }
-  } else {
-    streak2 = deltaPositive ? streak2+1 : 0;
-    t2StreakEl.textContent = `Streak: ${streak2}`;
+  }else{
+    streak2=deltaPositive?streak2+1:0;
+    t2StreakEl.textContent=`Streak: ${streak2}`;
     if(streak2>=3){ score2+=1; streak2=0; t2StreakEl.textContent=`Streak: ${streak2} (bonus applied)`; renderScores(); }
   }
 }
 
-/* ------------- Rounds / Games ------------- */
+/* Rounds / Games */
 function setRounds(n){
-  totalRounds = n;
-  roundTotalEl.textContent = String(totalRounds);
-  currentRound = 1;
-  roundNowEl.textContent = String(currentRound);
-  roundFillEl.style.width = (currentRound-1)/Math.max(1,totalRounds)*100 + '%';
+  totalRounds=n;
+  roundTotalEl.textContent=String(totalRounds);
+  currentRound=1;
+  roundNowEl.textContent=String(currentRound);
+  roundFillEl.style.width=(currentRound-1)/Math.max(1,totalRounds)*100+'%';
   banner.classList.add('hidden');
-  roundStartScores = {t1:score1, t2:score2};
+  roundStartScores={t1:score1,t2:score2};
   endNote.classList.add('hidden');
-  nextBtn.textContent = 'Next Question';
-  justFinishedGame = false;
+  nextBtn.textContent='Next Question';
+  justFinishedGame=false;
 }
 function finishRoundAndAdvance(){
-  // compute deltas for the round
-  const d1 = score1 - roundStartScores.t1;
-  const d2 = score2 - roundStartScores.t2;
-  const name1 = t1Name.value.trim() || 'Team 1';
-  const name2 = t2Name.value.trim() || 'Team 2';
-  let text = '';
-  if(d1> d2) text = `Round winner: ${name1}`;
-  else if(d2> d1) text = `Round winner: ${name2}`;
-  else text = 'Round tied';
-  banner.textContent = text;
+  const d1=score1-roundStartScores.t1;
+  const d2=score2-roundStartScores.t2;
+  const name1=t1Name.value.trim()||'Team 1';
+  const name2=t2Name.value.trim()||'Team 2';
+  banner.textContent=(d1>d2)?`Round winner: ${name1}`:(d2>d1)?`Round winner: ${name2}`:'Round tied';
   banner.classList.remove('hidden');
 
-  // if final round, decide game winner now
-  if(currentRound >= totalRounds){
-    const gameText = score1===score2 ? 'Game tied' : ((score1>score2) ? `Game winner: ${name1}` : `Game winner: ${name2}`);
-    // Update games tally and modal only if not tie
+  if(currentRound>=totalRounds){
+    const gameText=score1===score2?'Game tied':(score1>score2?`Game winner: ${name1}`:`Game winner: ${name2}`);
     if(score1!==score2){
       if(score1>score2) gamesWon1++; else gamesWon2++;
-      // Congrats modal
-      modalTitle.textContent = 'Congratulations!';
-      modalBody.textContent = `${gameText}`;
+      modalTitle.textContent='Congratulations!';
+      modalBody.textContent=gameText;
       modalWrap.classList.remove('hidden');
-      // confetti with winning color
-      const c = (score1>score2) ? t1Color.value : t2Color.value;
-      confettiBurst(c, '#ffffff');
-    } else {
-      // Tie modal
-      modalTitle.textContent = 'Game Tied';
-      modalBody.textContent = 'No game winner this time.';
+      const c=(score1>score2)?t1Color.value:t2Color.value;
+      confettiBurst(c,'#ffffff');
+    }else{
+      modalTitle.textContent='Game Tied';
+      modalBody.textContent='No game winner this time.';
       modalWrap.classList.remove('hidden');
     }
     updateGamesPanel();
-    // Prepare Next button note
-    endNote.innerHTML = 'Please call over Mr. Sargool and show your results before clicking <strong>Next Question</strong>.<br>(Next game will begin and scores will be reset, but you can see the games counter below.)';
+    endNote.innerHTML='Please call over Mr. Sargool and show your results before clicking <strong>Next Question</strong>.<br>(Next game will begin and scores will be reset, but you can see the games counter below.)';
     endNote.classList.remove('hidden');
-    nextBtn.textContent = 'Next Question (Next game will begin and scores will be reset …)';
-    justFinishedGame = true;
+    nextBtn.textContent='Next Question (Next game will begin and scores will be reset …)';
+    justFinishedGame=true;
   }
 
-  // advance round counter (visual)
-  if(currentRound < totalRounds){
+  if(currentRound<totalRounds){
     currentRound++;
-    roundNowEl.textContent = String(currentRound);
-    roundFillEl.style.width = ((currentRound-1)/Math.max(1,totalRounds))*100 + '%';
-    roundStartScores = {t1:score1, t2:score2};
+    roundNowEl.textContent=String(currentRound);
+    roundFillEl.style.width=((currentRound-1)/Math.max(1,totalRounds))*100+'%';
+    roundStartScores={t1:score1,t2:score2};
   }
 }
 function updateGamesPanel(){
-  const name1 = t1Name.value.trim() || 'Team 1';
-  const name2 = t2Name.value.trim() || 'Team 2';
-  gamesTally.textContent = `${name1}: ${gamesWon1}  •  ${name2}: ${gamesWon2}`;
-  if(gamesWon1===gamesWon2) gameLeader.textContent = 'Games leader: tied';
-  else gameLeader.textContent = `Games leader: ${gamesWon1>gamesWon2 ? name1 : name2}`;
+  const name1=t1Name.value.trim()||'Team 1';
+  const name2=t2Name.value.trim()||'Team 2';
+  gamesTally.textContent=`${name1}: ${gamesWon1}  •  ${name2}: ${gamesWon2}`;
+  gameLeader.textContent=(gamesWon1===gamesWon2)?'Games leader: tied':`Games leader: ${gamesWon1>gamesWon2?name1:name2}`;
 }
 function startNewGame(){
-  // reset scores and rounds, keep gamesWon counters
   score1=0; score2=0; streak1=0; streak2=0;
   renderScores();
   t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0';
   setRounds(parseInt(roundsSelect.value,10));
 }
 
-/* ------------- Flow ------------- */
+/* Common setup for each question: locks + unlock timer */
+function setupLocksForNewQuestion(){
+  // Lock Next until Show Answer is clicked
+  nextBtn.disabled=true;
+  // Lock Show Answer for 10s, regardless of bonus
+  showAnswerBtn.disabled=true;
+  canShowAnswer=false;
+  if(answerUnlockTimeout){ clearTimeout(answerUnlockTimeout); answerUnlockTimeout=null; }
+  answerUnlockTimeout=setTimeout(unlockShowAnswer, 10000);
+}
+function unlockShowAnswer(){
+  canShowAnswer=true;
+  showAnswerBtn.disabled=false;
+}
+
+/* Flow */
 function nextQuestion(){
-  // If we just finished a game and the modal is open, do nothing until closed
   if(!modalWrap.classList.contains('hidden')) return;
+  if(justFinishedGame){ startNewGame(); }
 
-  // If last game just finished, clicking Next starts a fresh game
-  if(justFinishedGame){
-    startNewGame();
-  }
-
-  // close previous round and move to next (or end game)
+  // must click Show Answer before Next
+  // (If teacher tries to double-click Next, this function re-runs but Next remains disabled until Show Answer happened)
   finishRoundAndAdvance();
 
-  // reset timer to selected value
-  currentTime = timerSeconds;
+  currentTime=timerSeconds;
   updateTimerLabel();
-  answerLabel.textContent = '';
+  answerLabel.textContent='';
 
-  // pick prompt (English only)
-  currentPrompt = randomPromptFromPool();
-  promptLabel.textContent = currentPrompt;
+  // New prompt
+  currentPrompt=randomPromptFromPool();
+  promptLabel.textContent=currentPrompt;
 
-  // maybe bonus (English food only in question)
-  if(Math.random() < 0.20){
-    currentFoodIndex = Math.floor(Math.random()*FOODS_EN.length);
-    foodLabel.textContent = `Bonus Round: with ${FOODS_EN[currentFoodIndex]}`;
+  // Bonus?
+  if(Math.random()<0.20){
+    currentFoodIndex=Math.floor(Math.random()*FOODS_EN.length);
+    foodLabel.textContent=`Bonus Round: with ${FOODS_EN[currentFoodIndex]}`;
     setBonusUI(true);
     stopTimer(); // frozen during bonus
   }else{
-    currentFoodIndex = null;
-    foodLabel.textContent = '';
+    currentFoodIndex=null;
+    foodLabel.textContent='';
     setBonusUI(false);
-    startTimer(); // auto-start timer
+    startTimer(); // auto-start
   }
+
+  // Apply gating
+  setupLocksForNewQuestion();
 }
 
 function showAnswer(){
-  // stop timer when showing answer
+  if(!canShowAnswer) return; // still locked
   stopTimer();
+  const base=PHRASES[currentPrompt]||'';
+  const pron=detectPronoun(currentPrompt);
+  const fut=isFuture(currentPrompt);
+  const verb=stripBed(base);
+  let built=fut?`${pron}  ܒܸܕ  ${verb}`:`${pron}  ${verb}`;
+  if(currentFoodIndex!==null) built+=`  ${FOODS_SY[currentFoodIndex]}`;
+  answerLabel.textContent=built;
 
-  // Syriac-only answer: pronoun + (ܒܸܕ if future) + verb (+ Syriac food)
-  const base = PHRASES[currentPrompt] || '';
-  const pron = detectPronoun(currentPrompt);
-  const fut  = isFuture(currentPrompt);
-  const verb = stripBed(base);
-  let built  = fut ? `${pron}  ܒܸܕ  ${verb}` : `${pron}  ${verb}`;
-  if(currentFoodIndex !== null){ built += `  ${FOODS_SY[currentFoodIndex]}`; }
-  answerLabel.textContent = built;
+  // Now allow Next Question
+  nextBtn.disabled=false;
 }
 
-/* ------------- Button handlers ------------- */
-function addPoints(team, delta){
-  if(team===1){
-    score1 = Math.max(0, score1 + delta);
-    renderScores();
-    updateStreak(1, delta>0);
-  } else {
-    score2 = Math.max(0, score2 + delta);
-    renderScores();
-    updateStreak(2, delta>0);
-  }
+/* Button handlers */
+function addPoints(team,delta){
+  if(team===1){ score1=Math.max(0,score1+delta); renderScores(); updateStreak(1,delta>0); }
+  else{ score2=Math.max(0,score2+delta); renderScores(); updateStreak(2,delta>0); }
 }
 function addBonus(team){
   if(!isBonus) return;
-  addPoints(team, 2);
-  // celebration confetti per team color (visual only)
-  const cA = team===1 ? t1Color.value : t2Color.value;
-  confettiBurst(cA, '#ffffff');
+  addPoints(team,2);
+  const cA=team===1? t1Color.value : t2Color.value;
+  confettiBurst(cA,'#ffffff');
 }
+t1Plus.onclick=()=>addPoints(1,1);
+t1Minus.onclick=()=>addPoints(1,-1);
+t1Bonus.onclick=()=>addBonus(1);
+t2Plus.onclick=()=>addPoints(2,1);
+t2Minus.onclick=()=>addPoints(2,-1);
+t2Bonus.onclick=()=>addBonus(2);
 
-t1Plus.onclick = ()=>addPoints(1,1);
-t1Minus.onclick= ()=>addPoints(1,-1);
-t1Bonus.onclick= ()=>addBonus(1);
+resetScoresBtn.onclick=()=>{ score1=0; score2=0; streak1=0; streak2=0; t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0'; renderScores(); banner.classList.add('hidden'); roundStartScores={t1:0,t2:0}; };
 
-t2Plus.onclick = ()=>addPoints(2,1);
-t2Minus.onclick= ()=>addPoints(2,-1);
-t2Bonus.onclick= ()=>addBonus(2);
+showAnswerBtn.onclick=showAnswer;
+nextBtn.onclick=nextQuestion;
 
-resetScoresBtn.onclick = ()=>{ score1=0; score2=0; streak1=0; streak2=0; t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0'; renderScores(); banner.classList.add('hidden'); roundStartScores={t1:0,t2:0}; };
+timerSelect.onchange=(e)=>{ timerSeconds=parseInt(e.target.value,10); currentTime=timerSeconds; updateTimerLabel(); };
+roundsSelect.onchange=(e)=>{ setRounds(parseInt(e.target.value,10)); };
 
-showAnswerBtn.onclick = showAnswer;
-nextBtn.onclick = nextQuestion;
-
-timerSelect.onchange = (e)=>{ timerSeconds = parseInt(e.target.value,10); currentTime = timerSeconds; updateTimerLabel(); };
-roundsSelect.onchange = (e)=>{ setRounds(parseInt(e.target.value,10)); };
-
-/* Live-updating team names and colors */
+/* Team live updates */
 function updateTeamTitle(which){
-  const name = (which===1 ? t1Name.value.trim() : t2Name.value.trim()) || (which===1?'Team 1':'Team 2');
-  (which===1? t1Title : t2Title).textContent = name;
+  const name=(which===1? t1Name.value.trim() : t2Name.value.trim()) || (which===1?'Team 1':'Team 2');
+  (which===1? t1Title : t2Title).textContent=name;
   updateGamesPanel();
 }
 t1Name.addEventListener('input', ()=>updateTeamTitle(1));
 t2Name.addEventListener('input', ()=>updateTeamTitle(2));
 
 function applyTeamColor(which){
-  const color = which===1 ? t1Color.value : t2Color.value;
-  const card  = which===1 ? t1Card : t2Card;
-  const bar   = which===1 ? t1Bar  : t2Bar;
-  card.style.background = hexToRgba(color, 0.10);   // soft tint
-  card.style.borderColor = hexToRgba(color, 0.6);
-  bar.style.background = color;
+  const color=which===1? t1Color.value : t2Color.value;
+  const card=which===1? t1Card : t2Card;
+  const bar=which===1? t1Bar : t2Bar;
+  card.style.background=hexToRgba(color,0.10);
+  card.style.borderColor=hexToRgba(color,0.6);
+  bar.style.background=color;
 }
-t1Color.oninput = ()=>applyTeamColor(1);
-t2Color.oninput = ()=>applyTeamColor(2);
+t1Color.oninput=()=>applyTeamColor(1);
+t2Color.oninput=()=>applyTeamColor(2);
+
+/* Bonus UI */
+function setBonusUI(on){
+  isBonus=on;
+  bonusPill.classList.toggle('hidden', !on);
+  t1Bonus.disabled=!on;
+  t2Bonus.disabled=!on;
+  updateTimerLabel();
+}
 
 /* Fullscreen */
-fullscreenBtn.onclick = ()=>{
-  const el = document.documentElement;
+fullscreenBtn.onclick=()=>{
+  const el=document.documentElement;
   if(!document.fullscreenElement){ el.requestFullscreen?.(); } else { document.exitFullscreen?.(); }
 };
 
 /* Modal */
-modalClose.onclick = ()=>{
+modalClose.onclick=()=>{
   modalWrap.classList.add('hidden');
-  // After closing results, allow Next to start new game
-  justFinishedGame = true;
+  // After closing results, allow Next to start new game (but still gated by Show Answer on the next first question)
+  justFinishedGame=true;
 };
 
-/* ------------- Keyboard shortcuts ------------- */
-document.addEventListener('keydown', (e)=>{
-  if(e.target.tagName==='INPUT' || e.target.tagName==='SELECT' || e.target.isContentEditable) return;
+/* Keyboard shortcuts (obey locks) */
+document.addEventListener('keydown',(e)=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.isContentEditable) return;
   if(e.key===' '){ e.preventDefault(); if(isBonus){ return; } if(timerRunning){ stopTimer(); } else { startTimer(); } }
-  if(e.key==='Enter'){ e.preventDefault(); nextQuestion(); }
-  if(e.key.toLowerCase()==='a'){ e.preventDefault(); showAnswer(); }
+  if(e.key==='Enter'){ e.preventDefault(); if(!nextBtn.disabled) nextQuestion(); }
+  if(e.key.toLowerCase()==='a'){ e.preventDefault(); if(canShowAnswer) showAnswer(); }
   if(e.key==='1' && !e.shiftKey){ addPoints(1,1); }
   if(e.key==='2' && !e.shiftKey){ addPoints(2,1); }
   if(e.key==='1' && e.shiftKey){ addPoints(1,-1); }
@@ -610,25 +581,29 @@ document.addEventListener('keydown', (e)=>{
   if(e.key.toLowerCase()==='n'){ addBonus(2); }
 });
 
-/* ------------- Init ------------- */
+/* Init (first question without calling nextQuestion to avoid premature round advance) */
 (function init(){
-  timerSeconds = parseInt(timerSelect.value,10);
-  currentTime = timerSeconds;
-  totalRounds = parseInt(roundsSelect.value,10);
-  roundTotalEl.textContent = String(totalRounds);
-  roundNowEl.textContent = String(currentRound);
-  roundFillEl.style.width = '0%';
+  timerSeconds=parseInt(timerSelect.value,10);
+  currentTime=timerSeconds;
+  totalRounds=parseInt(roundsSelect.value,10);
+  roundTotalEl.textContent=String(totalRounds);
+  roundNowEl.textContent=String(currentRound);
+  roundFillEl.style.width='0%';
   renderScores();
   updateTimerLabel();
-  roundStartScores = {t1:score1, t2:score2};
+  roundStartScores={t1:score1, t2:score2};
   applyTeamColor(1); applyTeamColor(2);
   updateTeamTitle(1); updateTeamTitle(2);
   updateGamesPanel();
-  // First question
-  currentPrompt = randomPromptFromPool();
-  promptLabel.textContent = currentPrompt;
-  // Not a bonus by default; start timer
-  currentFoodIndex = null; foodLabel.textContent=''; setBonusUI(false); startTimer();
+
+  // First prompt
+  currentPrompt=randomPromptFromPool();
+  promptLabel.textContent=currentPrompt;
+  currentFoodIndex=null; foodLabel.textContent=''; setBonusUI(false);
+
+  // Start timer and locks
+  startTimer();
+  setupLocksForNewQuestion();
 })();
 </script>
 </body>
