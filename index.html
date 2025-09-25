@@ -1,0 +1,343 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; -webkit-text-stroke: #000000}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; -webkit-text-stroke: #000000; min-height: 14.0px}
+    p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Noto Sans Syriac'; -webkit-text-stroke: #000000}
+    span.s1 {font-kerning: none}
+    span.s2 {font: 12.0px 'Noto Sans Syriac'; font-kerning: none}
+    span.s3 {font: 12.0px Times; font-kerning: none}
+  </style>
+</head>
+<body>
+<p class="p1"><span class="s1">&lt;!doctype html&gt;</span></p>
+<p class="p1"><span class="s1">&lt;html lang="en" dir="ltr"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;head&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;meta charset="utf-8" /&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;title&gt;Assyrian Ordering Quiz&lt;/title&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;!-- Noto Sans Syriac Eastern for answers --&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Syriac+Eastern:wght@400;700&amp;display=swap" rel="stylesheet"&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;style&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>:root{</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>--bg:#F7F9FC; --card:#FFFFFF; --ink:#0F172A; --muted:#475569;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>--accent:#2563EB; --success:#16A34A; --warn:#D97706; --danger:#DC2626; --line:#E5E7EB;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>--radius:16px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>*{box-sizing:border-box}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>body{margin:0; background:var(--bg); color:var(--ink); font:16px/1.4 "Segoe UI", system-ui, Arial, sans-serif;}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.wrap{max-width:1000px; margin:24px auto; padding:0 16px;}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px;}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>h1{font-size:22px; margin:0; font-weight:800;}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.controls{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>select, input[type="text"]{</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.btn{appearance:none; border:0; padding:10px 14px; border-radius:10px; color:#fff; font-weight:700; cursor:pointer;}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.btn.primary{background:var(--accent)}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.btn.success{background:var(--success)}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.btn.neutral{background:#334155}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.btn.danger{background:var(--danger)}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.pill{display:inline-block; padding:2px 10px; border-radius:999px; background:#EEF2FF; color:#3730A3; font-weight:700; font-size:12px;}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.timer{font-size:56px; font-weight:800; color:var(--accent); margin:4px 0 8px}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.prompt{font-size:30px; font-weight:800; margin:8px 0 6px}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.food{font-size:18px; font-style:italic; color:var(--warn); margin:0 0 6px}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.answer{font-family:"Noto Sans Syriac Eastern", "Segoe UI", system-ui, Arial, sans-serif; font-size:48px; color:var(--success); margin:12px 0 18px}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 1px 0 rgba(0,0,0,.04); border:1px solid var(--line);}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.row{display:flex; gap:16px; flex-wrap:wrap; align-items:center}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.spacer{flex:1}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.legend{color:var(--muted); font-size:12px}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.scores .team{min-width:220px}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.scores .score{font-size:26px; font-weight:800; margin:6px 0}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.scores .grid{display:flex; gap:6px; flex-wrap:wrap}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.point{padding:8px 10px; border-radius:10px; background:#E2E8F0; color:#0F172A; font-weight:800; border:1px solid #CBD5E1; cursor:pointer;}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.point:hover{background:#CBD5E1}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.hidden{display:none !important}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
+<p class="p1"><span class="s1">&lt;body&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div class="wrap"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;header&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;h1&gt;Assyrian Ordering Quiz&lt;/h1&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;div class="controls"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;button class="btn neutral" id="fullscreenBtn" title="Toggle fullscreen"&gt;Fullscreen&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label class="legend" for="timerSelect"&gt;Timer:&lt;/label&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;select id="timerSelect" title="Seconds per round"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;option&gt;20&lt;/option&gt;&lt;option selected&gt;30&lt;/option&gt;&lt;option&gt;45&lt;/option&gt;&lt;option&gt;60&lt;/option&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/select&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;button class="btn primary" id="startPauseBtn" title="Start/Pause the countdown"&gt;Start&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;button class="btn danger" id="resetScoresBtn" title="Reset both teams to 0"&gt;Reset Scores&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/header&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="timer" id="timerLabel"&gt;30 sec&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="prompt" id="promptLabel"&gt;&lt;!-- English prompt only --&gt;&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="food" id="foodLabel"&gt;&lt;!-- Bonus: English food only --&gt;&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="answer" id="answerLabel"&gt;&lt;!-- Syriac answer only --&gt;&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="row"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;button class="btn success" id="showAnswerBtn" title="Reveal Syriac answer (pronoun + (</span><span class="s2">ܒܸܕ</span><span class="s1">) + verb + food in Syriac)"&gt;Show Answer&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;button class="btn primary" id="nextBtn" title="Next random prompt"&gt;Next Question&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;span id="bonusPill" class="pill hidden"&gt;BONUS ROUND (+2)&lt;/span&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;div class="spacer"&gt;&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="card scores" style="margin-top:14px"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;div class="row"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div class="team"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;div class="legend"&gt;Team 1 Name&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;input id="t1Name" type="text" value="Team 1" /&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;div class="score" id="t1Score"&gt;0&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;div class="grid"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;button class="point" id="t1Plus"&gt;+1 (Correct)&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;button class="point" id="t1Minus"&gt;-1 (Penalty)&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;button class="point" id="t1Bonus" disabled&gt;+2 BONUS&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div class="team"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;div class="legend"&gt;Team 2 Name&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;input id="t2Name" type="text" value="Team 2" /&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;div class="score" id="t2Score"&gt;0&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;div class="grid"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;button class="point" id="t2Plus"&gt;+1 (Correct)&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;button class="point" id="t2Minus"&gt;-1 (Penalty)&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;button class="point" id="t2Bonus" disabled&gt;+2 BONUS&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div class="legend" style="align-self:flex-end"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;strong&gt;Highlights:&lt;/strong&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>Start = begin/pause timer • Show Answer = Syriac only • Next Question = new prompt • Bonus buttons appear only in bonus rounds (+2)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;script&gt;</span></p>
+<p class="p1"><span class="s1">/* ---------------- DATA ---------------- */</span></p>
+<p class="p1"><span class="s1">const PHRASES = {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"I order (masc.)": "</span><span class="s2">ܛܵܠܒܹܢ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"I will order (masc.)": "</span><span class="s2">ܛܵܠܒܹܢ</span><span class="s1"> </span><span class="s2">ܒܸܕ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"I order (fem.)": "</span><span class="s2">ܛܵܠܒܵܢ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"I will order (fem.)": "</span><span class="s2">ܛܵܠܒܵܢ</span><span class="s1"> </span><span class="s2">ܒܸܕ</span><span class="s1">",</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"you order (masc.)": "</span><span class="s2">ܛܵܠܒܹܬ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"you will order (masc.)": "</span><span class="s2">ܛܵܠܒܹܬ</span><span class="s1"> </span><span class="s2">ܒܸܕ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"you order (fem.)": "</span><span class="s2">ܛܵܠܒܵܬܝ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"you will order (fem.)": "</span><span class="s2">ܛܵܠܒܵܬܝ</span><span class="s1"> </span><span class="s2">ܒܸܕ</span><span class="s1">",</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"he orders": "</span><span class="s2">ܛܵܠܹܒ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"he will order": "</span><span class="s2">ܛܵܠܹܒ</span><span class="s1"> </span><span class="s2">ܒܸܕ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"she orders": "</span><span class="s2">ܛܵܠܒܵܐ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"she will order": "</span><span class="s2">ܛܵܠܒܵܐ</span><span class="s1"> </span><span class="s2">ܒܸܕ</span><span class="s1">",</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"we order": "</span><span class="s2">ܛܵܠܒܲܚ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"we will order": "</span><span class="s2">ܛܵܠܒܲܚ</span><span class="s1"> </span><span class="s2">ܒܸܕ</span><span class="s1">",</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"they order": "</span><span class="s2">ܛܵܠܒܝܼ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"they will order": "</span><span class="s2">ܛܵܠܒܝܼ</span><span class="s1"> </span><span class="s2">ܒܸܕ</span><span class="s1">",</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"y’all order": "</span><span class="s2">ܛܵܠܒܝܼܬܘܿܢ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"y’all will order": "</span><span class="s2">ܛܵܠܒܝܼܬܘܿܢ</span><span class="s1"> </span><span class="s2">ܒܸܕ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1">};</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">const PRONOUNS = {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>i_masc: "</span><span class="s2">ܐܵܢܵܐ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>i_fem:<span class="Apple-converted-space">  </span>"</span><span class="s2">ܐܵܢܵܐ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>you_masc:"</span><span class="s2">ܐܲܢ݇ܬ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>you_fem: "</span><span class="s2">ܐܲܢ݇ܬܝ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>he:<span class="Apple-converted-space">      </span>"</span><span class="s2">ܗ̇ܘ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>she: <span class="Apple-converted-space">    </span>"</span><span class="s2">ܗ̇ܝ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>we:<span class="Apple-converted-space">      </span>"</span><span class="s2">ܐܲܚܢܲܢ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>yall:<span class="Apple-converted-space">    </span>"</span><span class="s2">ܐܲܚܬܘܿܢ</span><span class="s1">",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>they:<span class="Apple-converted-space">    </span>"</span><span class="s2">ܐܵܢܝܼ</span><span class="s1">", // corrected</span></p>
+<p class="p1"><span class="s1">};</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">// English foods</span></p>
+<p class="p1"><span class="s1">const FOODS_EN = [</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"potatoes","rice","beans","stew","kabobs","chicken","steak","lamb",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"fish","fries","water","fizzy drinks","yogurt drink","lemonade",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"orange juice","dolma","red rice","okra stew","yogurt",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"Assyrian egg rolls","tea","coffee","hummus","baba ganosh",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>"salad","pickles","meatballs"</span></p>
+<p class="p1"><span class="s1">];</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">// Syriac foods aligned to FOODS_EN</span></p>
+<p class="p1"><span class="s1">const FOODS_SY = [</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">  </span>"</span><span class="s1">ܟܸܪܬܘܿܦܹ̈ܐ</span><span class="s3">","</span><span class="s1">ܪܸܙܵܐ</span><span class="s3">","</span><span class="s1">ܚܲܒ̣ܨܹ̈ܐ</span><span class="s3">","</span><span class="s1">ܫܘܼܪܒ̣ܵܐ</span><span class="s3">","</span><span class="s1">ܟܵܒܵܒܹ̈ܐ</span><span class="s3">","</span><span class="s1">ܟܬܵܝܬܵܐ</span><span class="s3">","</span><span class="s1">ܒܸܣܪܵܐ</span><span class="s3">","</span><span class="s1">ܥܸܪܒܵܐ</span><span class="s3">",</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">  </span>"</span><span class="s1">ܢܘܼܢܵܐ</span><span class="s3">","</span><span class="s1">ܟܸܪܬܘܿܦܹ̈ܐ</span><span class="s3"> </span><span class="s1">ܩܸܠܝܹ̈ܐ</span><span class="s3">","</span><span class="s1">ܡܝܼܵܐ</span><span class="s3">","</span><span class="s1">ܫܬܵܝܬܵܐ</span><span class="s3"> </span><span class="s1">ܒܲܩܒܸܩܵܢܵܐ</span><span class="s3">","</span><span class="s1">ܕܲܘܹ̈ܐ</span><span class="s3">","</span><span class="s1">ܡܝܼܵܐ</span><span class="s3"> </span><span class="s1">ܕܠܝܼܡܘܿܢܹ̈ܐ</span><span class="s3">",</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">  </span>"</span><span class="s1">ܡܝܼܵܐ</span><span class="s3"> </span><span class="s1">ܕܦܘܼܪ̈ܬܩܵܠܹܐ</span><span class="s3">","</span><span class="s1">ܕܘܿܠܡܵܐ</span><span class="s3">","</span><span class="s1">ܪܸܙܵܐ</span><span class="s3"> </span><span class="s1">ܣܡܘܿܩܵܐ</span><span class="s3">","</span><span class="s1">ܒܲܡܝܹ̈ܐ</span><span class="s3">","</span><span class="s1">ܡܲܣܬܵܐ</span><span class="s3">",</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">  </span>"</span><span class="s1">ܒܘܼܪܲܟ</span><span class="s3">","</span><span class="s1">ܟ̰ܵܐܝ</span><span class="s3">","</span><span class="s1">ܩܲܗܘܵܐ</span><span class="s3">","</span><span class="s1">ܚܲܪ̈ܛܡܵܢܹܐ</span><span class="s3"> </span><span class="s1">ܓܪ̈ܝܼܣܹܐ</span><span class="s3">","</span><span class="s1">ܒܵܕܸܡܓ̰ܵܢܹ̈ܐ</span><span class="s3"> </span><span class="s1">ܓܪ̈ܝܼܣܹܐ</span><span class="s3">",</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">  </span>"</span><span class="s1">ܣܲܠܵܛܵܐ</span><span class="s3">","</span><span class="s1">ܛܘܼܪ̈ܫܝܹܐ</span><span class="s3">","</span><span class="s1">ܟܸܦܬܹ̈ܐ</span><span class="s3">"</span></p>
+<p class="p1"><span class="s1">];</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">/* ------------- DOM refs ------------- */</span></p>
+<p class="p1"><span class="s1">const timerLabel <span class="Apple-converted-space">  </span>= document.getElementById('timerLabel');</span></p>
+<p class="p1"><span class="s1">const promptLabel<span class="Apple-converted-space">  </span>= document.getElementById('promptLabel');</span></p>
+<p class="p1"><span class="s1">const foodLabel<span class="Apple-converted-space">    </span>= document.getElementById('foodLabel');</span></p>
+<p class="p1"><span class="s1">const answerLabel<span class="Apple-converted-space">  </span>= document.getElementById('answerLabel');</span></p>
+<p class="p1"><span class="s1">const startPauseBtn= document.getElementById('startPauseBtn');</span></p>
+<p class="p1"><span class="s1">const nextBtn<span class="Apple-converted-space">      </span>= document.getElementById('nextBtn');</span></p>
+<p class="p1"><span class="s1">const showAnswerBtn= document.getElementById('showAnswerBtn');</span></p>
+<p class="p1"><span class="s1">const timerSelect<span class="Apple-converted-space">  </span>= document.getElementById('timerSelect');</span></p>
+<p class="p1"><span class="s1">const fullscreenBtn= document.getElementById('fullscreenBtn');</span></p>
+<p class="p1"><span class="s1">const resetScoresBtn=document.getElementById('resetScoresBtn');</span></p>
+<p class="p1"><span class="s1">const bonusPill<span class="Apple-converted-space">    </span>= document.getElementById('bonusPill');</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">const t1ScoreEl = document.getElementById('t1Score');</span></p>
+<p class="p1"><span class="s1">const t2ScoreEl = document.getElementById('t2Score');</span></p>
+<p class="p1"><span class="s1">const t1Plus = document.getElementById('t1Plus');</span></p>
+<p class="p1"><span class="s1">const t1Minus= document.getElementById('t1Minus');</span></p>
+<p class="p1"><span class="s1">const t1Bonus= document.getElementById('t1Bonus');</span></p>
+<p class="p1"><span class="s1">const t2Plus = document.getElementById('t2Plus');</span></p>
+<p class="p1"><span class="s1">const t2Minus= document.getElementById('t2Minus');</span></p>
+<p class="p1"><span class="s1">const t2Bonus= document.getElementById('t2Bonus');</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">/* ------------- State ------------- */</span></p>
+<p class="p1"><span class="s1">let timerSeconds = 30;</span></p>
+<p class="p1"><span class="s1">let currentTime = timerSeconds;</span></p>
+<p class="p1"><span class="s1">let timerId = null;</span></p>
+<p class="p1"><span class="s1">let timerRunning = false;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">let currentPrompt = '';</span></p>
+<p class="p1"><span class="s1">let isBonus = false;</span></p>
+<p class="p1"><span class="s1">let currentFoodIndex = null; // index into FOODS_EN/SY</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">let score1 = 0, score2 = 0;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">/* ------------- Helpers ------------- */</span></p>
+<p class="p1"><span class="s1">function randomPrompt(){</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const keys = Object.keys(PHRASES);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>return keys[Math.floor(Math.random()*keys.length)];</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p1"><span class="s1">function isFuture(prompt){ return prompt.toLowerCase().includes('will'); }</span></p>
+<p class="p1"><span class="s1">function stripBed(s){ return s.replace(/\s*</span><span class="s2">ܒܸܕ</span><span class="s1">\s*$/,'').trim(); }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">function detectPronoun(prompt){</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const p = prompt.toLowerCase();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(p.startsWith('i ')) <span class="Apple-converted-space">      </span>return p.includes('(fem') ? PRONOUNS.i_fem : PRONOUNS.i_masc;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(p.startsWith('you ')) <span class="Apple-converted-space">    </span>return p.includes('(fem') ? PRONOUNS.you_fem : PRONOUNS.you_masc;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(p.startsWith('he '))<span class="Apple-converted-space">      </span>return PRONOUNS.he;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(p.startsWith('she ')) <span class="Apple-converted-space">    </span>return PRONOUNS.she;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(p.startsWith('we '))<span class="Apple-converted-space">      </span>return PRONOUNS.we;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(p.startsWith('they '))<span class="Apple-converted-space">    </span>return PRONOUNS.they;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(p.startsWith('y’all'))<span class="Apple-converted-space">    </span>return PRONOUNS.yall;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>return '';</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">function updateTimerLabel(){</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>timerLabel.textContent = isBonus ? '--' : `${currentTime} sec`;</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">function setBonusUI(on){</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>isBonus = on;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>bonusPill.classList.toggle('hidden', !on);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>t1Bonus.disabled = !on;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>t2Bonus.disabled = !on;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>startPauseBtn.disabled = on; // freeze timer during bonus</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>updateTimerLabel();</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">/* ------------- Flow ------------- */</span></p>
+<p class="p1"><span class="s1">function nextQuestion(){</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// stop timer</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(timerId){ clearInterval(timerId); timerId = null; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>timerRunning = false;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>startPauseBtn.textContent = 'Start';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>currentTime = timerSeconds;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>updateTimerLabel();</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// clear answer (Syriac only)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>answerLabel.textContent = '';</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// choose new prompt (English only)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>currentPrompt = randomPrompt();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>promptLabel.textContent = currentPrompt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// maybe bonus (English food only in question)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(Math.random() &lt; 0.20){</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>currentFoodIndex = Math.floor(Math.random()*FOODS_EN.length);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>foodLabel.textContent = `Bonus Round: with ${FOODS_EN[currentFoodIndex]}`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>setBonusUI(true);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}else{</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>currentFoodIndex = null;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>foodLabel.textContent = '';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>setBonusUI(false);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">function showAnswer(){</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// Build Syriac-only answer: pronoun + (</span><span class="s2">ܒܸܕ</span><span class="s1"> if future) + verb (+ Syriac food)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const base = PHRASES[currentPrompt] || '';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const pron = detectPronoun(currentPrompt);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const fut<span class="Apple-converted-space">  </span>= isFuture(currentPrompt);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const verb = stripBed(base);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>let built<span class="Apple-converted-space">  </span>= fut ? `${pron}<span class="Apple-converted-space">  </span></span><span class="s2">ܒܸܕ</span><span class="s1"><span class="Apple-converted-space">  </span>${verb}` : `${pron}<span class="Apple-converted-space">  </span>${verb}`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(currentFoodIndex !== null){</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>built += `<span class="Apple-converted-space">  </span>${FOODS_SY[currentFoodIndex]}`; // Syriac only (no English gloss)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>answerLabel.textContent = built;</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">/* ------------- Timer ------------- */</span></p>
+<p class="p1"><span class="s1">function startPause(){</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(isBonus) return; // frozen</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(timerRunning){</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>clearInterval(timerId); timerId=null; timerRunning=false; startPauseBtn.textContent='Start';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}else{</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>timerRunning=true; startPauseBtn.textContent='Pause';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>timerId = setInterval(()=&gt;{</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>if(currentTime&gt;0){ currentTime--; updateTimerLabel(); }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>else { clearInterval(timerId); timerId=null; timerRunning=false; startPauseBtn.textContent='Start'; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>},1000);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">/* ------------- Scores ------------- */</span></p>
+<p class="p1"><span class="s1">function renderScores(){</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>t1ScoreEl.textContent = String(score1);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>t2ScoreEl.textContent = String(score2);</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p1"><span class="s1">t1Plus.onclick = ()=&gt;{ score1=Math.max(0,score1+1); renderScores(); };</span></p>
+<p class="p1"><span class="s1">t1Minus.onclick= ()=&gt;{ score1=Math.max(0,score1-1); renderScores(); };</span></p>
+<p class="p1"><span class="s1">t1Bonus.onclick= ()=&gt;{ if(isBonus){ score1=Math.max(0,score1+2); renderScores(); } };</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">t2Plus.onclick = ()=&gt;{ score2=Math.max(0,score2+1); renderScores(); };</span></p>
+<p class="p1"><span class="s1">t2Minus.onclick= ()=&gt;{ score2=Math.max(0,score2-1); renderScores(); };</span></p>
+<p class="p1"><span class="s1">t2Bonus.onclick= ()=&gt;{ if(isBonus){ score2=Math.max(0,score2+2); renderScores(); } };</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">resetScoresBtn.onclick = ()=&gt;{ score1=0; score2=0; renderScores(); };</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">/* ------------- UI events ------------- */</span></p>
+<p class="p1"><span class="s1">showAnswerBtn.onclick = showAnswer;</span></p>
+<p class="p1"><span class="s1">nextBtn.onclick = nextQuestion;</span></p>
+<p class="p1"><span class="s1">startPauseBtn.onclick = startPause;</span></p>
+<p class="p1"><span class="s1">timerSelect.onchange = (e)=&gt;{ timerSeconds = parseInt(e.target.value,10); currentTime = timerSeconds; updateTimerLabel(); };</span></p>
+<p class="p1"><span class="s1">fullscreenBtn.onclick = ()=&gt;{</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const el = document.documentElement;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(!document.fullscreenElement){ el.requestFullscreen?.(); } else { document.exitFullscreen?.(); }</span></p>
+<p class="p1"><span class="s1">};</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">/* ------------- Init ------------- */</span></p>
+<p class="p1"><span class="s1">(function init(){</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>timerSeconds = parseInt(timerSelect.value,10);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>currentTime = timerSeconds;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>updateTimerLabel();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>renderScores();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>nextQuestion();</span></p>
+<p class="p1"><span class="s1">})();</span></p>
+<p class="p1"><span class="s1">&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+</body>
+</html>
