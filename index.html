@@ -623,8 +623,10 @@ function maybeEnableMC(){
 
 /* Multiple choice */
 function uniqueFoodIndices(count, excludeIndex){
+  const exclude = Array.isArray(excludeIndex) ? new Set(excludeIndex) :
+                  (excludeIndex==null ? new Set() : new Set([excludeIndex]));
   const all=[...Array(FOODS_EN.length).keys()];
-  const pool=excludeIndex==null ? all : all.filter(i=>i!==excludeIndex);
+  const pool=all.filter(i=>!exclude.has(i));
   const picks=[];
   while(picks.length<count && pool.length){
     const idx=Math.floor(Math.random()*pool.length);
@@ -643,15 +645,50 @@ function clearMC(){
   mcOptions=[];
 }
 function renderMC_EN2SY(correctKey){
+  // Build the correct text (with announced food if bonus)
   const correctText = buildSyAnswerFromKey(correctKey, currentFoodIndex);
+
+  // Choose 3 distractor keys
   const distractorKeys = [makeDistractorKey(correctKey), makeDistractorKey(correctKey), makeDistractorKey(correctKey)];
-  const foodAlt = isBonus ? uniqueFoodIndices(3, currentFoodIndex) : [null,null,null];
-  const options = [
-    {text: correctText, correct:true},
-    {text: buildSyAnswerFromKey(distractorKeys[0], foodAlt[0]), correct:false},
-    {text: buildSyAnswerFromKey(distractorKeys[1], foodAlt[1]), correct:false},
-    {text: buildSyAnswerFromKey(distractorKeys[2], foodAlt[2]), correct:false},
-  ].sort(()=>Math.random()-0.5);
+
+  // Decide the distraction mode for BONUS rounds:
+  //  - "ALL": all 4 options include some food (correct uses announced food, distractors use other foods)
+  //  - "HALF": exactly 2 options include food (correct + one distractor), other 2 have no food
+  // For NON-bonus: no options have food.
+  const isBonusRound = isBonus && currentFoodIndex != null;
+  const mode = isBonusRound ? (Math.random() < 0.5 ? 'ALL' : 'HALF') : 'NONE';
+
+  let options = [];
+
+  if (mode === 'ALL'){
+    // Need 3 other foods for the distractors, none equal to currentFoodIndex
+    const otherFoods = uniqueFoodIndices(3, currentFoodIndex);
+    options = [
+      { text: correctText, correct: true },
+      { text: buildSyAnswerFromKey(distractorKeys[0], otherFoods[0]), correct: false },
+      { text: buildSyAnswerFromKey(distractorKeys[1], otherFoods[1]), correct: false },
+      { text: buildSyAnswerFromKey(distractorKeys[2], otherFoods[2]), correct: false },
+    ].sort(()=>Math.random()-0.5);
+
+  } else if (mode === 'HALF'){
+    // Exactly 2 with food: the correct option + exactly 1 distractor with a different food
+    const oneOtherFood = uniqueFoodIndices(1, currentFoodIndex)[0]; // may be undefined if not enough foods
+    options = [
+      { text: correctText, correct: true },                                                // has food
+      { text: buildSyAnswerFromKey(distractorKeys[0], oneOtherFood), correct: false },     // has other food
+      { text: buildSyAnswerFromKey(distractorKeys[1], null), correct: false },             // no food
+      { text: buildSyAnswerFromKey(distractorKeys[2], null), correct: false },             // no food
+    ].sort(()=>Math.random()-0.5);
+
+  } else {
+    // NON-bonus: no foods anywhere
+    options = [
+      { text: buildSyAnswerFromKey(correctKey, null), correct: true },
+      { text: buildSyAnswerFromKey(distractorKeys[0], null), correct: false },
+      { text: buildSyAnswerFromKey(distractorKeys[1], null), correct: false },
+      { text: buildSyAnswerFromKey(distractorKeys[2], null), correct: false },
+    ].sort(()=>Math.random()-0.5);
+  }
 
   mcOptions = options;
   mcWrap.innerHTML='';
@@ -665,6 +702,7 @@ function renderMC_EN2SY(correctKey){
   });
   enableMCOptions(false);
 }
+  
 function renderMC_SY2EN(correctKey){
   const correctText = buildEnAnswerFromKey(correctKey);
   const distractorKeys = [makeDistractorKey(correctKey), makeDistractorKey(correctKey), makeDistractorKey(correctKey)];
