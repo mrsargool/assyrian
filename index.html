@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Assyrian Verb To Order Game</title>
+  <title>AssyrianVerb To Order Game</title>
 
   <!-- Noto Sans Syriac Eastern for answers -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Syriac+Eastern:wght@400;700&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
     }
     *{box-sizing:border-box}
     body{margin:0; background:var(--bg); color:var(--ink); font:16px/1.4 "Segoe UI", system-ui, Arial, sans-serif;}
-    .wrap{max-width:1000px; margin:24px auto; padding:0 16px;}
+    .wrap{max-width:1100px; margin:24px auto; padding:0 16px;}
     header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px;}
     h1{font-size:22px; margin:0; font-weight:800;}
     .controls{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
@@ -28,21 +28,35 @@
     .btn.success{background:var(--success)}
     .btn.neutral{background:#334155}
     .btn.danger{background:var(--danger)}
+    .btn.warn{background:var(--warn); color:#fff}
     .pill{display:inline-block; padding:2px 10px; border-radius:999px; background:#EEF2FF; color:#3730A3; font-weight:700; font-size:12px;}
     .timer{font-size:56px; font-weight:800; color:var(--accent); margin:4px 0 8px}
     .prompt{font-size:30px; font-weight:800; margin:8px 0 6px}
     .food{font-size:18px; font-style:italic; color:var(--warn); margin:0 0 6px}
-    .answer{font-family:"Noto Sans Syriac Eastern", "Segoe UI", system-ui, Arial, sans-serif; font-size:48px; color:var(--success); margin:12px 0 18px}
+    .answer{font-family:"Noto Sans Syriac Eastern","Segoe UI",system-ui,Arial,sans-serif; font-size:48px; color:var(--success); margin:12px 0 18px}
     .card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 1px 0 rgba(0,0,0,.04); border:1px solid var(--line);}
     .row{display:flex; gap:16px; flex-wrap:wrap; align-items:center}
     .spacer{flex:1}
     .legend{color:var(--muted); font-size:12px}
-    .scores .team{min-width:220px}
+    .scores .team{min-width:260px}
     .scores .score{font-size:26px; font-weight:800; margin:6px 0}
     .scores .grid{display:flex; gap:6px; flex-wrap:wrap}
     .point{padding:8px 10px; border-radius:10px; background:#E2E8F0; color:#0F172A; font-weight:800; border:1px solid #CBD5E1; cursor:pointer;}
     .point:hover{background:#CBD5E1}
     .hidden{display:none !important}
+    .team-bar{height:6px; border-radius:6px; background:#E5E7EB; overflow:hidden; margin-top:6px; position:relative}
+    .team-bar .fill{height:100%; width:0%; transition:width .3s ease}
+    .roundbar{height:8px; background:#E5E7EB; border-radius:8px; overflow:hidden}
+    .roundbar .fill{height:100%; width:0%; background:var(--accent); transition:width .4s ease}
+    .banner{margin:10px 0; padding:10px 14px; border-radius:10px; background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; font-weight:700}
+    .confetti{position:fixed; left:0; top:0; width:100%; height:100%; pointer-events:none; overflow:hidden}
+    .piece{position:absolute; width:8px; height:12px; opacity:.9; transform:translate3d(0,0,0); animation:fall 1400ms linear forwards;}
+    @keyframes fall{
+      0%{ transform:translate3d(var(--x),-10vh,0) rotate(0deg); }
+      100%{ transform:translate3d(calc(var(--x) + var(--dx)),110vh,0) rotate(360deg); opacity:.7; }
+    }
+    .settings{display:flex; gap:16px; flex-wrap:wrap; align-items:center}
+    .mini{font-size:12px; color:var(--muted)}
   </style>
 </head>
 <body>
@@ -55,10 +69,25 @@
         <select id="timerSelect" title="Seconds per round">
           <option>20</option><option selected>30</option><option>45</option><option>60</option>
         </select>
-        <button class="btn primary" id="startPauseBtn" title="Start/Pause the countdown">Start</button>
+        <label class="legend" for="roundsSelect">Total Rounds:</label>
+        <select id="roundsSelect" title="Number of rounds">
+          <option>5</option><option selected>10</option><option>15</option><option>20</option>
+        </select>
+        <label class="legend"><input type="checkbox" id="noRepeat" checked> No-repeat</label>
+        <label class="legend"><input type="checkbox" id="muteToggle"> Mute</label>
         <button class="btn danger" id="resetScoresBtn" title="Reset both teams to 0">Reset Scores</button>
       </div>
     </header>
+
+    <div class="card" style="margin-bottom:10px">
+      <div class="row">
+        <div><strong>Round:</strong> <span id="roundNow">1</span>/<span id="roundTotal">10</span></div>
+        <div class="spacer"></div>
+        <div style="min-width:240px">
+          <div class="roundbar" title="Round progress"><div class="fill" id="roundFill"></div></div>
+        </div>
+      </div>
+    </div>
 
     <div class="timer" id="timerLabel">30 sec</div>
 
@@ -67,43 +96,60 @@
     <div class="answer" id="answerLabel"><!-- Syriac answer only --></div>
 
     <div class="row">
-      <button class="btn success" id="showAnswerBtn" title="Reveal Syriac answer (pronoun + (ܒܸܕ) + verb + food in Syriac)">Show Answer</button>
+      <button class="btn success" id="showAnswerBtn" title="Reveal Syriac answer">Show Answer</button>
       <button class="btn primary" id="nextBtn" title="Next random prompt (auto-starts timer)">Next Question</button>
       <span id="bonusPill" class="pill hidden">BONUS ROUND (+2)</span>
       <div class="spacer"></div>
+      <div class="mini">Shortcuts: Space=Start/Pause • Enter=Next • A=Show • 1/2=+1 • Shift+1/2=−1 • B/N=+2 (bonus)</div>
     </div>
 
     <div class="card scores" style="margin-top:14px">
       <div class="row">
+        <!-- Team 1 -->
         <div class="team">
           <div class="legend">Team 1 Name</div>
-          <input id="t1Name" type="text" value="Team 1" />
+          <div class="settings">
+            <input id="t1Name" type="text" value="Team 1" />
+            <label class="legend">Color <input type="color" id="t1Color" value="#2563EB"></label>
+          </div>
           <div class="score" id="t1Score">0</div>
-          <div class="grid">
+          <div class="team-bar"><div class="fill" id="t1Bar" style="background:#2563EB"></div></div>
+          <div class="mini" id="t1Streak">Streak: 0</div>
+          <div class="grid" style="margin-top:6px">
             <button class="point" id="t1Plus">+1 (Correct)</button>
             <button class="point" id="t1Minus">-1 (Penalty)</button>
             <button class="point" id="t1Bonus" disabled>+2 BONUS</button>
           </div>
         </div>
 
+        <!-- Team 2 -->
         <div class="team">
           <div class="legend">Team 2 Name</div>
-          <input id="t2Name" type="text" value="Team 2" />
+          <div class="settings">
+            <input id="t2Name" type="text" value="Team 2" />
+            <label class="legend">Color <input type="color" id="t2Color" value="#16A34A"></label>
+          </div>
           <div class="score" id="t2Score">0</div>
-          <div class="grid">
+          <div class="team-bar"><div class="fill" id="t2Bar" style="background:#16A34A"></div></div>
+          <div class="mini" id="t2Streak">Streak: 0</div>
+          <div class="grid" style="margin-top:6px">
             <button class="point" id="t2Plus">+1 (Correct)</button>
             <button class="point" id="t2Minus">-1 (Penalty)</button>
             <button class="point" id="t2Bonus" disabled>+2 BONUS</button>
           </div>
         </div>
 
-        <div class="legend" style="align-self:flex-end">
-          <strong>Highlights:</strong>
-          Next Question = new prompt & auto-start timer • Show Answer = Syriac only • Bonus buttons appear only in bonus rounds (+2)
+        <div class="spacer"></div>
+        <div style="min-width:260px">
+          <div class="legend">Round banner</div>
+          <div id="banner" class="banner hidden">Round result will appear here.</div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Confetti layer -->
+  <div class="confetti" id="confetti"></div>
 
 <script>
 /* ---------------- DATA ---------------- */
@@ -142,7 +188,7 @@ const PRONOUNS = {
   she:     "ܗ̇ܝ",
   we:      "ܐܲܚܢܲܢ",
   yall:    "ܐܲܚܬܘܿܢ",
-  they:    "ܐܵܢܝܼ", // corrected
+  they:    "ܐܵܢܝܼ",
 };
 
 // English foods
@@ -168,13 +214,15 @@ const timerLabel   = document.getElementById('timerLabel');
 const promptLabel  = document.getElementById('promptLabel');
 const foodLabel    = document.getElementById('foodLabel');
 const answerLabel  = document.getElementById('answerLabel');
-const startPauseBtn= document.getElementById('startPauseBtn');
 const nextBtn      = document.getElementById('nextBtn');
 const showAnswerBtn= document.getElementById('showAnswerBtn');
 const timerSelect  = document.getElementById('timerSelect');
+const roundsSelect = document.getElementById('roundsSelect');
+const noRepeat     = document.getElementById('noRepeat');
 const fullscreenBtn= document.getElementById('fullscreenBtn');
 const resetScoresBtn=document.getElementById('resetScoresBtn');
 const bonusPill    = document.getElementById('bonusPill');
+const muteToggle   = document.getElementById('muteToggle');
 
 const t1ScoreEl = document.getElementById('t1Score');
 const t2ScoreEl = document.getElementById('t2Score');
@@ -184,6 +232,18 @@ const t1Bonus= document.getElementById('t1Bonus');
 const t2Plus = document.getElementById('t2Plus');
 const t2Minus= document.getElementById('t2Minus');
 const t2Bonus= document.getElementById('t2Bonus');
+const t1Color= document.getElementById('t1Color');
+const t2Color= document.getElementById('t2Color');
+const t1Bar  = document.getElementById('t1Bar');
+const t2Bar  = document.getElementById('t2Bar');
+const t1StreakEl = document.getElementById('t1Streak');
+const t2StreakEl = document.getElementById('t2Streak');
+
+const roundNowEl = document.getElementById('roundNow');
+const roundTotalEl = document.getElementById('roundTotal');
+const roundFillEl = document.getElementById('roundFill');
+const banner = document.getElementById('banner');
+const confettiLayer = document.getElementById('confetti');
 
 /* ------------- State ------------- */
 let timerSeconds = 30;
@@ -196,10 +256,39 @@ let isBonus = false;
 let currentFoodIndex = null; // index into FOODS_EN/SY
 
 let score1 = 0, score2 = 0;
+let streak1 = 0, streak2 = 0;
+
+let totalRounds = 10;
+let currentRound = 1;
+let promptsPool = Object.keys(PHRASES);
+let unusedPrompts = [...promptsPool];
+let roundStartScores = {t1:0, t2:0}; // to compute round winner
+
+/* ------------- Audio (WebAudio) ------------- */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let muted = false;
+function beep(f=880, dur=0.07, type='sine', vol=0.06){
+  if(muted) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type; o.frequency.value = f;
+  g.gain.value = vol;
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start();
+  setTimeout(()=>{ o.stop(); }, dur*1000);
+}
+function tick(){ beep(700, 0.03, 'square', 0.03); }
+function ding(){ beep(1100, 0.12, 'sine', 0.08); }
+function bonusSnd(){ beep(500, 0.06, 'triangle', 0.08); setTimeout(()=>beep(800,0.08,'triangle',0.08),70); }
 
 /* ------------- Helpers ------------- */
-function randomPrompt(){
-  const keys = Object.keys(PHRASES);
+function randomPromptFromPool(){
+  if(noRepeat.checked){
+    if(unusedPrompts.length===0) unusedPrompts = [...promptsPool];
+    const i = Math.floor(Math.random()*unusedPrompts.length);
+    return unusedPrompts.splice(i,1)[0];
+  }
+  const keys = promptsPool;
   return keys[Math.floor(Math.random()*keys.length)];
 }
 function isFuture(prompt){ return prompt.toLowerCase().includes('will'); }
@@ -211,7 +300,7 @@ function detectPronoun(prompt){
   if(p.startsWith('you '))     return p.includes('(fem') ? PRONOUNS.you_fem : PRONOUNS.you_masc;
   if(p.startsWith('he '))      return PRONOUNS.he;
   if(p.startsWith('she '))     return PRONOUNS.she;
-  if(p.startswith('we '))      return PRONOUNS.we;
+  if(p.startsWith('we '))      return PRONOUNS.we;
   if(p.startsWith('they '))    return PRONOUNS.they;
   if(p.startsWith('y’all'))    return PRONOUNS.yall;
   return '';
@@ -220,46 +309,125 @@ function detectPronoun(prompt){
 function updateTimerLabel(){
   timerLabel.textContent = isBonus ? '--' : `${currentTime} sec`;
 }
-
 function setBonusUI(on){
   isBonus = on;
   bonusPill.classList.toggle('hidden', !on);
   t1Bonus.disabled = !on;
   t2Bonus.disabled = !on;
-  startPauseBtn.disabled = on; // freeze timer during bonus
   updateTimerLabel();
 }
 
-/* ------------- Timer controls ------------- */
+/* ------------- Timer ------------- */
 function stopTimer(){
   if(timerId){ clearInterval(timerId); timerId = null; }
   timerRunning = false;
-  startPauseBtn.textContent = 'Start';
 }
 function startTimer(){
-  if(isBonus) return; // frozen during bonus
+  if(isBonus) return;
   stopTimer();
   timerRunning = true;
-  startPauseBtn.textContent = 'Pause';
   timerId = setInterval(()=>{
-    if(currentTime>0){ currentTime--; updateTimerLabel(); }
-    else { stopTimer(); }
+    if(currentTime>0){
+      currentTime--;
+      updateTimerLabel();
+      if(currentTime % 2 === 0) tick(); // subtle tick every 2 seconds
+    } else {
+      stopTimer(); ding();
+    }
   },1000);
 }
-function startPause(){
-  if(isBonus) return;
-  if(timerRunning) stopTimer(); else startTimer();
+
+/* ------------- Confetti ------------- */
+function confettiBurst(colorA, colorB){
+  const COUNT = 80;
+  for(let i=0;i<COUNT;i++){
+    const d = document.createElement('div');
+    d.className = 'piece';
+    const x = Math.random()*100+'vw';
+    const dx = (Math.random()*40 - 20)+'vw';
+    d.style.setProperty('--x', x);
+    d.style.setProperty('--dx', dx);
+    d.style.left = Math.random()*100+'%';
+    d.style.background = Math.random()<0.5 ? colorA : colorB;
+    confettiLayer.appendChild(d);
+    setTimeout(()=>d.remove(), 1600);
+  }
+}
+
+/* ------------- Scores / Streaks ------------- */
+function renderScores(){
+  t1ScoreEl.textContent = String(score1);
+  t2ScoreEl.textContent = String(score2);
+  // progress bars: share of total (avoid div by zero)
+  const total = Math.max(1, score1 + score2);
+  t1Bar.style.width = (score1/total*100).toFixed(0) + '%';
+  t2Bar.style.width = (score2/total*100).toFixed(0) + '%';
+}
+function updateStreak(team, deltaPositive){
+  if(team===1){
+    streak1 = deltaPositive ? streak1+1 : 0;
+    t1StreakEl.textContent = `Streak: ${streak1}`;
+    if(streak1>=3){
+      score1+=1; streak1=0; t1StreakEl.textContent = `Streak: ${streak1} (bonus applied)`;
+      renderScores(); ding();
+    }
+  } else {
+    streak2 = deltaPositive ? streak2+1 : 0;
+    t2StreakEl.textContent = `Streak: ${streak2}`;
+    if(streak2>=3){
+      score2+=1; streak2=0; t2StreakEl.textContent = `Streak: ${streak2} (bonus applied)`;
+      renderScores(); ding();
+    }
+  }
+}
+
+/* ------------- Rounds ------------- */
+function setRounds(n){
+  totalRounds = n;
+  roundTotalEl.textContent = String(totalRounds);
+  currentRound = 1;
+  roundNowEl.textContent = String(currentRound);
+  roundFillEl.style.width = (currentRound-1)/Math.max(1,totalRounds)*100 + '%';
+  banner.classList.add('hidden');
+  roundStartScores = {t1:score1, t2:score2};
+}
+function finishRoundAndAdvance(){
+  // compute deltas
+  const d1 = score1 - roundStartScores.t1;
+  const d2 = score2 - roundStartScores.t2;
+  let text = '';
+  if(d1> d2) text = 'Round winner: Team 1';
+  else if(d2> d1) text = 'Round winner: Team 2';
+  else text = 'Round tied';
+  banner.textContent = text;
+  banner.classList.remove('hidden');
+
+  // advance
+  if(currentRound < totalRounds){
+    currentRound++;
+    roundNowEl.textContent = String(currentRound);
+    roundFillEl.style.width = ((currentRound-1)/Math.max(1,totalRounds))*100 + '%';
+    roundStartScores = {t1:score1, t2:score2};
+  } else {
+    // end-of-game banner
+    const final = score1===score2 ? 'Game tied' : (score1>score2 ? 'Game winner: Team 1' : 'Game winner: Team 2');
+    banner.textContent = final;
+  }
 }
 
 /* ------------- Flow ------------- */
 function nextQuestion(){
+  // close previous round and move to next
+  finishRoundAndAdvance();
+
   // reset timer to selected value
   currentTime = timerSeconds;
   updateTimerLabel();
   answerLabel.textContent = '';
+  banner.scrollIntoView({behavior:'smooth', block:'center'});
 
-  // choose new prompt (English only)
-  currentPrompt = randomPrompt();
+  // pick prompt (English only)
+  currentPrompt = randomPromptFromPool();
   promptLabel.textContent = currentPrompt;
 
   // maybe bonus (English food only in question)
@@ -272,56 +440,94 @@ function nextQuestion(){
     currentFoodIndex = null;
     foodLabel.textContent = '';
     setBonusUI(false);
-    // auto-start timer on Next Question (as requested)
-    startTimer();
+    startTimer(); // auto-start timer
   }
 }
 
 function showAnswer(){
-  // Build Syriac-only answer: pronoun + (ܒܸܕ if future) + verb (+ Syriac food)
+  // Syriac-only answer: pronoun + (ܒܸܕ if future) + verb (+ Syriac food)
   const base = PHRASES[currentPrompt] || '';
   const pron = detectPronoun(currentPrompt);
   const fut  = isFuture(currentPrompt);
   const verb = stripBed(base);
   let built  = fut ? `${pron}  ܒܸܕ  ${verb}` : `${pron}  ${verb}`;
-  if(currentFoodIndex !== null){
-    built += `  ${FOODS_SY[currentFoodIndex]}`; // Syriac only (no English gloss)
-  }
+  if(currentFoodIndex !== null){ built += `  ${FOODS_SY[currentFoodIndex]}`; }
   answerLabel.textContent = built;
 }
 
-/* ------------- Scores ------------- */
-function renderScores(){
-  t1ScoreEl.textContent = String(score1);
-  t2ScoreEl.textContent = String(score2);
+/* ------------- Button handlers ------------- */
+function addPoints(team, delta){
+  if(team===1){
+    score1 = Math.max(0, score1 + delta);
+    renderScores();
+    updateStreak(1, delta>0);
+  } else {
+    score2 = Math.max(0, score2 + delta);
+    renderScores();
+    updateStreak(2, delta>0);
+  }
+  if(delta>0) ding(); else if(delta<0) beep(300,0.06,'square',0.06);
 }
-t1Plus.onclick = ()=>{ score1=Math.max(0,score1+1); renderScores(); };
-t1Minus.onclick= ()=>{ score1=Math.max(0,score1-1); renderScores(); };
-t1Bonus.onclick= ()=>{ if(isBonus){ score1=Math.max(0,score1+2); renderScores(); } };
+function addBonus(team){
+  if(!isBonus) return;
+  addPoints(team, 2);
+  bonusSnd();
+  // confetti in team color
+  const cA = team===1 ? t1Color.value : t2Color.value;
+  const cB = '#ffffff';
+  confettiBurst(cA, cB);
+}
 
-t2Plus.onclick = ()=>{ score2=Math.max(0,score2+1); renderScores(); };
-t2Minus.onclick= ()=>{ score2=Math.max(0,score2-1); renderScores(); };
-t2Bonus.onclick= ()=>{ if(isBonus){ score2=Math.max(0,score2+2); renderScores(); } };
+t1Plus.onclick = ()=>addPoints(1,1);
+t1Minus.onclick= ()=>addPoints(1,-1);
+t1Bonus.onclick= ()=>addBonus(1);
 
-resetScoresBtn.onclick = ()=>{ score1=0; score2=0; renderScores(); };
+t2Plus.onclick = ()=>addPoints(2,1);
+t2Minus.onclick= ()=>addPoints(2,-1);
+t2Bonus.onclick= ()=>addBonus(2);
 
-/* ------------- UI events ------------- */
+resetScoresBtn.onclick = ()=>{ score1=0; score2=0; streak1=0; streak2=0; t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0'; renderScores(); banner.classList.add('hidden'); roundStartScores={t1:0,t2:0}; };
+
 showAnswerBtn.onclick = showAnswer;
 nextBtn.onclick = nextQuestion;
-startPauseBtn.onclick = startPause;
+
 timerSelect.onchange = (e)=>{ timerSeconds = parseInt(e.target.value,10); currentTime = timerSeconds; updateTimerLabel(); };
+roundsSelect.onchange = (e)=>{ setRounds(parseInt(e.target.value,10)); };
+t1Color.oninput = ()=>{ t1Bar.style.background = t1Color.value; };
+t2Color.oninput = ()=>{ t2Bar.style.background = t2Color.value; };
+muteToggle.onchange = (e)=>{ muted = e.target.checked; };
+
 fullscreenBtn.onclick = ()=>{
   const el = document.documentElement;
   if(!document.fullscreenElement){ el.requestFullscreen?.(); } else { document.exitFullscreen?.(); }
 };
 
+/* ------------- Keyboard shortcuts ------------- */
+document.addEventListener('keydown', (e)=>{
+  if(e.target.tagName==='INPUT' || e.target.tagName==='SELECT' || e.target.isContentEditable) return;
+  if(e.key===' '){ e.preventDefault(); if(isBonus){ return; } if(timerRunning){ stopTimer(); } else { startTimer(); } }
+  if(e.key==='Enter'){ e.preventDefault(); nextQuestion(); }
+  if(e.key.toLowerCase()==='a'){ e.preventDefault(); showAnswer(); }
+  if(e.key==='1' && !e.shiftKey){ addPoints(1,1); }
+  if(e.key==='2' && !e.shiftKey){ addPoints(2,1); }
+  if(e.key==='1' && e.shiftKey){ addPoints(1,-1); }
+  if(e.key==='2' && e.shiftKey){ addPoints(2,-1); }
+  if(e.key.toLowerCase()==='b'){ addBonus(1); }
+  if(e.key.toLowerCase()==='n'){ addBonus(2); }
+});
+
 /* ------------- Init ------------- */
 (function init(){
   timerSeconds = parseInt(timerSelect.value,10);
   currentTime = timerSeconds;
-  updateTimerLabel();
+  totalRounds = parseInt(roundsSelect.value,10);
+  roundTotalEl.textContent = String(totalRounds);
+  roundNowEl.textContent = String(currentRound);
+  roundFillEl.style.width = '0%';
   renderScores();
-  nextQuestion(); // load first prompt (will auto-start timer if not a bonus)
+  updateTimerLabel();
+  roundStartScores = {t1:score1, t2:score2};
+  nextQuestion(); // loads first prompt and starts timer if not bonus
 })();
 </script>
 </body>
