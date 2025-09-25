@@ -73,7 +73,6 @@
     .mc .opt.correct{border-color:#16A34A; background:#ECFDF5}
     .mc .opt.wrong{border-color:#DC2626; background:#FEF2F2}
     .lockpill{margin-left:8px}
-    /* Current Team pill tinting */
     #currentTeamPill{border:1px solid var(--line)}
   </style>
 </head>
@@ -140,7 +139,6 @@
     <div class="prompt" id="promptLabel"></div>
     <div class="food" id="foodLabel"></div>
 
-    <!-- Free-response answer (Syriac font) -->
     <div class="answer" id="answerLabel"></div>
 
     <!-- Multiple choice answers -->
@@ -361,10 +359,13 @@ let justFinishedGame=false;
 
 /* Gating */
 let canShowAnswer=false, answerUnlockTimeout=null;
-let mcEnabled=false, mcCorrectIndex=-1;
+let mcEnabled=false;
 let lastRenderedDir='EN2SY';
 let lastRenderedMode='FREE';
 let selectedTeam=0;
+
+/* For MC: we store option objects with a stable flag, not string equality */
+let mcOptions = []; // [{text, correct:true/false, button}]
 
 /* ---------------- Utils ---------------- */
 function hexToRgba(hex, alpha){
@@ -418,13 +419,13 @@ function detectPronounSyFromKey(key){
   if(p.startsWith('y’all')) return PRONOUNS.yall;
   return '';
 }
-function buildSyAnswerFromKey(key, includeFood){
+function buildSyAnswerFromKey(key, foodIndex){
   const base=PHRASES[key]||'';
   const fut=isFuture(key);
   const pron=detectPronounSyFromKey(key);
   const verb=base.replace(/\s*ܒܸܕ\s*$/,'').trim();
   let out=fut?`${pron}  ܒܸܕ  ${verb}`:`${pron}  ${verb}`;
-  if(includeFood && currentFoodIndex!=null) out+=`  ${FOODS_SY[currentFoodIndex]}`;
+  if(foodIndex!=null) out+=`  ${FOODS_SY[foodIndex]}`;
   return out;
 }
 function englishPronounFromKey(key){
@@ -564,8 +565,10 @@ function startNewGameHardReset(){
 function setupLocksForNewQuestion(){
   nextBtn.disabled=true;
   showAnswerBtn.disabled = (lastRenderedMode==='FREE');
-  canShowAnswer=false; mcEnabled=false; mcCorrectIndex=-1;
+  canShowAnswer=false; mcEnabled=false;
+  mcOptions = [];
   mcLock.classList.add('hidden');
+  // Team prompt is ONLY for MC
   teamLock.classList.toggle('hidden', !(lastRenderedMode==='MC' && selectedTeam===0));
 
   if(answerUnlockTimeout){ clearTimeout(answerUnlockTimeout); answerUnlockTimeout=null; }
@@ -575,6 +578,8 @@ function setupLocksForNewQuestion(){
     showAnswerBtn.classList.remove('hidden');
     answerLabel.classList.remove('hidden');
     mcWrap.classList.add('hidden');
+    mcLock.classList.add('hidden');
+    teamLock.classList.add('hidden');
   }else{
     showAnswerBtn.classList.add('hidden');
     answerLabel.classList.add('hidden');
@@ -599,45 +604,76 @@ function maybeEnableMC(){
 }
 
 /* Multiple choice */
-function makeDistractors(correctKey, count, targetLang){
-  const pool=Object.keys(PHRASES).filter(k=>k!==correctKey);
-  const out=[];
-  while(out.length<count && pool.length){
-    const i=Math.floor(Math.random()*pool.length);
-    const k=pool.splice(i,1)[0];
-    const txt=(targetLang==='SY')
-      ? buildSyAnswerFromKey(k, /*food*/ currentFoodIndex!=null)
-      : buildEnAnswerFromKey(k);
-    out.push(txt);
+function uniqueFoodIndices(count, excludeIndex){
+  const all=[...Array(FOODS_EN.length).keys()];
+  const pool=all.filter(i=>i!==excludeIndex);
+  const picks=[];
+  while(picks.length<count && pool.length){
+    const idx=Math.floor(Math.random()*pool.length);
+    picks.push(pool.splice(idx,1)[0]);
   }
-  return out;
+  return picks;
+}
+function makeDistractorKey(correctKey){
+  const pool=Object.keys(PHRASES).filter(k=>k!==correctKey);
+  return pool[Math.floor(Math.random()*pool.length)];
 }
 function clearMC(){
   mcWrap.innerHTML='';
   mcWrap.classList.add('hidden');
   mcLock.classList.add('hidden');
 }
-function renderMC(correctText, targetLang){
-  mcWrap.innerHTML='';
-  mcWrap.classList.remove('hidden');
-  const distractors=makeDistractors(currentPromptKey, 3, targetLang);
-  const options=[correctText, ...distractors].sort(()=>Math.random()-0.5);
-  mcCorrectIndex=options.indexOf(correctText);
+function renderMC_EN2SY(correctKey){
+  // Correct option: uses announced (currentFoodIndex) when bonus; distractors use DIFFERENT foods
+  const correctText = buildSyAnswerFromKey(correctKey, currentFoodIndex);
+  const distractorKeys = [makeDistractorKey(correctKey), makeDistractorKey(correctKey), makeDistractorKey(correctKey)];
+  const foodAlt = isBonus ? uniqueFoodIndices(3, currentFoodIndex) : [null,null,null];
+  const options = [
+    {text: correctText, correct:true},
+    {text: buildSyAnswerFromKey(distractorKeys[0], foodAlt[0]), correct:false},
+    {text: buildSyAnswerFromKey(distractorKeys[1], foodAlt[1]), correct:false},
+    {text: buildSyAnswerFromKey(distractorKeys[2], foodAlt[2]), correct:false},
+  ].sort(()=>Math.random()-0.5);
 
-  options.forEach((txt, idx)=>{
+  mcOptions = options;
+  mcWrap.innerHTML='';
+  options.forEach((opt, idx)=>{
     const btn=document.createElement('button');
     btn.className='opt';
-    btn.textContent=txt;
+    btn.textContent=opt.text;
     btn.onclick=()=>onMCClick(idx);
+    opt.button = btn;
+    mcWrap.appendChild(btn);
+  });
+  enableMCOptions(false);
+}
+function renderMC_SY2EN(correctKey){
+  const correctText = buildEnAnswerFromKey(correctKey);
+  const distractorKeys = [makeDistractorKey(correctKey), makeDistractorKey(correctKey), makeDistractorKey(correctKey)];
+  const options = [
+    {text: correctText, correct:true},
+    {text: buildEnAnswerFromKey(distractorKeys[0]), correct:false},
+    {text: buildEnAnswerFromKey(distractorKeys[1]), correct:false},
+    {text: buildEnAnswerFromKey(distractorKeys[2]), correct:false},
+  ].sort(()=>Math.random()-0.5);
+
+  mcOptions = options;
+  mcWrap.innerHTML='';
+  options.forEach((opt, idx)=>{
+    const btn=document.createElement('button');
+    btn.className='opt';
+    btn.textContent=opt.text;
+    btn.onclick=()=>onMCClick(idx);
+    opt.button = btn;
     mcWrap.appendChild(btn);
   });
   enableMCOptions(false);
 }
 function enableMCOptions(on){
   mcEnabled=on;
-  [...mcWrap.children].forEach(el=>{
-    el.classList.toggle('enabled', on);
-    el.style.cursor = on ? 'pointer' : 'not-allowed';
+  mcOptions.forEach(opt=>{
+    opt.button.classList.toggle('enabled', on);
+    opt.button.style.cursor = on ? 'pointer' : 'not-allowed';
   });
 }
 function pulseTeamCards(){
@@ -657,14 +693,19 @@ function onMCClick(idx){
 
   stopTimer();
 
-  const nodes=[...mcWrap.children];
-  nodes.forEach((n,i)=>{ if(i===mcCorrectIndex) n.classList.add('correct'); });
-  if(idx!==mcCorrectIndex){ nodes[idx].classList.add('wrong'); }
-  nodes.forEach(n=>n.classList.remove('enabled'));
+  // Mark correct/incorrect via flags, not string compare
+  mcOptions.forEach((opt, i)=>{
+    if(opt.correct) opt.button.classList.add('correct');
+  });
+  if(!mcOptions[idx].correct){
+    mcOptions[idx].button.classList.add('wrong');
+  }
+  enableMCOptions(false); // disables clicks
   mcEnabled=false;
 
+  // Scoring
   const deltaCorrect = isBonus ? 2 : 1;
-  if(idx===mcCorrectIndex){
+  if(mcOptions[idx].correct){
     score[selectedTeam]=Math.max(0, score[selectedTeam]+deltaCorrect);
     updateStreak(selectedTeam, true);
     confettiBurst(teamColor(selectedTeam),'#ffffff');
@@ -705,12 +746,13 @@ function nextQuestion(){
 
   currentPromptKey=randomPromptFromPool();
 
+  // BONUS: 20% chance, announce one food (correct option must use THIS food)
   if(Math.random()<0.20){
     currentFoodIndex=Math.floor(Math.random()*FOODS_EN.length);
     foodLabel.textContent=`Bonus Round: ${FOODS_EN[currentFoodIndex]}`;
     bonusPill.classList.remove('hidden');
     isBonus=true;
-    stopTimer();
+    stopTimer(); // no timer in bonus (per earlier behavior)
   }else{
     currentFoodIndex=null; foodLabel.textContent='';
     bonusPill.classList.add('hidden');
@@ -719,21 +761,21 @@ function nextQuestion(){
   }
 
   if(dir==='EN2SY'){
+    // English prompt only
     promptLabel.textContent = currentPromptKey;
     if(lastRenderedMode==='FREE'){
       answerLabel.textContent='';
     }else{
-      const correctSY=buildSyAnswerFromKey(currentPromptKey, true);
-      renderMC(correctSY, 'SY');
+      renderMC_EN2SY(currentPromptKey);
     }
   }else{
-    const promptSY = buildSyAnswerFromKey(currentPromptKey, true);
+    // Assyrian prompt (includes pronoun and possibly food if bonus)
+    const promptSY = buildSyAnswerFromKey(currentPromptKey, currentFoodIndex);
     promptLabel.textContent = promptSY;
     if(lastRenderedMode==='FREE'){
       answerLabel.textContent='';
     }else{
-      const correctEN=buildEnAnswerFromKey(currentPromptKey);
-      renderMC(correctEN, 'EN');
+      renderMC_SY2EN(currentPromptKey);
     }
   }
 
@@ -745,7 +787,7 @@ function showAnswer(){
   if(!canShowAnswer) return;
   stopTimer();
   if(lastRenderedDir==='EN2SY'){
-    answerLabel.textContent = buildSyAnswerFromKey(currentPromptKey, true);
+    answerLabel.textContent = buildSyAnswerFromKey(currentPromptKey, currentFoodIndex);
   }else{
     answerLabel.textContent = buildEnAnswerFromKey(currentPromptKey);
   }
@@ -853,21 +895,21 @@ function initFirstQuestion(forceFresh=false){
   if(forceFresh){ currentRound=1; roundNowEl.textContent='1'; roundFillEl.style.width='0%'; }
   renderScores(); updateGamesPanel(); updateTimerLabel();
 
-  directionMode=dirSelect.value;
-  qtype=qtypeSelect.value;
-  lastRenderedDir = (directionMode==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionMode;
-  lastRenderedMode = (qtype==='MIXED') ? (Math.random()<0.5?'FREE':'MC') : qtype;
+  const directionModeInit=dirSelect.value;
+  const qtypeInit=qtypeSelect.value;
+  lastRenderedDir = (directionModeInit==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionModeInit;
+  lastRenderedMode = (qtypeInit==='MIXED') ? (Math.random()<0.5?'FREE':'MC') : qtypeInit;
 
   selectedTeam=0; setActiveTeamHighlight();
   isBonus=false; currentFoodIndex=null; foodLabel.textContent=''; bonusPill.classList.add('hidden');
 
   currentPromptKey=randomPromptFromPool();
   if(lastRenderedDir==='EN2SY'){ promptLabel.textContent=currentPromptKey; }
-  else{ promptLabel.textContent=buildSyAnswerFromKey(currentPromptKey, true); }
+  else{ promptLabel.textContent=buildSyAnswerFromKey(currentPromptKey, currentFoodIndex); }
 
   if(lastRenderedMode==='MC'){
-    if(lastRenderedDir==='EN2SY'){ renderMC(buildSyAnswerFromKey(currentPromptKey, true), 'SY'); }
-    else{ renderMC(buildEnAnswerFromKey(currentPromptKey), 'EN'); }
+    if(lastRenderedDir==='EN2SY'){ renderMC_EN2SY(currentPromptKey); }
+    else{ renderMC_SY2EN(currentPromptKey); }
   }else{
     clearMC(); answerLabel.textContent='';
   }
