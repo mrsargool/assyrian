@@ -27,8 +27,8 @@
     .btn.primary{background:var(--accent)}
     .btn.success{background:var(--success)}
     .btn.neutral{background:#334155}
-    .btn.danger{background:var(--danger)}
-    .btn.warn{background:var(--warn)}
+    .btn.danger{background:#DC2626}
+    .btn.warn{background:#D97706}
     .btn:disabled{opacity:.6; cursor:not-allowed}
     .pill{display:inline-block; padding:2px 10px; border-radius:999px; background:#EEF2FF; color:#3730A3; font-weight:700; font-size:12px;}
     .timer{font-size:56px; font-weight:800; color:var(--accent); margin:4px 0 8px}
@@ -41,8 +41,7 @@
     .legend{color:var(--muted); font-size:12px}
     .scores .team{min-width:260px; border-radius:16px; padding:14px; border:2px solid var(--line); background:#fff; transition:background .2s,border-color .2s, box-shadow .2s}
     .scores .team.active{box-shadow:0 0 0 3px rgba(14,165,233,.25); border-color:var(--active)}
-    .scores .team.answering{box-shadow:0 0 0 3px rgba(16,163,74,.4); border-color:var(--success)}
-    .scores .team-title{font-size:18px; font-weight:800; margin-bottom:6px}
+    .scores .team-title{font-size:18px; font-weight:800; margin-bottom:6px; cursor:pointer}
     .scores .score{font-size:26px; font-weight:800; margin:6px 0}
     .scores .grid{display:flex; gap:6px; flex-wrap:wrap}
     .point{padding:8px 10px; border-radius:10px; background:#E2E8F0; color:#0F172A; font-weight:800; border:1px solid #CBD5E1; cursor:pointer;}
@@ -61,28 +60,13 @@
     .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:50}
     .modal{background:#fff; border-radius:16px; padding:20px; max-width:640px; width:92%; border:1px solid var(--line); text-align:center}
     .modal h2{margin-top:0; font-size:24px}
-    
     /* Multiple choice */
     .mc{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
-    .mc .opt{flex:1 1 48%; padding:12px; border:2px solid var(--line); border-radius:10px; background:#fff; cursor:pointer; font-weight:600; text-align:center; transition:all 0.2s;}
-    .mc .opt:hover{background:#F8FAFC; border-color:#94A3B8;}
-    .mc .opt.disabled{cursor:not-allowed; opacity:0.6;}
-    .mc .opt.disabled:hover{background:#fff; border-color:var(--line);}
-    .mc .opt.correct{border-color:#16A34A; background:#DCFCE7; color:#15803D;}
-    .mc .opt.incorrect{border-color:#DC2626; background:#FEF2F2; color:#DC2626;}
-    
-    /* Team answer buttons */
-    .team-answer-btn{
-      padding:12px 18px; border-radius:12px; font-weight:700; cursor:pointer; 
-      border:2px solid transparent; transition:all 0.2s; margin:4px 0;
-      background:#F1F5F9; color:#334155;
-    }
-    .team-answer-btn:hover{background:#E2E8F0;}
-    .team-answer-btn.active{border-color:var(--success); background:#ECFDF5; color:var(--success);}
-    .team-answer-btn:disabled{opacity:0.5; cursor:not-allowed;}
-    
+    .mc .opt{flex:1 1 48%; padding:10px; border:1px solid var(--line); border-radius:10px; background:#fff; cursor:not-allowed}
+    .mc .opt.enabled{cursor:pointer; background:#F8FAFC}
+    .mc .opt.correct{border-color:#16A34A; background:#ECFDF5}
+    .mc .opt.wrong{border-color:#DC2626; background:#FEF2F2}
     .lockpill{margin-left:8px}
-    .answer-phase{background:#FEF3C7; border:1px solid #F59E0B; color:#92400E; padding:12px; border-radius:8px; margin:8px 0; text-align:center; font-weight:600;}
   </style>
 </head>
 <body>
@@ -112,7 +96,7 @@
         </select>
 
         <label class="legend" for="qtypeSelect">Question type:</label>
-        <select id="qtypeSelect" title="Free Response or Multiple Choice or Mixed">
+        <select id="qtypeSelect" title="Free / Multiple Choice / Mixed">
           <option value="FREE" selected>Free Response</option>
           <option value="MC">Multiple Choice</option>
           <option value="MIXED">Mixed</option>
@@ -124,8 +108,8 @@
           <option value="3">3 Players</option>
         </select>
 
+        <button class="btn warn" id="resetGameBtn" title="Reset rounds, scores, and start from Round 1">Reset Game</button>
         <button class="btn danger" id="resetScoresBtn" title="Reset all teams to 0">Reset Scores</button>
-        <button class="btn warn" id="resetGameBtn" title="Reset game to round 1 with new question">Reset Game</button>
       </div>
     </header>
 
@@ -148,26 +132,17 @@
     <!-- Free-response answer (Syriac font) -->
     <div class="answer" id="answerLabel"></div>
 
-    <!-- Multiple choice section -->
-    <div id="mcSection" class="hidden">
-      <!-- Team selection for MC -->
-      <div id="teamAnswerPhase" class="answer-phase hidden">
-        <div style="margin-bottom:8px;">Which team is answering this question?</div>
-        <div id="teamAnswerBtns"></div>
-      </div>
-      
-      <!-- Multiple choice answers -->
-      <div id="mcWrap" class="mc"></div>
-    </div>
-    
-    <span id="mcLock" class="pill lockpill hidden">Options unlock after 10 sec</span>
+    <!-- Multiple choice answers -->
+    <div id="mcWrap" class="mc hidden"></div>
+    <span id="mcLock" class="pill lockpill hidden">Options unlock after 10 sec and when a team is selected</span>
+    <span id="teamLock" class="pill lockpill hidden">Select your team to enable answering</span>
 
     <div class="row" style="margin-top:8px">
       <button class="btn success" id="showAnswerBtn" title="Reveal the answer and stop the timer" disabled>Show Answer</button>
       <button class="btn primary" id="nextBtn" title="Next random prompt (auto-starts timer)" disabled>Next Question</button>
       <span id="bonusPill" class="pill hidden">BONUS ROUND</span>
       <div class="spacer"></div>
-      <div class="note">Shortcuts: Space=Start/Pause • Enter=Next • A=Show • 1/2/3=+1 • Shift+1/2/3=−1 • B/N/M=+2 bonus</div>
+      <div class="note">Shortcuts: Space=Start/Pause • Enter=Next • A=Show • Click a team name to set who’s answering</div>
     </div>
 
     <div class="card scores" style="margin-top:14px">
@@ -269,154 +244,628 @@ const PHRASES = {
   "we will order": "ܛܵܠܒܲܚ ܒܸܕ",
   "they order": "ܛܵܠܒܝܼ",
   "they will order": "ܛܵܠܒܝܼ ܒܸܕ",
-  "y'all order": "ܛܵܠܒܝܼܬܘܿܢ",
-  "y'all will order": "ܛܵܠܒܝܼܬܘܿܢ ܒܸܕ",
+  "y’all order": "ܛܵܠܒܝܼܬܘܿܢ",
+  "y’all will order": "ܛܵܠܒܝܼܬܘܿܢ ܒܸܕ",
 };
 
 const PRONOUNS = {
-  i_masc: "ܐܵܢܵܐ", i_fem: "ܐܵܢܵܐ", you_masc:"ܐܲܢ݇ܬ", you_fem: "ܐܲܢ݇ܬܝ",
-  he: "ܗ̇ܘ", she: "ܗ̇ܝ", we: "ܐܲܚܢܲܢ", yall: "ܐܲܚܬܘܿܢ", they: "ܐܵܢܝܼ",
+  i_masc: "ܐܵܢܵܐ",
+  i_fem:  "ܐܵܢܵܐ",
+  you_masc:"ܐܲܢ݇ܬ",
+  you_fem: "ܐܲܢ݇ܬܝ",
+  he:      "ܗ̇ܘ",
+  she:     "ܗ̇ܝ",
+  we:      "ܐܲܚܢܲܢ",
+  yall:    "ܐܲܚܬܘܿܢ",
+  they:    "ܐܵܢܝܼ",
 };
 
+// Foods EN/SY aligned
 const FOODS_EN = ["potatoes","rice","beans","stew","kabobs","chicken","steak","lamb","fish","fries","water","fizzy drinks","yogurt drink","lemonade","orange juice","dolma","red rice","okra stew","yogurt","Assyrian egg rolls","tea","coffee","hummus","baba ganosh","salad","pickles","meatballs"];
-const FOODS_SY = ["ܟܸܪܬܘܿܦܹ̈ܐ","ܪܸܙܵܐ","ܚܲܒ̣ܨܹ̈ܐ","ܫܘܼܪܒ̣ܵܐ","ܟܵܒܵܒܹ̈ܐ","ܟܬܵܝܬܵܐ","ܒܸܣܪܵܐ","ܥܸܪܒܵܐ","ܢܘܼܢܵܐ","ܟܸܪܬܘܿܦܹ̈ܐ ܩܸܠܝܹ̈ܐ","ܡܝܼܵܐ","ܫܬܵܝܬܵܐ ܒܲܩܒܸܩܵܢܵܐ","ܕܲܘܹ̈ܐ","ܡܝܼܵܐ ܕܠܝܼܡܘܿܢܹ̈ܐ","ܡܝܼܵܐ ܕܦܘܼܪ̈ܬܩܵܠܹܐ","ܕܘܿܠܡܵܐ","ܪܸܙܵܐ ܣܡܘܿܩܵܐ","ܒܲܡܝܹ̈ܐ","ܡܲܣܬܵܐ","ܒܘܼܪܲܟ","ܟ̰ܵܐܝ","ܩܲܗܘܵܐ","ܚܲܪ̈ܛܡܵܢܹܐ ܓܪ̈ܝܼܣܹܐ","ܒܵܕܸܡܓ̰ܵܢܹ̈ܐ ܓܪ̈ܝܼܣܹܐ","ܣܲܠܵܛܵܐ","ܛܘܼܪ̈ܫܝܹܐ","ܟܸܦܬܹ̈ܐ"];
+const FOODS_SY = ["ܟܸܪܬܘܿܦܹ̈ܐ","ܪܸܙܵܐ","ܚܲܒ̣ܨܹ̈ܐ","ܫܘܼܪܒ̣ܵܐ","ܟܵܒܵܒܹ̈ܐ","ܟܬܵܝܬܵܐ","ܒܸܣܪܵܐ","ܥܸܪܒܵܐ","ܢܘܼܢܵܐ","ܟܸܪܬܘܿܦܹ̈ܐ ܩܸܠܝܹ̈ܐ","ܡܝܼܵܐ","ܫܬܵܝܬܵܐ ܒܲܩܒܸܩܵܢܵܐ","ܕܲܘܹ̈ܐ","ܡܝܼܵܐ ܕܠܝܼܡܘܿܢܹ̈ܐ","ܡܝܼܵܐ ܕܦܘܼܪ̈ܬܩܵܠܹܐ","ܕܘܿܠܡܵܐ","ܪܸܙܵܐ ܣܡܘܿܩܵܐ","ܒܲܡܝܹ̈ܐ","ܡܲܣܬܵܐ","ܒܘܼܪܲܟ","ܟ̰ܵܐܝ","ܩܲܗܘܵܐ","ܚܲܪ̈ܛܡܵܢܹܐ ܓܪ̈ܝܼܣܹܐ","ܒܵܕܸܡܓ̰ܵܢܹ̈ܐ ܓܪ̈ܝܼܣܹܐ","ܣܲܠܵܛܵܐ","ܛܘܼܪ̈ܫܝܹܐ","ܟܸܦܬܹ̈ܐ"];
 
-/* ---------------- DOM ELEMENTS ---------------- */
-const timerLabel = document.getElementById('timerLabel');
-const promptLabel = document.getElementById('promptLabel');
-const foodLabel = document.getElementById('foodLabel');
-const answerLabel = document.getElementById('answerLabel');
-const mcSection = document.getElementById('mcSection');
-const mcWrap = document.getElementById('mcWrap');
-const mcLock = document.getElementById('mcLock');
-const teamAnswerPhase = document.getElementById('teamAnswerPhase');
-const teamAnswerBtns = document.getElementById('teamAnswerBtns');
+/* ---------------- DOM ---------------- */
+const timerLabel=document.getElementById('timerLabel');
+const promptLabel=document.getElementById('promptLabel');
+const foodLabel=document.getElementById('foodLabel');
+const answerLabel=document.getElementById('answerLabel');
+const mcWrap=document.getElementById('mcWrap');
+const mcLock=document.getElementById('mcLock');
+const teamLock=document.getElementById('teamLock');
 
-const nextBtn = document.getElementById('nextBtn');
-const showAnswerBtn = document.getElementById('showAnswerBtn');
-const resetGameBtn = document.getElementById('resetGameBtn');
+const nextBtn=document.getElementById('nextBtn');
+const showAnswerBtn=document.getElementById('showAnswerBtn');
 
-const timerSelect = document.getElementById('timerSelect');
-const roundsSelect = document.getElementById('roundsSelect');
-const dirSelect = document.getElementById('dirSelect');
-const qtypeSelect = document.getElementById('qtypeSelect');
-const playersSelect = document.getElementById('playersSelect');
+const timerSelect=document.getElementById('timerSelect');
+const roundsSelect=document.getElementById('roundsSelect');
+const dirSelect=document.getElementById('dirSelect');
+const qtypeSelect=document.getElementById('qtypeSelect');
+const playersSelect=document.getElementById('playersSelect');
 
-const noRepeat = document.getElementById('noRepeat');
-const fullscreenBtn = document.getElementById('fullscreenBtn');
-const resetScoresBtn = document.getElementById('resetScoresBtn');
-const bonusPill = document.getElementById('bonusPill');
-const endNote = document.getElementById('endNote');
+const noRepeat=document.getElementById('noRepeat');
+const fullscreenBtn=document.getElementById('fullscreenBtn');
+const resetScoresBtn=document.getElementById('resetScoresBtn');
+const resetGameBtn=document.getElementById('resetGameBtn');
+const bonusPill=document.getElementById('bonusPill');
+const endNote=document.getElementById('endNote');
 
-const scoreElements = [null, document.getElementById('t1Score'), document.getElementById('t2Score'), document.getElementById('t3Score')];
-const cardElements = [null, document.getElementById('t1Card'), document.getElementById('t2Card'), document.getElementById('t3Card')];
-const colorElements = [null, document.getElementById('t1Color'), document.getElementById('t2Color'), document.getElementById('t3Color')];
-const barElements = [null, document.getElementById('t1Bar'), document.getElementById('t2Bar'), document.getElementById('t3Bar')];
-const titleElements = [null, document.getElementById('t1Title'), document.getElementById('t2Title'), document.getElementById('t3Title')];
-const nameElements = [null, document.getElementById('t1Name'), document.getElementById('t2Name'), document.getElementById('t3Name')];
-const streakElements = [null, document.getElementById('t1Streak'), document.getElementById('t2Streak'), document.getElementById('t3Streak')];
+const t1ScoreEl=document.getElementById('t1Score');
+const t2ScoreEl=document.getElementById('t2Score');
+const t3ScoreEl=document.getElementById('t3Score');
+const t1Plus=document.getElementById('t1Plus');
+const t1Minus=document.getElementById('t1Minus');
+const t1Bonus=document.getElementById('t1Bonus');
+const t2Plus=document.getElementById('t2Plus');
+const t2Minus=document.getElementById('t2Minus');
+const t2Bonus=document.getElementById('t2Bonus');
+const t3Plus=document.getElementById('t3Plus');
+const t3Minus=document.getElementById('t3Minus');
+const t3Bonus=document.getElementById('t3Bonus');
 
-// Button elements for manual scoring
-const plusButtons = [null, document.getElementById('t1Plus'), document.getElementById('t2Plus'), document.getElementById('t3Plus')];
-const minusButtons = [null, document.getElementById('t1Minus'), document.getElementById('t2Minus'), document.getElementById('t3Minus')];
-const bonusButtons = [null, document.getElementById('t1Bonus'), document.getElementById('t2Bonus'), document.getElementById('t3Bonus')];
+const t1Color=document.getElementById('t1Color');
+const t2Color=document.getElementById('t2Color');
+const t3Color=document.getElementById('t3Color');
+const t1Bar=document.getElementById('t1Bar');
+const t2Bar=document.getElementById('t2Bar');
+const t3Bar=document.getElementById('t3Bar');
 
-const roundNowEl = document.getElementById('roundNow');
-const roundTotalEl = document.getElementById('roundTotal');
-const roundFillEl = document.getElementById('roundFill');
-const banner = document.getElementById('banner');
-const gamesTally = document.getElementById('gamesTally');
-const gameLeader = document.getElementById('gameLeader');
+const t1Card=document.getElementById('t1Card');
+const t2Card=document.getElementById('t2Card');
+const t3Card=document.getElementById('t3Card');
 
-const modalWrap = document.getElementById('modalWrap');
-const modalTitle = document.getElementById('modalTitle');
-const modalBody = document.getElementById('modalBody');
-const modalClose = document.getElementById('modalClose');
-const confettiLayer = document.getElementById('confetti');
+const t1Title=document.getElementById('t1Title');
+const t2Title=document.getElementById('t2Title');
+const t3Title=document.getElementById('t3Title');
 
-/* ---------------- GAME STATE ---------------- */
-let timerSeconds = 30, currentTime = 30, timerId = null, timerRunning = false;
-let currentPromptKey = '', isBonus = false, currentFoodIndex = null;
-let directionMode = 'EN2SY', qtype = 'FREE', players = 2;
-let score = [0, 0, 0, 0], streak = [0, 0, 0, 0], gamesWon = [0, 0, 0, 0];
-let totalRounds = 10, currentRound = 1;
-let promptsPool = Object.keys(PHRASES), unusedPrompts = [...promptsPool];
-let roundStartScores = [0, 0, 0, 0];
-let justFinishedGame = false;
+const t1Name=document.getElementById('t1Name');
+const t2Name=document.getElementById('t2Name');
+const t3Name=document.getElementById('t3Name');
 
-// Multiple choice state
-let mcEnabled = false, mcCorrectIndex = -1, mcOptions = [];
-let answeringTeam = null; // Which team is currently answering
-let lastRenderedDir = 'EN2SY', lastRenderedMode = 'FREE';
-let canShowAnswer = false, answerUnlockTimeout = null;
+const t1StreakEl=document.getElementById('t1Streak');
+const t2StreakEl=document.getElementById('t2Streak');
+const t3StreakEl=document.getElementById('t3Streak');
 
-/* ---------------- UTILITY FUNCTIONS ---------------- */
-function hexToRgba(hex, alpha) {
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!m) return `rgba(0,0,0,${alpha})`;
-  const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
+const roundNowEl=document.getElementById('roundNow');
+const roundTotalEl=document.getElementById('roundTotal');
+const roundFillEl=document.getElementById('roundFill');
+const banner=document.getElementById('banner');
+const gamesTally=document.getElementById('gamesTally');
+const gameLeader=document.getElementById('gameLeader');
+
+const modalWrap=document.getElementById('modalWrap');
+const modalTitle=document.getElementById('modalTitle');
+const modalBody=document.getElementById('modalBody');
+const modalClose=document.getElementById('modalClose');
+
+const confettiLayer=document.getElementById('confetti');
+
+/* ---------------- State ---------------- */
+let timerSeconds=30, currentTime=30, timerId=null, timerRunning=false;
+let currentPromptKey='', isBonus=false, currentFoodIndex=null;
+let directionMode='EN2SY';  // EN2SY | SY2EN | BOTH
+let qtype='FREE';           // FREE | MC | MIXED (per-question pick)
+let players=2;              // 2 | 3
+let score=[0,0,0,0];        // 1-indexed: [_, t1, t2, t3]
+let streak=[0,0,0,0];
+let gamesWon=[0,0,0,0];
+let totalRounds=10, currentRound=1;
+let promptsPool=Object.keys(PHRASES), unusedPrompts=[...promptsPool];
+let roundStartScores=[0,0,0,0];
+let justFinishedGame=false;
+
+/* Gating */
+let canShowAnswer=false, answerUnlockTimeout=null;
+let mcEnabled=false, mcCorrectIndex=-1;
+let lastRenderedDir='EN2SY';   // actual dir of current prompt
+let lastRenderedMode='FREE';   // actual mode of current question (FREE/MC)
+let selectedTeam=0;            // 0 until student clicks a team title
+
+/* ---------------- Utils & helpers ---------------- */
+function hexToRgba(hex, alpha){
+  const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if(!m) return `rgba(0,0,0,${alpha})`;
+  const r=parseInt(m[1],16), g=parseInt(m[2],16), b=parseInt(m[3],16);
   return `rgba(${r},${g},${b},${alpha})`;
 }
-
-function teamName(i) {
-  return nameElements[i]?.value.trim() || `Team ${i}`;
-}
-
-function teamColor(i) {
-  return colorElements[i]?.value || '#2563EB';
-}
-
-function setTeamHighlights() {
-  cardElements.forEach((card, idx) => {
-    if (!card || idx === 0) return;
-    card.classList.toggle('answering', idx === answeringTeam);
+function teamName(i){ return (i===1?t1Name.value.trim():i===2?t2Name.value.trim():t3Name.value.trim()) || `Team ${i}`; }
+function teamColor(i){ return i===1?t1Color.value:i===2?t2Color.value:t3Color.value; }
+function setActiveTeamHighlight(){
+  [t1Card,t2Card,t3Card].forEach((el,idx)=>{
+    if(!el) return;
+    const i=idx+1;
+    el.classList.toggle('active', selectedTeam===i);
   });
 }
 
-/* ---------------- PROMPT LOGIC ---------------- */
-function randomPromptFromPool() {
-  if (noRepeat.checked) {
-    if (unusedPrompts.length === 0) unusedPrompts = [...promptsPool];
-    const i = Math.floor(Math.random() * unusedPrompts.length);
-    return unusedPrompts.splice(i, 1)[0];
+/* Prompt helpers */
+function randomPromptFromPool(){
+  if(noRepeat.checked){
+    if(unusedPrompts.length===0) unusedPrompts=[...promptsPool];
+    const i=Math.floor(Math.random()*unusedPrompts.length);
+    return unusedPrompts.splice(i,1)[0];
   }
-  return promptsPool[Math.floor(Math.random() * promptsPool.length)];
+  const keys=promptsPool;
+  return keys[Math.floor(Math.random()*keys.length)];
 }
-
-function isFuture(key) {
-  return key.toLowerCase().includes('will');
-}
-
-function detectPronounSyFromKey(key) {
-  const p = key.toLowerCase();
-  if (p.startsWith('i ')) return p.includes('(fem') ? PRONOUNS.i_fem : PRONOUNS.i_masc;
-  if (p.startsWith('you ')) return p.includes('(fem') ? PRONOUNS.you_fem : PRONOUNS.you_masc;
-  if (p.startsWith('he ')) return PRONOUNS.he;
-  if (p.startsWith('she ')) return PRONOUNS.she;
-  if (p.startsWith('we ')) return PRONOUNS.we;
-  if (p.startsWith('they ')) return PRONOUNS.they;
-  if (p.startsWith('y'all')) return PRONOUNS.yall;
+function isFuture(key){ return key.toLowerCase().includes('will'); }
+function detectPronounSyFromKey(key){
+  const p=key.toLowerCase();
+  if(p.startsWith('i ')) return p.includes('(fem')?PRONOUNS.i_fem:PRONOUNS.i_masc;
+  if(p.startsWith('you ')) return p.includes('(fem')?PRONOUNS.you_fem:PRONOUNS.you_masc;
+  if(p.startsWith('he ')) return PRONOUNS.he;
+  if(p.startsWith('she ')) return PRONOUNS.she;
+  if(p.startsWith('we ')) return PRONOUNS.we;
+  if(p.startsWith('they ')) return PRONOUNS.they;
+  if(p.startsWith('y’all')) return PRONOUNS.yall;
   return '';
 }
-
-function buildSyAnswerFromKey(key, includeFood) {
-  const base = PHRASES[key] || '';
-  const fut = isFuture(key);
-  const pron = detectPronounSyFromKey(key);
-  const verb = base.replace(/\s*ܒܸܕ\s*$/, '').trim();
-  let out = fut ? `${pron}  ܒܸܕ  ${verb}` : `${pron}  ${verb}`;
-  if (includeFood && currentFoodIndex != null) out += `  ${FOODS_SY[currentFoodIndex]}`;
+function buildSyAnswerFromKey(key, includeFood){
+  const base=PHRASES[key]||'';
+  const fut=isFuture(key);
+  const pron=detectPronounSyFromKey(key);
+  const verb=base.replace(/\s*ܒܸܕ\s*$/,'').trim();
+  let out=fut?`${pron}  ܒܸܕ  ${verb}`:`${pron}  ${verb}`;
+  if(includeFood && currentFoodIndex!=null) out+=`  ${FOODS_SY[currentFoodIndex]}`;
   return out;
 }
-
-function englishPronounFromKey(key) {
-  if (key.toLowerCase().startsWith('y'all')) return "y'all";
-  return key.split(' ')[0].replace('(masc.)', '').replace('(fem.)', '').trim();
+function englishPronounFromKey(key){
+  if(key.toLowerCase().startsWith('y’all')) return "y’all";
+  return key.split(' ')[0].replace('(masc.)','').replace('(fem.)','').trim();
+}
+function buildEnAnswerFromKey(key){
+  // Never include "with" here
+  const fut=isFuture(key);
+  let pron=englishPronounFromKey(key);
+  let base=fut?'will order':'orders';
+  const p=pron.toLowerCase();
+  if(!fut && (p==='i'||p==='we'||p==='they'||p==='y’all')) base='order';
+  return `${pron} ${base}`;
 }
 
-function buildEnAnswerFromKey(key) {
-  const fut = isFuture(key);
-  let pron = englishPronounFromKey(key);
-  let base = fut ? 'will order' : 'orders';
-  const p = pron.toLowerCase();
-  if (!fut && (p === 'i' || p === 'we' || p === 'they' || p === 'y'all')) base = '
+/* Timer */
+function updateTimerLabel(){ timerLabel.textContent=isBonus?'--':`${currentTime} sec`; }
+function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } timerRunning=false; }
+function startTimer(){
+  if(isBonus) return;
+  stopTimer();
+  timerRunning=true;
+  timerId=setInterval(()=>{
+    if(currentTime>0){
+      currentTime--; updateTimerLabel();
+      if(!canShowAnswer && currentTime<=timerSeconds-10){ unlockAfterDelay(); }
+    } else { stopTimer(); }
+  },1000);
+}
+
+/* Confetti */
+function confettiBurst(colorA,colorB){
+  const COUNT=80;
+  for(let i=0;i<COUNT;i++){
+    const d=document.createElement('div');
+    d.className='piece';
+    const x=Math.random()*100+'vw';
+    const dx=(Math.random()*40-20)+'vw';
+    d.style.setProperty('--x',x);
+    d.style.setProperty('--dx',dx);
+    d.style.left=Math.random()*100+'%';
+    d.style.background=Math.random()<0.5?colorA:colorB;
+    confettiLayer.appendChild(d);
+    setTimeout(()=>d.remove(),1600);
+  }
+}
+
+/* Scores / Streaks */
+function renderScores(){
+  t1ScoreEl.textContent=String(score[1]);
+  t2ScoreEl.textContent=String(score[2]);
+  if(players===3) t3ScoreEl.textContent=String(score[3]);
+  const total=Math.max(1, score[1]+score[2]+(players===3?score[3]:0));
+  t1Bar.style.width=(score[1]/total*100).toFixed(0)+'%';
+  t2Bar.style.width=(score[2]/total*100).toFixed(0)+'%';
+  t3Bar.style.width=(players===3?(score[3]/total*100).toFixed(0):'0')+'%';
+}
+function updateStreak(team,deltaPositive){
+  streak[team]=deltaPositive?streak[team]+1:0;
+  const el = team===1?t1StreakEl:team===2?t2StreakEl:t3StreakEl;
+  el.textContent=`Streak: ${streak[team]}`;
+  if(streak[team]>=3){
+    score[team]+=1; streak[team]=0;
+    el.textContent=`Streak: 0 (bonus applied)`;
+    renderScores();
+  }
+}
+
+/* Rounds / Games */
+function setRounds(n){
+  totalRounds=n;
+  roundTotalEl.textContent=String(totalRounds);
+  currentRound=1;
+  roundNowEl.textContent=String(currentRound);
+  roundFillEl.style.width=(currentRound-1)/Math.max(1,totalRounds)*100+'%';
+  banner.classList.add('hidden');
+  roundStartScores=[0, score[1], score[2], (players===3?score[3]:0)];
+  endNote.classList.add('hidden');
+  nextBtn.textContent='Next Question';
+  justFinishedGame=false;
+}
+function finishRoundAndAdvance(){
+  const d=[0, score[1]-roundStartScores[1], score[2]-roundStartScores[2], players===3?score[3]-roundStartScores[3]:-Infinity];
+  let winTeam=0, maxDelta=-Infinity;
+  [1,2].concat(players===3?[3]:[]).forEach(t=>{ if(d[t]>maxDelta){maxDelta=d[t]; winTeam=t;} });
+  banner.textContent = (maxDelta<=0) ? 'Round tied' : `Round winner: ${teamName(winTeam)}`;
+  banner.classList.remove('hidden');
+
+  if(currentRound>=totalRounds){
+    const vals=[1,2].concat(players===3?[3]:[]).map(t=>({t, s:score[t]}));
+    const maxScore=Math.max(...vals.map(v=>v.s));
+    const winners=vals.filter(v=>v.s===maxScore).map(v=>v.t);
+    if(winners.length===1){
+      gamesWon[winners[0]]++;
+      modalTitle.textContent='Congratulations!';
+      modalBody.textContent=`Game winner: ${teamName(winners[0])}`;
+      modalWrap.classList.remove('hidden');
+      confettiBurst(teamColor(winners[0]),'#ffffff');
+    }else{
+      modalTitle.textContent='Game Tied';
+      modalBody.textContent='No game winner this time.';
+      modalWrap.classList.remove('hidden');
+    }
+    updateGamesPanel();
+    endNote.innerHTML='Please call over Mr. Sargool and show your results before clicking <strong>Next Question</strong>.<br>(Next game will begin and scores will be reset, but you can see the games counter below.)';
+    endNote.classList.remove('hidden');
+    nextBtn.textContent='Next Question (Next game will begin and scores will be reset …)';
+    justFinishedGame=true;
+  }
+
+  if(currentRound<totalRounds){
+    currentRound++;
+    roundNowEl.textContent=String(currentRound);
+    roundFillEl.style.width=((currentRound-1)/Math.max(1,totalRounds))*100+'%';
+    roundStartScores=[0, score[1], score[2], (players===3?score[3]:0)];
+  }
+}
+function updateGamesPanel(){
+  const parts=[1,2].concat(players===3?[3]:[]).map(t=>`${teamName(t)}: ${gamesWon[t]}`);
+  gamesTally.textContent=parts.join('  •  ');
+  const maxVal=Math.max(...[1,2].concat(players===3?[3]:[]).map(t=>gamesWon[t]));
+  const leaders=[1,2].concat(players===3?[3]:[]).filter(t=>gamesWon[t]===maxVal);
+  gameLeader.textContent = (leaders.length>1) ? 'Games leader: tied' : `Games leader: ${teamName(leaders[0])}`;
+}
+function startNewGameHardReset(){
+  // Full reset to Round 1 and zero scores
+  score=[0,0,0,0]; streak=[0,0,0,0];
+  t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0'; if(players===3) t3StreakEl.textContent='Streak: 0';
+  renderScores();
+  currentRound=1; roundNowEl.textContent='1'; roundFillEl.style.width='0%';
+  banner.classList.add('hidden'); endNote.classList.add('hidden'); modalWrap.classList.add('hidden');
+  justFinishedGame=false;
+  setRounds(parseInt(roundsSelect.value,10)); // resets internal round tracking to 1 as well
+  // Start immediate new question
+  initFirstQuestion(true);
+}
+
+/* Locks / gating */
+function setupLocksForNewQuestion(){
+  nextBtn.disabled=true;
+  showAnswerBtn.disabled = (lastRenderedMode==='FREE'); // only relevant in Free mode
+  canShowAnswer=false; mcEnabled=false; mcCorrectIndex=-1;
+  mcLock.classList.add('hidden');
+  teamLock.classList.toggle('hidden', selectedTeam!==0 || lastRenderedMode==='FREE');
+
+  if(answerUnlockTimeout){ clearTimeout(answerUnlockTimeout); answerUnlockTimeout=null; }
+  answerUnlockTimeout=setTimeout(unlockAfterDelay, 10000);
+
+  if(lastRenderedMode==='FREE'){
+    showAnswerBtn.classList.remove('hidden');
+    answerLabel.classList.remove('hidden');
+    mcWrap.classList.add('hidden');
+  }else{
+    showAnswerBtn.classList.add('hidden');
+    answerLabel.classList.add('hidden');
+    mcWrap.classList.remove('hidden');
+    mcLock.classList.remove('hidden');
+    enableMCOptions(false);
+  }
+}
+function unlockAfterDelay(){
+  canShowAnswer=true;
+  if(lastRenderedMode==='FREE'){
+    showAnswerBtn.disabled=false;
+  }else{
+    maybeEnableMC();
+  }
+}
+function maybeEnableMC(){
+  // Enable MC only if both 10s passed (canShowAnswer) AND a team is selected
+  const ready = canShowAnswer && selectedTeam!==0;
+  enableMCOptions(ready);
+  mcLock.classList.toggle('hidden', canShowAnswer);
+  teamLock.classList.toggle('hidden', selectedTeam!==0);
+}
+
+/* Multiple choice */
+function makeDistractors(correctKey, count, targetLang){
+  const pool=Object.keys(PHRASES).filter(k=>k!==correctKey);
+  const out=[];
+  while(out.length<count && pool.length){
+    const i=Math.floor(Math.random()*pool.length);
+    const k=pool.splice(i,1)[0];
+    const txt=(targetLang==='SY')
+      ? buildSyAnswerFromKey(k, /*food*/ currentFoodIndex!=null)
+      : buildEnAnswerFromKey(k);
+    out.push(txt);
+  }
+  return out;
+}
+function clearMC(){
+  mcWrap.innerHTML='';
+  mcWrap.classList.add('hidden');
+  mcLock.classList.add('hidden');
+}
+function renderMC(correctText, targetLang){
+  mcWrap.innerHTML='';
+  mcWrap.classList.remove('hidden');
+  const distractors=makeDistractors(currentPromptKey, 3, targetLang);
+  const options=[correctText, ...distractors].sort(()=>Math.random()-0.5);
+  mcCorrectIndex=options.indexOf(correctText);
+
+  options.forEach((txt, idx)=>{
+    const btn=document.createElement('button');
+    btn.className='opt';
+    btn.textContent=txt;
+    btn.onclick=()=>onMCClick(idx);
+    mcWrap.appendChild(btn);
+  });
+  enableMCOptions(false);
+}
+function enableMCOptions(on){
+  mcEnabled=on;
+  [...mcWrap.children].forEach(el=>{
+    el.classList.toggle('enabled', on);
+    el.style.cursor = on ? 'pointer' : 'not-allowed';
+  });
+}
+function onMCClick(idx){
+  if(!mcEnabled) return;
+  stopTimer();
+  const nodes=[...mcWrap.children];
+  // paint results
+  nodes.forEach((n,i)=>{
+    if(i===mcCorrectIndex) n.classList.add('correct');
+    if(i===idx && i!==mcCorrectIndex) n.classList.add('wrong');
+    n.classList.remove('enabled');
+  });
+  nextBtn.disabled=false;
+
+  if(selectedTeam===0) return; // safety
+
+  const deltaCorrect = isBonus ? 2 : 1;
+  if(idx===mcCorrectIndex){
+    score[selectedTeam]=Math.max(0, score[selectedTeam]+deltaCorrect);
+    updateStreak(selectedTeam, true);
+    confettiBurst(teamColor(selectedTeam),'#ffffff');
+  }else{
+    score[selectedTeam]=Math.max(0, score[selectedTeam]-1); // penalty
+    updateStreak(selectedTeam, false);
+  }
+  renderScores();
+}
+
+/* Flow */
+function chooseActualMode(){
+  if(qtype==='MIXED'){
+    return Math.random()<0.5 ? 'FREE' : 'MC';
+  }
+  return qtype; // FREE or MC
+}
+function nextQuestion(){
+  if(!modalWrap.classList.contains('hidden')) return;
+  if(justFinishedGame){ startNewGameHardReset(); return; }
+
+  finishRoundAndAdvance();
+
+  currentTime=timerSeconds; updateTimerLabel();
+  answerLabel.textContent='';
+  clearMC();
+
+  // reset selected team for this question
+  selectedTeam=0; setActiveTeamHighlight();
+
+  // Direction for this question
+  directionMode=document.getElementById('dirSelect').value;
+  const dir = (directionMode==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionMode;
+  lastRenderedDir = dir;
+
+  // Mode for this question
+  qtype = document.getElementById('qtypeSelect').value;
+  lastRenderedMode = chooseActualMode();
+
+  // pick prompt
+  currentPromptKey=randomPromptFromPool();
+
+  // maybe bonus (label only; no "with")
+  if(Math.random()<0.20){
+    currentFoodIndex=Math.floor(Math.random()*FOODS_EN.length);
+    foodLabel.textContent=`Bonus Round: ${FOODS_EN[currentFoodIndex]}`;
+    bonusPill.classList.remove('hidden');
+    isBonus=true;
+    stopTimer(); // frozen during bonus
+  }else{
+    currentFoodIndex=null; foodLabel.textContent='';
+    bonusPill.classList.add('hidden');
+    isBonus=false;
+    startTimer();
+  }
+
+  // Render prompt/answers by dir & mode
+  if(dir==='EN2SY'){
+    // English prompt
+    promptLabel.textContent = currentPromptKey;
+
+    if(lastRenderedMode==='FREE'){
+      answerLabel.textContent='';
+    }else{
+      const correctSY=buildSyAnswerFromKey(currentPromptKey, true);
+      renderMC(correctSY, 'SY');
+    }
+  }else{ // SY2EN
+    const promptSY = buildSyAnswerFromKey(currentPromptKey, true);
+    promptLabel.textContent = promptSY;
+
+    if(lastRenderedMode==='FREE'){
+      answerLabel.textContent='';
+    }else{
+      const correctEN=buildEnAnswerFromKey(currentPromptKey);
+      renderMC(correctEN, 'EN');
+    }
+  }
+
+  setupLocksForNewQuestion();
+}
+
+function showAnswer(){
+  if(lastRenderedMode!=='FREE') return;
+  if(!canShowAnswer) return;
+  stopTimer();
+
+  if(lastRenderedDir==='EN2SY'){
+    answerLabel.textContent = buildSyAnswerFromKey(currentPromptKey, true);
+  }else{
+    answerLabel.textContent = buildEnAnswerFromKey(currentPromptKey);
+  }
+  nextBtn.disabled=false;
+}
+
+/* Buttons */
+function addPoints(team,delta){
+  score[team]=Math.max(0,score[team]+delta);
+  renderScores();
+  updateStreak(team, delta>0);
+}
+function addBonus(team){
+  if(!isBonus) return;
+  addPoints(team,2);
+  confettiBurst(teamColor(team),'#ffffff');
+}
+t1Plus.onclick=()=>addPoints(1,1);
+t1Minus.onclick=()=>addPoints(1,-1);
+t1Bonus.onclick=()=>addBonus(1);
+t2Plus.onclick=()=>addPoints(2,1);
+t2Minus.onclick=()=>addPoints(2,-1);
+t2Bonus.onclick=()=>addBonus(2);
+if(t3Plus) t3Plus.onclick=()=>addPoints(3,1);
+if(t3Minus) t3Minus.onclick=()=>addPoints(3,-1);
+if(t3Bonus) t3Bonus.onclick=()=>addBonus(3);
+
+resetScoresBtn.onclick=()=>{ score=[0,0,0,0]; streak=[0,0,0,0]; t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0'; if(players===3) t3StreakEl.textContent='Streak: 0'; renderScores(); banner.classList.add('hidden'); roundStartScores=[0,score[1],score[2],(players===3?score[3]:0)]; };
+resetGameBtn.onclick=startNewGameHardReset;
+
+showAnswerBtn.onclick=showAnswer;
+nextBtn.onclick=nextQuestion;
+
+/* Selects */
+timerSelect.onchange=(e)=>{ timerSeconds=parseInt(e.target.value,10); currentTime=timerSeconds; updateTimerLabel(); };
+roundsSelect.onchange=(e)=>{ setRounds(parseInt(e.target.value,10)); };
+qtypeSelect.onchange=()=>{ /* applied on next question */ };
+dirSelect.onchange=()=>{ /* applied on next question */ };
+playersSelect.onchange=()=>{
+  players = parseInt(playersSelect.value,10);
+  const t3Visible = (players===3);
+  t3Card.classList.toggle('hidden', !t3Visible);
+  if(!t3Visible && selectedTeam===3) selectedTeam=0;
+  setActiveTeamHighlight();
+  renderScores(); updateGamesPanel();
+};
+
+/* Team selection: click team titles to choose who’s answering */
+[t1Title, t2Title, t3Title].forEach((el,idx)=>{
+  if(!el) return;
+  const team=idx+1;
+  el.onclick=()=>{
+    if(team===3 && players!==3) return;
+    selectedTeam = team;
+    setActiveTeamHighlight();
+    // If MC and 10s have already elapsed, enable options now
+    if(lastRenderedMode==='MC') maybeEnableMC();
+  };
+});
+
+/* Team live updates */
+function updateTeamTitle(which){
+  const nm=teamName(which);
+  (which===1? t1Title : which===2? t2Title : t3Title).textContent=nm;
+  updateGamesPanel();
+}
+t1Name.addEventListener('input', ()=>updateTeamTitle(1));
+t2Name.addEventListener('input', ()=>updateTeamTitle(2));
+t3Name.addEventListener('input', ()=>updateTeamTitle(3));
+
+function applyTeamColor(which){
+  const color=teamColor(which);
+  const card=which===1? t1Card : which===2? t2Card : t3Card;
+  const bar=which===1? t1Bar : which===2? t2Bar : t3Bar;
+  card.style.background=hexToRgba(color,0.10);
+  card.style.borderColor=hexToRgba(color,0.6);
+  bar.style.background=color;
+}
+[t1Color,t2Color,t3Color].forEach((el,i)=>{ if(el) el.oninput=()=>applyTeamColor(i+1); });
+
+/* Fullscreen */
+fullscreenBtn.onclick=()=>{
+  const el=document.documentElement;
+  if(!document.fullscreenElement){ el.requestFullscreen?.(); } else { document.exitFullscreen?.(); }
+};
+
+/* Modal */
+modalClose.onclick=()=>{ modalWrap.classList.add('hidden'); justFinishedGame=true; };
+
+/* Keyboard shortcuts */
+document.addEventListener('keydown',(e)=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.isContentEditable) return;
+  if(e.key===' '){ e.preventDefault(); if(isBonus){ return; } if(timerRunning){ stopTimer(); } else { startTimer(); } }
+  if(e.key==='Enter'){ e.preventDefault(); if(!nextBtn.disabled) nextQuestion(); }
+  if(e.key.toLowerCase()==='a'){ e.preventDefault(); if(lastRenderedMode==='FREE' && canShowAnswer) showAnswer(); }
+});
+
+/* Init */
+function initFirstQuestion(forceFresh=false){
+  timerSeconds=parseInt(timerSelect.value,10);
+  currentTime=timerSeconds;
+  totalRounds=parseInt(roundsSelect.value,10);
+  roundTotalEl.textContent=String(totalRounds);
+  if(forceFresh){ currentRound=1; roundNowEl.textContent='1'; roundFillEl.style.width='0%'; }
+  renderScores(); updateGamesPanel(); updateTimerLabel();
+
+  // first prompt
+  directionMode=dirSelect.value;
+  qtype=qtypeSelect.value;
+  lastRenderedDir = (directionMode==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionMode;
+  lastRenderedMode = (qtype==='MIXED') ? (Math.random()<0.5?'FREE':'MC') : qtype;
+
+  // reset state
+  selectedTeam=0; setActiveTeamHighlight();
+  isBonus=false; currentFoodIndex=null; foodLabel.textContent=''; bonusPill.classList.add('hidden');
+
+  currentPromptKey=randomPromptFromPool();
+  if(lastRenderedDir==='EN2SY'){ promptLabel.textContent=currentPromptKey; }
+  else{ promptLabel.textContent=buildSyAnswerFromKey(currentPromptKey, true); }
+
+  if(lastRenderedMode==='MC'){
+    if(lastRenderedDir==='EN2SY'){ renderMC(buildSyAnswerFromKey(currentPromptKey, true), 'SY'); }
+    else{ renderMC(buildEnAnswerFromKey(currentPromptKey), 'EN'); }
+  }else{
+    clearMC(); answerLabel.textContent='';
+  }
+
+  startTimer();
+  setupLocksForNewQuestion();
+}
+
+(function init(){
+  applyTeamColor(1); applyTeamColor(2); applyTeamColor(3);
+  updateTeamTitle(1); updateTeamTitle(2); updateTeamTitle(3);
+  initFirstQuestion();
+})();
+</script>
+</body>
+</html>
