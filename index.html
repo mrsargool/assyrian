@@ -39,13 +39,15 @@
     .row{display:flex; gap:16px; flex-wrap:wrap; align-items:center}
     .spacer{flex:1}
     .legend{color:var(--muted); font-size:12px}
-    .scores .team{min-width:260px; border-radius:16px; padding:14px; border:2px solid var(--line); background:#fff; transition:background .2s,border-color .2s, box-shadow .2s}
-    .scores .team.active{box-shadow:0 0 0 3px rgba(14,165,233,.25); border-color:var(--active); position:relative}
+
+    .scores .team{min-width:260px; border-radius:16px; padding:14px; border:2px solid var(--line); background:#fff; transition:background .2s,border-color .2s, box-shadow .2s; cursor:pointer; position:relative}
+    .scores .team:hover{box-shadow:0 0 0 3px rgba(14,165,233,.15)}
+    .scores .team.active{box-shadow:0 0 0 3px rgba(14,165,233,.35); border-color:var(--active)}
     .scores .team.active::after{
       content:"Selected"; position:absolute; top:10px; right:12px;
       background:#0ea5e9; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:999px;
     }
-    .scores .team-title{font-size:18px; font-weight:800; margin-bottom:6px; cursor:pointer}
+    .scores .team-title{font-size:18px; font-weight:800; margin-bottom:6px}
     .scores .score{font-size:26px; font-weight:800; margin:6px 0}
     .scores .grid{display:flex; gap:6px; flex-wrap:wrap}
     .point{padding:8px 10px; border-radius:10px; background:#E2E8F0; color:#0F172A; font-weight:800; border:1px solid #CBD5E1; cursor:pointer;}
@@ -151,7 +153,7 @@
       <button class="btn primary" id="nextBtn" title="Next random prompt (auto-starts timer)" disabled>Next Question</button>
       <span id="bonusPill" class="pill hidden">BONUS ROUND</span>
       <div class="spacer"></div>
-      <div class="note">Click a team name to set who’s answering • Space=Start/Pause • Enter=Next • A=Show</div>
+      <div class="note">Click a team card to select who’s answering • Space=Start/Pause • Enter=Next • A=Show</div>
     </div>
 
     <div class="card scores" style="margin-top:14px">
@@ -791,8 +793,8 @@ playersSelect.onchange=()=>{
   renderScores(); updateGamesPanel();
 };
 
-/* Team selection: click team titles */
-[t1Title, t2Title, t3Title].forEach((el,idx)=>{
+/* Team selection: click the entire team card */
+[t1Card, t2Card, t3Card].forEach((el,idx)=>{
   if(!el) return;
   const team=idx+1;
   el.onclick=()=>{
