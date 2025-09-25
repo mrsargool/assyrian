@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Assyrian III: Verb to Order Game</title>
 
-  <!-- Noto Sans Syriac Eastern for answers -->
+  <!-- Noto Sans Syriac Eastern -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Syriac+Eastern:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
     :root{
       --bg:#F7F9FC; --card:#FFFFFF; --ink:#0F172A; --muted:#475569;
       --accent:#2563EB; --success:#16A34A; --warn:#D97706; --danger:#DC2626; --line:#E5E7EB;
-      --radius:16px;
+      --radius:16px; --active:#0ea5e9;
     }
     *{box-sizing:border-box}
     body{margin:0; background:var(--bg); color:var(--ink); font:16px/1.4 "Segoe UI", system-ui, Arial, sans-serif;}
@@ -39,7 +39,8 @@
     .row{display:flex; gap:16px; flex-wrap:wrap; align-items:center}
     .spacer{flex:1}
     .legend{color:var(--muted); font-size:12px}
-    .scores .team{min-width:260px; border-radius:16px; padding:14px; border:1px solid var(--line); background:#fff; transition:background .2s,border-color .2s}
+    .scores .team{min-width:260px; border-radius:16px; padding:14px; border:2px solid var(--line); background:#fff; transition:background .2s,border-color .2s, box-shadow .2s}
+    .scores .team.active{box-shadow:0 0 0 3px rgba(14,165,233,.25); border-color:var(--active)}
     .scores .team-title{font-size:18px; font-weight:800; margin-bottom:6px}
     .scores .score{font-size:26px; font-weight:800; margin:6px 0}
     .scores .grid{display:flex; gap:6px; flex-wrap:wrap}
@@ -65,6 +66,7 @@
     .mc .opt.enabled{cursor:pointer; background:#F8FAFC}
     .mc .opt.correct{border-color:#16A34A; background:#ECFDF5}
     .mc .opt.wrong{border-color:#DC2626; background:#FEF2F2}
+    .lockpill{margin-left:8px}
   </style>
 </head>
 <body>
@@ -94,9 +96,10 @@
         </select>
 
         <label class="legend" for="qtypeSelect">Question type:</label>
-        <select id="qtypeSelect" title="Standard or Multiple Choice">
-          <option value="STANDARD" selected>Standard</option>
+        <select id="qtypeSelect" title="Free Response or Multiple Choice or Mixed">
+          <option value="FREE" selected>Free Response</option>
           <option value="MC">Multiple Choice</option>
+          <option value="MIXED">Mixed</option>
         </select>
 
         <label class="legend" for="playersSelect">Players:</label>
@@ -132,16 +135,17 @@
     <div class="prompt" id="promptLabel"></div>
     <div class="food" id="foodLabel"></div>
 
-    <!-- Standard single-answer -->
+    <!-- Free-response answer (Syriac font) -->
     <div class="answer" id="answerLabel"></div>
 
     <!-- Multiple choice answers -->
     <div id="mcWrap" class="mc hidden"></div>
+    <span id="mcLock" class="pill lockpill hidden">Options unlock after 10 sec</span>
 
-    <div class="row">
+    <div class="row" style="margin-top:8px">
       <button class="btn success" id="showAnswerBtn" title="Reveal the answer and stop the timer" disabled>Show Answer</button>
       <button class="btn primary" id="nextBtn" title="Next random prompt (auto-starts timer)" disabled>Next Question</button>
-      <span id="bonusPill" class="pill hidden">BONUS ROUND (+2)</span>
+      <span id="bonusPill" class="pill hidden">BONUS ROUND</span>
       <div class="spacer"></div>
       <div class="note">Shortcuts: Space=Start/Pause • Enter=Next • A=Show • 1/2/3=+1 • Shift+1/2/3=−1 • B/N/M=+2 bonus</div>
     </div>
@@ -265,12 +269,13 @@ const PRONOUNS = {
 const FOODS_EN = ["potatoes","rice","beans","stew","kabobs","chicken","steak","lamb","fish","fries","water","fizzy drinks","yogurt drink","lemonade","orange juice","dolma","red rice","okra stew","yogurt","Assyrian egg rolls","tea","coffee","hummus","baba ganosh","salad","pickles","meatballs"];
 const FOODS_SY = ["ܟܸܪܬܘܿܦܹ̈ܐ","ܪܸܙܵܐ","ܚܲܒ̣ܨܹ̈ܐ","ܫܘܼܪܒ̣ܵܐ","ܟܵܒܵܒܹ̈ܐ","ܟܬܵܝܬܵܐ","ܒܸܣܪܵܐ","ܥܸܪܒܵܐ","ܢܘܼܢܵܐ","ܟܸܪܬܘܿܦܹ̈ܐ ܩܸܠܝܹ̈ܐ","ܡܝܼܵܐ","ܫܬܵܝܬܵܐ ܒܲܩܒܸܩܵܢܵܐ","ܕܲܘܹ̈ܐ","ܡܝܼܵܐ ܕܠܝܼܡܘܿܢܹ̈ܐ","ܡܝܼܵܐ ܕܦܘܼܪ̈ܬܩܵܠܹܐ","ܕܘܿܠܡܵܐ","ܪܸܙܵܐ ܣܡܘܿܩܵܐ","ܒܲܡܝܹ̈ܐ","ܡܲܣܬܵܐ","ܒܘܼܪܲܟ","ܟ̰ܵܐܝ","ܩܲܗܘܵܐ","ܚܲܪ̈ܛܡܵܢܹܐ ܓܪ̈ܝܼܣܹܐ","ܒܵܕܸܡܓ̰ܵܢܹ̈ܐ ܓܪ̈ܝܼܣܹܐ","ܣܲܠܵܛܵܐ","ܛܘܼܪ̈ܫܝܹܐ","ܟܸܦܬܹ̈ܐ"];
 
-/* ------------- DOM refs ------------- */
+/* ---------------- DOM ---------------- */
 const timerLabel=document.getElementById('timerLabel');
 const promptLabel=document.getElementById('promptLabel');
 const foodLabel=document.getElementById('foodLabel');
 const answerLabel=document.getElementById('answerLabel');
 const mcWrap=document.getElementById('mcWrap');
+const mcLock=document.getElementById('mcLock');
 
 const nextBtn=document.getElementById('nextBtn');
 const showAnswerBtn=document.getElementById('showAnswerBtn');
@@ -338,13 +343,13 @@ const modalClose=document.getElementById('modalClose');
 
 const confettiLayer=document.getElementById('confetti');
 
-/* ------------- State ------------- */
+/* ---------------- State ---------------- */
 let timerSeconds=30, currentTime=30, timerId=null, timerRunning=false;
 let currentPromptKey='', isBonus=false, currentFoodIndex=null;
 let directionMode='EN2SY';  // EN2SY | SY2EN | BOTH
-let qtype='STANDARD';        // STANDARD | MC
-let players=2;               // 2 | 3
-let score=[0,0,0,0];         // 1-indexed: [_, t1, t2, t3]
+let qtype='FREE';           // FREE | MC | MIXED (per-question pick)
+let players=2;              // 2 | 3
+let score=[0,0,0,0];        // 1-indexed: [_, t1, t2, t3]
 let streak=[0,0,0,0];
 let gamesWon=[0,0,0,0];
 let totalRounds=10, currentRound=1;
@@ -355,8 +360,10 @@ let justFinishedGame=false;
 /* Gating */
 let canShowAnswer=false, answerUnlockTimeout=null;
 let mcEnabled=false, mcCorrectIndex=-1;
+let lastRenderedDir='EN2SY';   // actual dir of current prompt
+let lastRenderedMode='FREE';   // actual mode of current question (FREE/MC)
 
-/* Utils */
+/* ---------------- Utils & helpers ---------------- */
 function hexToRgba(hex, alpha){
   const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if(!m) return `rgba(0,0,0,${alpha})`;
@@ -365,6 +372,13 @@ function hexToRgba(hex, alpha){
 }
 function teamName(i){ return (i===1?t1Name.value.trim():i===2?t2Name.value.trim():t3Name.value.trim()) || `Team ${i}`; }
 function teamColor(i){ return i===1?t1Color.value:i===2?t2Color.value:t3Color.value; }
+function setActiveTeamHighlight(){
+  [t1Card,t2Card,t3Card].forEach((el,idx)=>{
+    if(!el) return;
+    const i=idx+1;
+    el.classList.toggle('active', String(i)===activeTeam.value);
+  });
+}
 
 /* Prompt helpers */
 function randomPromptFromPool(){
@@ -388,19 +402,7 @@ function detectPronounSyFromKey(key){
   if(p.startsWith('y’all')) return PRONOUNS.yall;
   return '';
 }
-function englishPronounFromKey(key){
-  // return the pronoun part of the key before the verb, normalized
-  // keys are like "he orders", "I will order (masc.)"
-  if(key.toLowerCase().startsWith('y’all')) return "y’all";
-  return key.split(' ')[0].replace('(masc.)','').replace('(fem.)','').trim();
-}
-function englishVerbFromKey(key){
-  // "orders" or "will order" from key
-  const low=key.toLowerCase();
-  if(low.includes('will')) return 'will order';
-  return 'order(s)'.replace('order(s)','orders'); // keep "orders" as used in keys
-}
-function buildSyAnswerFromKey(key, includeFood=false){
+function buildSyAnswerFromKey(key, includeFood){
   const base=PHRASES[key]||'';
   const fut=isFuture(key);
   const pron=detectPronounSyFromKey(key);
@@ -409,18 +411,18 @@ function buildSyAnswerFromKey(key, includeFood=false){
   if(includeFood && currentFoodIndex!=null) out+=`  ${FOODS_SY[currentFoodIndex]}`;
   return out;
 }
-function buildEnAnswerFromKey(key, includeFood=false){
-  // Build English line “Pronoun + (will) order (+ with food)”
+function englishPronounFromKey(key){
+  if(key.toLowerCase().startsWith('y’all')) return "y’all";
+  return key.split(' ')[0].replace('(masc.)','').replace('(fem.)','').trim();
+}
+function buildEnAnswerFromKey(key){
+  // Never include "with" here (your requirement)
   const fut=isFuture(key);
   let pron=englishPronounFromKey(key);
-  let baseVerb=fut?'will order':'orders';
-  if(pron.toLowerCase()==='i' && !fut) baseVerb='order'; // "I order"
-  if(pron.toLowerCase()==='we' && !fut) baseVerb='order'; // "we order"
-  if(pron.toLowerCase()==='they' && !fut) baseVerb='order'; // "they order"
-  if(pron.toLowerCase()==='y’all' && !fut) baseVerb='order'; // "y’all order"
-  let out=`${pron} ${baseVerb}`;
-  if(includeFood && currentFoodIndex!=null) out+=` with ${FOODS_EN[currentFoodIndex]}`;
-  return out;
+  let base=fut?'will order':'orders';
+  const p=pron.toLowerCase();
+  if(!fut && (p==='i'||p==='we'||p==='they'||p==='y’all')) base='order';
+  return `${pron} ${base}`;
 }
 
 /* Timer */
@@ -433,7 +435,7 @@ function startTimer(){
   timerId=setInterval(()=>{
     if(currentTime>0){
       currentTime--; updateTimerLabel();
-      if(!canShowAnswer && currentTime<=timerSeconds-10){ unlockShowAnswerOrMC(); }
+      if(!canShowAnswer && currentTime<=timerSeconds-10){ unlockAfterDelay(); }
     } else { stopTimer(); }
   },1000);
 }
@@ -490,17 +492,13 @@ function setRounds(n){
   justFinishedGame=false;
 }
 function finishRoundAndAdvance(){
-  const d1=score[1] - roundStartScores[1];
-  const d2=score[2] - roundStartScores[2];
-  const d3=(players===3?score[3] - roundStartScores[3]:-Infinity);
+  const d=[0, score[1]-roundStartScores[1], score[2]-roundStartScores[2], players===3?score[3]-roundStartScores[3]:-Infinity];
   let winTeam=0, maxDelta=-Infinity;
-  [1,2].concat(players===3?[3]:[]).forEach(t=>{ if((t===3&&d3===-Infinity)?false:true){ const dd=t===1?d1:t===2?d2:d3; if(dd>maxDelta){maxDelta=dd; winTeam=t;} } });
-  const text = (maxDelta<=0) ? 'Round tied' : `Round winner: ${teamName(winTeam)}`;
-  banner.textContent=text;
+  [1,2].concat(players===3?[3]:[]).forEach(t=>{ if(d[t]>maxDelta){maxDelta=d[t]; winTeam=t;} });
+  banner.textContent = (maxDelta<=0) ? 'Round tied' : `Round winner: ${teamName(winTeam)}`;
   banner.classList.remove('hidden');
 
   if(currentRound>=totalRounds){
-    // Game winner
     const vals=[1,2].concat(players===3?[3]:[]).map(t=>({t, s:score[t]}));
     const maxScore=Math.max(...vals.map(v=>v.s));
     const winners=vals.filter(v=>v.s===maxScore).map(v=>v.t);
@@ -546,40 +544,54 @@ function startNewGame(){
 /* Locks / gating */
 function setupLocksForNewQuestion(){
   nextBtn.disabled=true;
-  showAnswerBtn.disabled = (qtype==='STANDARD'); // Standard starts disabled; MC hides showAnswer
+  showAnswerBtn.disabled = (lastRenderedMode==='FREE'); // only relevant in Free mode
   canShowAnswer=false; mcEnabled=false; mcCorrectIndex=-1;
+  mcLock.classList.add('hidden');
+
   if(answerUnlockTimeout){ clearTimeout(answerUnlockTimeout); answerUnlockTimeout=null; }
-  if(qtype==='STANDARD'){
-    answerUnlockTimeout=setTimeout(unlockShowAnswerOrMC, 10000);
-  }else{
-    // MC: enable options after 10s
-    answerUnlockTimeout=setTimeout(unlockShowAnswerOrMC, 10000);
+  answerUnlockTimeout=setTimeout(unlockAfterDelay, 10000);
+
+  // visibility of controls per mode
+  if(lastRenderedMode==='FREE'){
+    showAnswerBtn.classList.remove('hidden');
+    answerLabel.classList.remove('hidden');
+    mcWrap.classList.add('hidden');
+  }else{ // MC
+    showAnswerBtn.classList.add('hidden');
+    answerLabel.classList.add('hidden');
+    mcWrap.classList.remove('hidden');
+    mcLock.classList.remove('hidden'); // show "unlock after 10s" pill
+    enableMCOptions(false);
   }
 }
-function unlockShowAnswerOrMC(){
+function unlockAfterDelay(){
   canShowAnswer=true;
-  if(qtype==='STANDARD'){
+  if(lastRenderedMode==='FREE'){
     showAnswerBtn.disabled=false;
   }else{
     enableMCOptions(true);
+    mcLock.classList.add('hidden');
   }
 }
 
 /* Multiple choice */
-function makeDistractors(correctKey, count, targetLang){ // targetLang: 'SY' or 'EN'
+function makeDistractors(correctKey, count, targetLang){
   const pool=Object.keys(PHRASES).filter(k=>k!==correctKey);
   const out=[];
   while(out.length<count && pool.length){
     const i=Math.floor(Math.random()*pool.length);
     const k=pool.splice(i,1)[0];
-    const text = (targetLang==='SY') ? buildSyAnswerFromKey(k, /*food*/ currentFoodIndex!=null) : buildEnAnswerFromKey(k, /*food*/ currentFoodIndex!=null);
-    out.push(text);
+    const txt=(targetLang==='SY')
+      ? buildSyAnswerFromKey(k, /*food*/ currentFoodIndex!=null)
+      : buildEnAnswerFromKey(k); // never "with" in EN
+    out.push(txt);
   }
   return out;
 }
 function clearMC(){
   mcWrap.innerHTML='';
   mcWrap.classList.add('hidden');
+  mcLock.classList.add('hidden');
 }
 function renderMC(correctText, targetLang){
   mcWrap.innerHTML='';
@@ -590,7 +602,7 @@ function renderMC(correctText, targetLang){
 
   options.forEach((txt, idx)=>{
     const btn=document.createElement('button');
-    btn.className='opt'; // will be enabled later
+    btn.className='opt';
     btn.textContent=txt;
     btn.onclick=()=>onMCClick(idx);
     mcWrap.appendChild(btn);
@@ -628,87 +640,89 @@ function onMCClick(idx){
 }
 
 /* Flow */
+function chooseActualMode(){
+  if(qtype==='MIXED'){
+    return Math.random()<0.5 ? 'FREE' : 'MC';
+  }
+  return qtype; // FREE or MC
+}
 function nextQuestion(){
   if(!modalWrap.classList.contains('hidden')) return;
   if(justFinishedGame){ startNewGame(); }
 
   finishRoundAndAdvance();
 
-  // reset visuals
   currentTime=timerSeconds; updateTimerLabel();
   answerLabel.textContent='';
   clearMC();
 
-  // choose direction
+  // Direction for this question
   directionMode=document.getElementById('dirSelect').value;
   const dir = (directionMode==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionMode;
+  lastRenderedDir = dir;
 
-  // choose prompt key
+  // Mode for this question
+  qtype = document.getElementById('qtypeSelect').value;
+  lastRenderedMode = chooseActualMode();
+
+  // pick prompt
   currentPromptKey=randomPromptFromPool();
 
-  // maybe bonus
+  // maybe bonus (label only; no "with")
   if(Math.random()<0.20){
     currentFoodIndex=Math.floor(Math.random()*FOODS_EN.length);
-    foodLabel.textContent=`Bonus Round: with ${FOODS_EN[currentFoodIndex]}`;
-    setBonusUI(true);
+    foodLabel.textContent=`Bonus Round: ${FOODS_EN[currentFoodIndex]}`;
+    bonusPill.classList.remove('hidden');
+    isBonus=true;
     stopTimer(); // frozen during bonus
   }else{
-    currentFoodIndex=null; foodLabel.textContent=''; setBonusUI(false);
+    currentFoodIndex=null; foodLabel.textContent='';
+    bonusPill.classList.add('hidden');
+    isBonus=false;
     startTimer();
   }
 
-  // render prompt & (defer) answers by type
+  // Render prompt/answers by dir & mode
   if(dir==='EN2SY'){
-    // English prompt
-    promptLabel.textContent = currentPromptKey + (currentFoodIndex!=null?` with ${FOODS_EN[currentFoodIndex]}`:'');
-    if(qtype==='STANDARD'){
-      // answer will be Syriac (on Show Answer)
+    // English prompt (never “with”)
+    promptLabel.textContent = currentPromptKey;
+
+    if(lastRenderedMode==='FREE'){
       answerLabel.textContent='';
-      mcWrap.classList.add('hidden');
     }else{
-      // MC: Syriac options
       const correctSY=buildSyAnswerFromKey(currentPromptKey, true);
       renderMC(correctSY, 'SY');
     }
   }else{ // SY2EN
-    // Syriac prompt (fully built)
+    // Syriac prompt (includes Syriac food on bonus)
     const promptSY = buildSyAnswerFromKey(currentPromptKey, true);
     promptLabel.textContent = promptSY;
-    if(qtype==='STANDARD'){
-      // answer will be English (on Show Answer)
+
+    if(lastRenderedMode==='FREE'){
       answerLabel.textContent='';
-      mcWrap.classList.add('hidden');
     }else{
-      // MC: English options
-      const correctEN=buildEnAnswerFromKey(currentPromptKey, true);
+      const correctEN=buildEnAnswerFromKey(currentPromptKey);
       renderMC(correctEN, 'EN');
     }
   }
 
-  // Locking rules per type
   setupLocksForNewQuestion();
 }
 
 function showAnswer(){
-  if(qtype!=='STANDARD') return;
+  if(lastRenderedMode!=='FREE') return;
   if(!canShowAnswer) return;
   stopTimer();
 
-  const dir = (directionMode==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionMode;
-  // BUT we must match the direction of the *current* prompt; store lastDir instead:
-  // (To keep simple, recompute from what is displayed)
-  const enShown = !/[\u0700-\u074F]/.test(promptLabel.textContent); // crude: EN if not Syriac range
-  const currentDir = enShown ? 'EN2SY' : 'SY2EN';
-
-  if(currentDir==='EN2SY'){
+  if(lastRenderedDir==='EN2SY'){
     answerLabel.textContent = buildSyAnswerFromKey(currentPromptKey, true);
   }else{
-    answerLabel.textContent = buildEnAnswerFromKey(currentPromptKey, true);
+    answerLabel.textContent = buildEnAnswerFromKey(currentPromptKey); // never “with”
   }
   nextBtn.disabled=false;
 }
 
-/* Button handlers */
+/* Buttons */
 function addPoints(team,delta){
   score[team]=Math.max(0,score[team]+delta);
   renderScores();
@@ -734,28 +748,21 @@ resetScoresBtn.onclick=()=>{ score=[0,0,0,0]; streak=[0,0,0,0]; t1StreakEl.textC
 showAnswerBtn.onclick=showAnswer;
 nextBtn.onclick=nextQuestion;
 
+/* Selects */
 timerSelect.onchange=(e)=>{ timerSeconds=parseInt(e.target.value,10); currentTime=timerSeconds; updateTimerLabel(); };
 roundsSelect.onchange=(e)=>{ setRounds(parseInt(e.target.value,10)); };
-dirSelect.onchange=()=>{}; // picked up on next question
-qtypeSelect.onchange=()=>{
-  // switch UI between Standard and MC
-  if(qtypeSelect.value==='MC'){
-    qtype='MC';
-    answerLabel.textContent='';
-    // MC will render on next question
-  }else{
-    qtype='STANDARD';
-    clearMC();
-  }
-};
+qtypeSelect.onchange=()=>{ /* applied on next question */ };
+dirSelect.onchange=()=>{ /* applied on next question */ };
 playersSelect.onchange=()=>{
   players = parseInt(playersSelect.value,10);
   const t3Visible = (players===3);
   t3Card.classList.toggle('hidden', !t3Visible);
   activeTeam.querySelector('option[value="3"]').classList.toggle('hidden', !t3Visible);
   if(!t3Visible && activeTeam.value==='3') activeTeam.value='1';
+  setActiveTeamHighlight();
   renderScores(); updateGamesPanel();
 };
+activeTeam.onchange=()=> setActiveTeamHighlight();
 
 /* Team live updates */
 function updateTeamTitle(which){
@@ -777,14 +784,6 @@ function applyTeamColor(which){
 }
 [t1Color,t2Color,t3Color].forEach((el,i)=>{ if(el) el.oninput=()=>applyTeamColor(i+1); });
 
-/* Bonus UI */
-function setBonusUI(on){
-  isBonus=on;
-  bonusPill.classList.toggle('hidden', !on);
-  t1Bonus.disabled=!on; t2Bonus.disabled=!on; if(players===3) t3Bonus.disabled=!on;
-  updateTimerLabel();
-}
-
 /* Fullscreen */
 fullscreenBtn.onclick=()=>{
   const el=document.documentElement;
@@ -792,17 +791,14 @@ fullscreenBtn.onclick=()=>{
 };
 
 /* Modal */
-modalClose.onclick=()=>{
-  modalWrap.classList.add('hidden');
-  justFinishedGame=true;
-};
+modalClose.onclick=()=>{ modalWrap.classList.add('hidden'); justFinishedGame=true; };
 
-/* Keyboard shortcuts (respect locks; MC uses options only) */
+/* Keyboard shortcuts */
 document.addEventListener('keydown',(e)=>{
   if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.isContentEditable) return;
   if(e.key===' '){ e.preventDefault(); if(isBonus){ return; } if(timerRunning){ stopTimer(); } else { startTimer(); } }
   if(e.key==='Enter'){ e.preventDefault(); if(!nextBtn.disabled) nextQuestion(); }
-  if(e.key.toLowerCase()==='a'){ e.preventDefault(); if(qtype==='STANDARD' && canShowAnswer) showAnswer(); }
+  if(e.key.toLowerCase()==='a'){ e.preventDefault(); if(lastRenderedMode==='FREE' && canShowAnswer) showAnswer(); }
   if(e.key==='1' && !e.shiftKey){ addPoints(1,1); }
   if(e.key==='2' && !e.shiftKey){ addPoints(2,1); }
   if(e.key==='3' && !e.shiftKey && players===3){ addPoints(3,1); }
@@ -823,18 +819,30 @@ document.addEventListener('keydown',(e)=>{
   roundNowEl.textContent=String(currentRound);
   roundFillEl.style.width='0%';
 
-  // defaults
-  players=2; qtype='STANDARD'; directionMode='EN2SY';
-
-  // visuals
   applyTeamColor(1); applyTeamColor(2); applyTeamColor(3);
   updateTeamTitle(1); updateTeamTitle(2); updateTeamTitle(3);
+  setActiveTeamHighlight();
   renderScores(); updateGamesPanel(); updateTimerLabel();
 
   // first prompt
   currentPromptKey=randomPromptFromPool();
-  promptLabel.textContent=currentPromptKey;
-  currentFoodIndex=null; foodLabel.textContent=''; setBonusUI(false);
+  directionMode=dirSelect.value;
+  qtype=qtypeSelect.value;
+  lastRenderedDir = (directionMode==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionMode;
+  lastRenderedMode = chooseActualMode();
+
+  // No bonus by default
+  isBonus=false; currentFoodIndex=null; foodLabel.textContent=''; bonusPill.classList.add('hidden');
+
+  // Render first prompt
+  if(lastRenderedDir==='EN2SY'){ promptLabel.textContent=currentPromptKey; }
+  else{ promptLabel.textContent=buildSyAnswerFromKey(currentPromptKey, true); }
+
+  if(lastRenderedMode==='MC'){
+    if(lastRenderedDir==='EN2SY'){ renderMC(buildSyAnswerFromKey(currentPromptKey, true), 'SY'); }
+    else{ renderMC(buildEnAnswerFromKey(currentPromptKey), 'EN'); }
+  }
+
   startTimer();
   setupLocksForNewQuestion();
 })();
