@@ -30,7 +30,7 @@
     .btn.danger{background:#DC2626}
     .btn.warn{background:#D97706}
     .btn:disabled{opacity:.6; cursor:not-allowed}
-    .pill{display:inline-block; padding:2px 10px; border-radius:999px; background:#EEF2FF; color:#3730A3; font-weight:700; font-size:12px;}
+    .pill{display:inline-block; padding:6px 12px; border-radius:999px; background:#EEF2FF; color:#3730A3; font-weight:800; font-size:13px;}
     .timer{font-size:56px; font-weight:800; color:var(--accent); margin:4px 0 8px}
     .prompt{font-size:30px; font-weight:800; margin:8px 0 6px}
     .food{font-size:18px; font-style:italic; color:var(--warn); margin:0 0 6px}
@@ -40,7 +40,11 @@
     .spacer{flex:1}
     .legend{color:var(--muted); font-size:12px}
     .scores .team{min-width:260px; border-radius:16px; padding:14px; border:2px solid var(--line); background:#fff; transition:background .2s,border-color .2s, box-shadow .2s}
-    .scores .team.active{box-shadow:0 0 0 3px rgba(14,165,233,.25); border-color:var(--active)}
+    .scores .team.active{box-shadow:0 0 0 3px rgba(14,165,233,.25); border-color:var(--active); position:relative}
+    .scores .team.active::after{
+      content:"Selected"; position:absolute; top:10px; right:12px;
+      background:#0ea5e9; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:999px;
+    }
     .scores .team-title{font-size:18px; font-weight:800; margin-bottom:6px; cursor:pointer}
     .scores .score{font-size:26px; font-weight:800; margin:6px 0}
     .scores .grid{display:flex; gap:6px; flex-wrap:wrap}
@@ -67,6 +71,8 @@
     .mc .opt.correct{border-color:#16A34A; background:#ECFDF5}
     .mc .opt.wrong{border-color:#DC2626; background:#FEF2F2}
     .lockpill{margin-left:8px}
+    /* Current Team pill tinting */
+    #currentTeamPill{border:1px solid var(--line)}
   </style>
 </head>
 <body>
@@ -126,6 +132,9 @@
 
     <div class="timer" id="timerLabel">30 sec</div>
 
+    <!-- Current team pill -->
+    <div id="currentTeamPill" class="pill hidden">Current Team: —</div>
+
     <div class="prompt" id="promptLabel"></div>
     <div class="food" id="foodLabel"></div>
 
@@ -142,7 +151,7 @@
       <button class="btn primary" id="nextBtn" title="Next random prompt (auto-starts timer)" disabled>Next Question</button>
       <span id="bonusPill" class="pill hidden">BONUS ROUND</span>
       <div class="spacer"></div>
-      <div class="note">Shortcuts: Space=Start/Pause • Enter=Next • A=Show • Click a team name to set who’s answering</div>
+      <div class="note">Click a team name to set who’s answering • Space=Start/Pause • Enter=Next • A=Show</div>
     </div>
 
     <div class="card scores" style="margin-top:14px">
@@ -249,18 +258,12 @@ const PHRASES = {
 };
 
 const PRONOUNS = {
-  i_masc: "ܐܵܢܵܐ",
-  i_fem:  "ܐܵܢܵܐ",
-  you_masc:"ܐܲܢ݇ܬ",
-  you_fem: "ܐܲܢ݇ܬܝ",
-  he:      "ܗ̇ܘ",
-  she:     "ܗ̇ܝ",
-  we:      "ܐܲܚܢܲܢ",
-  yall:    "ܐܲܚܬܘܿܢ",
-  they:    "ܐܵܢܝܼ",
+  i_masc: "ܐܵܢܵܐ", i_fem: "ܐܵܢܵܐ",
+  you_masc:"ܐܲܢ݇ܬ", you_fem:"ܐܲܢ݇ܬܝ",
+  he:"ܗ̇ܘ", she:"ܗ̇ܝ",
+  we:"ܐܲܚܢܲܢ", yall:"ܐܲܚܬܘܿܢ", they:"ܐܵܢܝܼ",
 };
 
-// Foods EN/SY aligned
 const FOODS_EN = ["potatoes","rice","beans","stew","kabobs","chicken","steak","lamb","fish","fries","water","fizzy drinks","yogurt drink","lemonade","orange juice","dolma","red rice","okra stew","yogurt","Assyrian egg rolls","tea","coffee","hummus","baba ganosh","salad","pickles","meatballs"];
 const FOODS_SY = ["ܟܸܪܬܘܿܦܹ̈ܐ","ܪܸܙܵܐ","ܚܲܒ̣ܨܹ̈ܐ","ܫܘܼܪܒ̣ܵܐ","ܟܵܒܵܒܹ̈ܐ","ܟܬܵܝܬܵܐ","ܒܸܣܪܵܐ","ܥܸܪܒܵܐ","ܢܘܼܢܵܐ","ܟܸܪܬܘܿܦܹ̈ܐ ܩܸܠܝܹ̈ܐ","ܡܝܼܵܐ","ܫܬܵܝܬܵܐ ܒܲܩܒܸܩܵܢܵܐ","ܕܲܘܹ̈ܐ","ܡܝܼܵܐ ܕܠܝܼܡܘܿܢܹ̈ܐ","ܡܝܼܵܐ ܕܦܘܼܪ̈ܬܩܵܠܹܐ","ܕܘܿܠܡܵܐ","ܪܸܙܵܐ ܣܡܘܿܩܵܐ","ܒܲܡܝܹ̈ܐ","ܡܲܣܬܵܐ","ܒܘܼܪܲܟ","ܟ̰ܵܐܝ","ܩܲܗܘܵܐ","ܚܲܪ̈ܛܡܵܢܹܐ ܓܪ̈ܝܼܣܹܐ","ܒܵܕܸܡܓ̰ܵܢܹ̈ܐ ܓܪ̈ܝܼܣܹܐ","ܣܲܠܵܛܵܐ","ܛܘܼܪ̈ܫܝܹܐ","ܟܸܦܬܹ̈ܐ"];
 
@@ -272,6 +275,7 @@ const answerLabel=document.getElementById('answerLabel');
 const mcWrap=document.getElementById('mcWrap');
 const mcLock=document.getElementById('mcLock');
 const teamLock=document.getElementById('teamLock');
+const currentTeamPill=document.getElementById('currentTeamPill');
 
 const nextBtn=document.getElementById('nextBtn');
 const showAnswerBtn=document.getElementById('showAnswerBtn');
@@ -343,9 +347,9 @@ const confettiLayer=document.getElementById('confetti');
 let timerSeconds=30, currentTime=30, timerId=null, timerRunning=false;
 let currentPromptKey='', isBonus=false, currentFoodIndex=null;
 let directionMode='EN2SY';  // EN2SY | SY2EN | BOTH
-let qtype='FREE';           // FREE | MC | MIXED (per-question pick)
+let qtype='FREE';           // FREE | MC | MIXED
 let players=2;              // 2 | 3
-let score=[0,0,0,0];        // 1-indexed: [_, t1, t2, t3]
+let score=[0,0,0,0];        // 1-indexed
 let streak=[0,0,0,0];
 let gamesWon=[0,0,0,0];
 let totalRounds=10, currentRound=1;
@@ -356,11 +360,11 @@ let justFinishedGame=false;
 /* Gating */
 let canShowAnswer=false, answerUnlockTimeout=null;
 let mcEnabled=false, mcCorrectIndex=-1;
-let lastRenderedDir='EN2SY';   // actual dir of current prompt
-let lastRenderedMode='FREE';   // actual mode of current question (FREE/MC)
-let selectedTeam=0;            // 0 until student clicks a team title
+let lastRenderedDir='EN2SY';
+let lastRenderedMode='FREE';
+let selectedTeam=0;
 
-/* ---------------- Utils & helpers ---------------- */
+/* ---------------- Utils ---------------- */
 function hexToRgba(hex, alpha){
   const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if(!m) return `rgba(0,0,0,${alpha})`;
@@ -369,12 +373,25 @@ function hexToRgba(hex, alpha){
 }
 function teamName(i){ return (i===1?t1Name.value.trim():i===2?t2Name.value.trim():t3Name.value.trim()) || `Team ${i}`; }
 function teamColor(i){ return i===1?t1Color.value:i===2?t2Color.value:t3Color.value; }
+function tintPill(el, color){
+  el.style.background = hexToRgba(color, 0.12);
+  el.style.color = '#0F172A';
+  el.style.borderColor = hexToRgba(color, 0.6);
+}
 function setActiveTeamHighlight(){
   [t1Card,t2Card,t3Card].forEach((el,idx)=>{
     if(!el) return;
     const i=idx+1;
     el.classList.toggle('active', selectedTeam===i);
   });
+  if(selectedTeam===0){
+    currentTeamPill.classList.add('hidden');
+    currentTeamPill.textContent='Current Team: —';
+  }else{
+    currentTeamPill.textContent = `Current Team: ${teamName(selectedTeam)}`;
+    tintPill(currentTeamPill, teamColor(selectedTeam));
+    currentTeamPill.classList.remove('hidden');
+  }
 }
 
 /* Prompt helpers */
@@ -413,7 +430,6 @@ function englishPronounFromKey(key){
   return key.split(' ')[0].replace('(masc.)','').replace('(fem.)','').trim();
 }
 function buildEnAnswerFromKey(key){
-  // Never include "with" here
   const fut=isFuture(key);
   let pron=englishPronounFromKey(key);
   let base=fut?'will order':'orders';
@@ -532,25 +548,23 @@ function updateGamesPanel(){
   gameLeader.textContent = (leaders.length>1) ? 'Games leader: tied' : `Games leader: ${teamName(leaders[0])}`;
 }
 function startNewGameHardReset(){
-  // Full reset to Round 1 and zero scores
   score=[0,0,0,0]; streak=[0,0,0,0];
   t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0'; if(players===3) t3StreakEl.textContent='Streak: 0';
   renderScores();
   currentRound=1; roundNowEl.textContent='1'; roundFillEl.style.width='0%';
   banner.classList.add('hidden'); endNote.classList.add('hidden'); modalWrap.classList.add('hidden');
   justFinishedGame=false;
-  setRounds(parseInt(roundsSelect.value,10)); // resets internal round tracking to 1 as well
-  // Start immediate new question
+  setRounds(parseInt(roundsSelect.value,10));
   initFirstQuestion(true);
 }
 
 /* Locks / gating */
 function setupLocksForNewQuestion(){
   nextBtn.disabled=true;
-  showAnswerBtn.disabled = (lastRenderedMode==='FREE'); // only relevant in Free mode
+  showAnswerBtn.disabled = (lastRenderedMode==='FREE');
   canShowAnswer=false; mcEnabled=false; mcCorrectIndex=-1;
   mcLock.classList.add('hidden');
-  teamLock.classList.toggle('hidden', selectedTeam!==0 || lastRenderedMode==='FREE');
+  teamLock.classList.toggle('hidden', !(lastRenderedMode==='MC' && selectedTeam===0));
 
   if(answerUnlockTimeout){ clearTimeout(answerUnlockTimeout); answerUnlockTimeout=null; }
   answerUnlockTimeout=setTimeout(unlockAfterDelay, 10000);
@@ -573,13 +587,12 @@ function unlockAfterDelay(){
     showAnswerBtn.disabled=false;
   }else{
     maybeEnableMC();
+    mcLock.classList.add('hidden');
   }
 }
 function maybeEnableMC(){
-  // Enable MC only if both 10s passed (canShowAnswer) AND a team is selected
   const ready = canShowAnswer && selectedTeam!==0;
   enableMCOptions(ready);
-  mcLock.classList.toggle('hidden', canShowAnswer);
   teamLock.classList.toggle('hidden', selectedTeam!==0);
 }
 
@@ -625,19 +638,28 @@ function enableMCOptions(on){
     el.style.cursor = on ? 'pointer' : 'not-allowed';
   });
 }
+function pulseTeamCards(){
+  [t1Card, t2Card, players===3 ? t3Card : null].filter(Boolean).forEach(el=>{
+    el.style.transition='transform 120ms';
+    el.style.transform='scale(1.02)';
+    setTimeout(()=>{ el.style.transform='scale(1)'; }, 140);
+  });
+}
 function onMCClick(idx){
   if(!mcEnabled) return;
-  stopTimer();
-  const nodes=[...mcWrap.children];
-  // paint results
-  nodes.forEach((n,i)=>{
-    if(i===mcCorrectIndex) n.classList.add('correct');
-    if(i===idx && i!==mcCorrectIndex) n.classList.add('wrong');
-    n.classList.remove('enabled');
-  });
-  nextBtn.disabled=false;
+  if(selectedTeam===0){
+    teamLock.classList.remove('hidden');
+    pulseTeamCards();
+    return;
+  }
 
-  if(selectedTeam===0) return; // safety
+  stopTimer();
+
+  const nodes=[...mcWrap.children];
+  nodes.forEach((n,i)=>{ if(i===mcCorrectIndex) n.classList.add('correct'); });
+  if(idx!==mcCorrectIndex){ nodes[idx].classList.add('wrong'); }
+  nodes.forEach(n=>n.classList.remove('enabled'));
+  mcEnabled=false;
 
   const deltaCorrect = isBonus ? 2 : 1;
   if(idx===mcCorrectIndex){
@@ -645,10 +667,12 @@ function onMCClick(idx){
     updateStreak(selectedTeam, true);
     confettiBurst(teamColor(selectedTeam),'#ffffff');
   }else{
-    score[selectedTeam]=Math.max(0, score[selectedTeam]-1); // penalty
+    score[selectedTeam]=Math.max(0, score[selectedTeam]-1);
     updateStreak(selectedTeam, false);
   }
   renderScores();
+
+  nextBtn.disabled=false;
 }
 
 /* Flow */
@@ -656,7 +680,7 @@ function chooseActualMode(){
   if(qtype==='MIXED'){
     return Math.random()<0.5 ? 'FREE' : 'MC';
   }
-  return qtype; // FREE or MC
+  return qtype;
 }
 function nextQuestion(){
   if(!modalWrap.classList.contains('hidden')) return;
@@ -668,28 +692,23 @@ function nextQuestion(){
   answerLabel.textContent='';
   clearMC();
 
-  // reset selected team for this question
   selectedTeam=0; setActiveTeamHighlight();
 
-  // Direction for this question
   directionMode=document.getElementById('dirSelect').value;
   const dir = (directionMode==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionMode;
   lastRenderedDir = dir;
 
-  // Mode for this question
   qtype = document.getElementById('qtypeSelect').value;
   lastRenderedMode = chooseActualMode();
 
-  // pick prompt
   currentPromptKey=randomPromptFromPool();
 
-  // maybe bonus (label only; no "with")
   if(Math.random()<0.20){
     currentFoodIndex=Math.floor(Math.random()*FOODS_EN.length);
     foodLabel.textContent=`Bonus Round: ${FOODS_EN[currentFoodIndex]}`;
     bonusPill.classList.remove('hidden');
     isBonus=true;
-    stopTimer(); // frozen during bonus
+    stopTimer();
   }else{
     currentFoodIndex=null; foodLabel.textContent='';
     bonusPill.classList.add('hidden');
@@ -697,21 +716,17 @@ function nextQuestion(){
     startTimer();
   }
 
-  // Render prompt/answers by dir & mode
   if(dir==='EN2SY'){
-    // English prompt
     promptLabel.textContent = currentPromptKey;
-
     if(lastRenderedMode==='FREE'){
       answerLabel.textContent='';
     }else{
       const correctSY=buildSyAnswerFromKey(currentPromptKey, true);
       renderMC(correctSY, 'SY');
     }
-  }else{ // SY2EN
+  }else{
     const promptSY = buildSyAnswerFromKey(currentPromptKey, true);
     promptLabel.textContent = promptSY;
-
     if(lastRenderedMode==='FREE'){
       answerLabel.textContent='';
     }else{
@@ -727,7 +742,6 @@ function showAnswer(){
   if(lastRenderedMode!=='FREE') return;
   if(!canShowAnswer) return;
   stopTimer();
-
   if(lastRenderedDir==='EN2SY'){
     answerLabel.textContent = buildSyAnswerFromKey(currentPromptKey, true);
   }else{
@@ -766,8 +780,8 @@ nextBtn.onclick=nextQuestion;
 /* Selects */
 timerSelect.onchange=(e)=>{ timerSeconds=parseInt(e.target.value,10); currentTime=timerSeconds; updateTimerLabel(); };
 roundsSelect.onchange=(e)=>{ setRounds(parseInt(e.target.value,10)); };
-qtypeSelect.onchange=()=>{ /* applied on next question */ };
-dirSelect.onchange=()=>{ /* applied on next question */ };
+qtypeSelect.onchange=()=>{};
+dirSelect.onchange=()=>{};
 playersSelect.onchange=()=>{
   players = parseInt(playersSelect.value,10);
   const t3Visible = (players===3);
@@ -777,7 +791,7 @@ playersSelect.onchange=()=>{
   renderScores(); updateGamesPanel();
 };
 
-/* Team selection: click team titles to choose who’s answering */
+/* Team selection: click team titles */
 [t1Title, t2Title, t3Title].forEach((el,idx)=>{
   if(!el) return;
   const team=idx+1;
@@ -785,7 +799,6 @@ playersSelect.onchange=()=>{
     if(team===3 && players!==3) return;
     selectedTeam = team;
     setActiveTeamHighlight();
-    // If MC and 10s have already elapsed, enable options now
     if(lastRenderedMode==='MC') maybeEnableMC();
   };
 });
@@ -794,6 +807,7 @@ playersSelect.onchange=()=>{
 function updateTeamTitle(which){
   const nm=teamName(which);
   (which===1? t1Title : which===2? t2Title : t3Title).textContent=nm;
+  if(selectedTeam===which) setActiveTeamHighlight();
   updateGamesPanel();
 }
 t1Name.addEventListener('input', ()=>updateTeamTitle(1));
@@ -807,6 +821,7 @@ function applyTeamColor(which){
   card.style.background=hexToRgba(color,0.10);
   card.style.borderColor=hexToRgba(color,0.6);
   bar.style.background=color;
+  if(selectedTeam===which) tintPill(currentTeamPill,color);
 }
 [t1Color,t2Color,t3Color].forEach((el,i)=>{ if(el) el.oninput=()=>applyTeamColor(i+1); });
 
@@ -836,13 +851,11 @@ function initFirstQuestion(forceFresh=false){
   if(forceFresh){ currentRound=1; roundNowEl.textContent='1'; roundFillEl.style.width='0%'; }
   renderScores(); updateGamesPanel(); updateTimerLabel();
 
-  // first prompt
   directionMode=dirSelect.value;
   qtype=qtypeSelect.value;
   lastRenderedDir = (directionMode==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionMode;
   lastRenderedMode = (qtype==='MIXED') ? (Math.random()<0.5?'FREE':'MC') : qtype;
 
-  // reset state
   selectedTeam=0; setActiveTeamHighlight();
   isBonus=false; currentFoodIndex=null; foodLabel.textContent=''; bonusPill.classList.add('hidden');
 
