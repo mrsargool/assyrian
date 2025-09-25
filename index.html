@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Assyrian Verb To Order Game</title>
+  <title>AssyrianVerb To Order Game</title>
 
   <!-- Noto Sans Syriac Eastern for answers -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Syriac+Eastern:wght@400;700&display=swap" rel="stylesheet">
@@ -38,31 +38,36 @@
     .row{display:flex; gap:16px; flex-wrap:wrap; align-items:center}
     .spacer{flex:1}
     .legend{color:var(--muted); font-size:12px}
-    .scores .team{min-width:260px}
+    .scores .team{min-width:260px; border-radius:16px; padding:14px; border:1px solid var(--line); background:#fff;}
+    .scores .team-title{font-size:18px; font-weight:800; margin-bottom:6px}
     .scores .score{font-size:26px; font-weight:800; margin:6px 0}
     .scores .grid{display:flex; gap:6px; flex-wrap:wrap}
     .point{padding:8px 10px; border-radius:10px; background:#E2E8F0; color:#0F172A; font-weight:800; border:1px solid #CBD5E1; cursor:pointer;}
     .point:hover{background:#CBD5E1}
-    .hidden{display:none !important}
     .team-bar{height:6px; border-radius:6px; background:#E5E7EB; overflow:hidden; margin-top:6px; position:relative}
     .team-bar .fill{height:100%; width:0%; transition:width .3s ease}
     .roundbar{height:8px; background:#E5E7EB; border-radius:8px; overflow:hidden}
     .roundbar .fill{height:100%; width:0%; background:var(--accent); transition:width .4s ease}
     .banner{margin:10px 0; padding:10px 14px; border-radius:10px; background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; font-weight:700}
+    .hidden{display:none !important}
     .confetti{position:fixed; left:0; top:0; width:100%; height:100%; pointer-events:none; overflow:hidden}
     .piece{position:absolute; width:8px; height:12px; opacity:.9; transform:translate3d(0,0,0); animation:fall 1400ms linear forwards;}
     @keyframes fall{
       0%{ transform:translate3d(var(--x),-10vh,0) rotate(0deg); }
       100%{ transform:translate3d(calc(var(--x) + var(--dx)),110vh,0) rotate(360deg); opacity:.7; }
     }
-    .settings{display:flex; gap:16px; flex-wrap:wrap; align-items:center}
-    .mini{font-size:12px; color:var(--muted)}
+    .games-card .big{font-size:18px; font-weight:800}
+    .note{font-size:12px; color:var(--muted)}
+    /* Modal overlay */
+    .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:50}
+    .modal{background:#fff; border-radius:16px; padding:20px; max-width:640px; width:92%; border:1px solid var(--line); text-align:center}
+    .modal h2{margin-top:0; font-size:24px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>Assyrian Verb To Order Game</h1>
+      <h1>AssyrianVerb To Order Game</h1>
       <div class="controls">
         <button class="btn neutral" id="fullscreenBtn" title="Toggle fullscreen">Fullscreen</button>
         <label class="legend" for="timerSelect">Timer:</label>
@@ -74,7 +79,6 @@
           <option>5</option><option selected>10</option><option>15</option><option>20</option>
         </select>
         <label class="legend"><input type="checkbox" id="noRepeat" checked> No-repeat</label>
-        <label class="legend"><input type="checkbox" id="muteToggle"> Mute</label>
         <button class="btn danger" id="resetScoresBtn" title="Reset both teams to 0">Reset Scores</button>
       </div>
     </header>
@@ -87,6 +91,7 @@
           <div class="roundbar" title="Round progress"><div class="fill" id="roundFill"></div></div>
         </div>
       </div>
+      <div id="endNote" class="note hidden" style="margin-top:8px;"></div>
     </div>
 
     <div class="timer" id="timerLabel">30 sec</div>
@@ -96,25 +101,25 @@
     <div class="answer" id="answerLabel"><!-- Syriac answer only --></div>
 
     <div class="row">
-      <button class="btn success" id="showAnswerBtn" title="Reveal Syriac answer">Show Answer</button>
+      <button class="btn success" id="showAnswerBtn" title="Reveal Syriac answer and stop the timer">Show Answer</button>
       <button class="btn primary" id="nextBtn" title="Next random prompt (auto-starts timer)">Next Question</button>
       <span id="bonusPill" class="pill hidden">BONUS ROUND (+2)</span>
       <div class="spacer"></div>
-      <div class="mini">Shortcuts: Space=Start/Pause • Enter=Next • A=Show • 1/2=+1 • Shift+1/2=−1 • B/N=+2 (bonus)</div>
+      <div class="note">Shortcuts: Space=Start/Pause • Enter=Next • A=Show • 1/2=+1 • Shift+1/2=−1 • B/N=+2 (bonus)</div>
     </div>
 
     <div class="card scores" style="margin-top:14px">
       <div class="row">
         <!-- Team 1 -->
-        <div class="team">
-          <div class="legend">Team 1 Name</div>
-          <div class="settings">
+        <div class="team" id="t1Card">
+          <div class="team-title" id="t1Title">Team 1</div>
+          <div class="row">
             <input id="t1Name" type="text" value="Team 1" />
             <label class="legend">Color <input type="color" id="t1Color" value="#2563EB"></label>
           </div>
           <div class="score" id="t1Score">0</div>
           <div class="team-bar"><div class="fill" id="t1Bar" style="background:#2563EB"></div></div>
-          <div class="mini" id="t1Streak">Streak: 0</div>
+          <div class="legend" id="t1Streak">Streak: 0</div>
           <div class="grid" style="margin-top:6px">
             <button class="point" id="t1Plus">+1 (Correct)</button>
             <button class="point" id="t1Minus">-1 (Penalty)</button>
@@ -123,15 +128,15 @@
         </div>
 
         <!-- Team 2 -->
-        <div class="team">
-          <div class="legend">Team 2 Name</div>
-          <div class="settings">
+        <div class="team" id="t2Card">
+          <div class="team-title" id="t2Title">Team 2</div>
+          <div class="row">
             <input id="t2Name" type="text" value="Team 2" />
             <label class="legend">Color <input type="color" id="t2Color" value="#16A34A"></label>
           </div>
           <div class="score" id="t2Score">0</div>
           <div class="team-bar"><div class="fill" id="t2Bar" style="background:#16A34A"></div></div>
-          <div class="mini" id="t2Streak">Streak: 0</div>
+          <div class="legend" id="t2Streak">Streak: 0</div>
           <div class="grid" style="margin-top:6px">
             <button class="point" id="t2Plus">+1 (Correct)</button>
             <button class="point" id="t2Minus">-1 (Penalty)</button>
@@ -140,9 +145,14 @@
         </div>
 
         <div class="spacer"></div>
-        <div style="min-width:260px">
-          <div class="legend">Round banner</div>
+        <div class="games-card" style="min-width:260px">
+          <div class="legend">Round & Game Results</div>
           <div id="banner" class="banner hidden">Round result will appear here.</div>
+          <div class="card" style="padding:12px">
+            <div class="big">Games Won</div>
+            <div id="gamesTally" class="legend" style="margin-top:6px">—</div>
+            <div id="gameLeader" class="legend" style="margin-top:6px">—</div>
+          </div>
         </div>
       </div>
     </div>
@@ -150,6 +160,16 @@
 
   <!-- Confetti layer -->
   <div class="confetti" id="confetti"></div>
+
+  <!-- Modal (Congrats / New Game) -->
+  <div id="modalWrap" class="modal-backdrop hidden">
+    <div class="modal">
+      <h2 id="modalTitle">Congratulations!</h2>
+      <p id="modalBody">Game winner goes here.</p>
+      <p class="note" style="margin-top:10px">Please call over Mr. Sargool and show your results before clicking Next Question.</p>
+      <button class="btn primary" id="modalClose">Continue</button>
+    </div>
+  </div>
 
 <script>
 /* ---------------- DATA ---------------- */
@@ -222,7 +242,7 @@ const noRepeat     = document.getElementById('noRepeat');
 const fullscreenBtn= document.getElementById('fullscreenBtn');
 const resetScoresBtn=document.getElementById('resetScoresBtn');
 const bonusPill    = document.getElementById('bonusPill');
-const muteToggle   = document.getElementById('muteToggle');
+const endNote      = document.getElementById('endNote');
 
 const t1ScoreEl = document.getElementById('t1Score');
 const t2ScoreEl = document.getElementById('t2Score');
@@ -236,6 +256,12 @@ const t1Color= document.getElementById('t1Color');
 const t2Color= document.getElementById('t2Color');
 const t1Bar  = document.getElementById('t1Bar');
 const t2Bar  = document.getElementById('t2Bar');
+const t1Card = document.getElementById('t1Card');
+const t2Card = document.getElementById('t2Card');
+const t1Title= document.getElementById('t1Title');
+const t2Title= document.getElementById('t2Title');
+const t1Name = document.getElementById('t1Name');
+const t2Name = document.getElementById('t2Name');
 const t1StreakEl = document.getElementById('t1Streak');
 const t2StreakEl = document.getElementById('t2Streak');
 
@@ -243,6 +269,14 @@ const roundNowEl = document.getElementById('roundNow');
 const roundTotalEl = document.getElementById('roundTotal');
 const roundFillEl = document.getElementById('roundFill');
 const banner = document.getElementById('banner');
+const gamesTally = document.getElementById('gamesTally');
+const gameLeader = document.getElementById('gameLeader');
+
+const modalWrap = document.getElementById('modalWrap');
+const modalTitle = document.getElementById('modalTitle');
+const modalBody = document.getElementById('modalBody');
+const modalClose = document.getElementById('modalClose');
+
 const confettiLayer = document.getElementById('confetti');
 
 /* ------------- State ------------- */
@@ -262,24 +296,18 @@ let totalRounds = 10;
 let currentRound = 1;
 let promptsPool = Object.keys(PHRASES);
 let unusedPrompts = [...promptsPool];
-let roundStartScores = {t1:0, t2:0}; // to compute round winner
+let roundStartScores = {t1:0, t2:0};
 
-/* ------------- Audio (WebAudio) ------------- */
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-let muted = false;
-function beep(f=880, dur=0.07, type='sine', vol=0.06){
-  if(muted) return;
-  const o = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  o.type = type; o.frequency.value = f;
-  g.gain.value = vol;
-  o.connect(g); g.connect(audioCtx.destination);
-  o.start();
-  setTimeout(()=>{ o.stop(); }, dur*1000);
+let gamesWon1 = 0, gamesWon2 = 0;
+let justFinishedGame = false;
+
+/* ------------- Utilities ------------- */
+function hexToRgba(hex, alpha){
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if(!m) return `rgba(0,0,0,${alpha})`;
+  const r = parseInt(m[1],16), g = parseInt(m[2],16), b = parseInt(m[3],16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
-function tick(){ beep(700, 0.03, 'square', 0.03); }
-function ding(){ beep(1100, 0.12, 'sine', 0.08); }
-function bonusSnd(){ beep(500, 0.06, 'triangle', 0.08); setTimeout(()=>beep(800,0.08,'triangle',0.08),70); }
 
 /* ------------- Helpers ------------- */
 function randomPromptFromPool(){
@@ -330,9 +358,8 @@ function startTimer(){
     if(currentTime>0){
       currentTime--;
       updateTimerLabel();
-      if(currentTime % 2 === 0) tick(); // subtle tick every 2 seconds
     } else {
-      stopTimer(); ding();
+      stopTimer();
     }
   },1000);
 }
@@ -358,7 +385,6 @@ function confettiBurst(colorA, colorB){
 function renderScores(){
   t1ScoreEl.textContent = String(score1);
   t2ScoreEl.textContent = String(score2);
-  // progress bars: share of total (avoid div by zero)
   const total = Math.max(1, score1 + score2);
   t1Bar.style.width = (score1/total*100).toFixed(0) + '%';
   t2Bar.style.width = (score2/total*100).toFixed(0) + '%';
@@ -367,21 +393,15 @@ function updateStreak(team, deltaPositive){
   if(team===1){
     streak1 = deltaPositive ? streak1+1 : 0;
     t1StreakEl.textContent = `Streak: ${streak1}`;
-    if(streak1>=3){
-      score1+=1; streak1=0; t1StreakEl.textContent = `Streak: ${streak1} (bonus applied)`;
-      renderScores(); ding();
-    }
+    if(streak1>=3){ score1+=1; streak1=0; t1StreakEl.textContent=`Streak: ${streak1} (bonus applied)`; renderScores(); }
   } else {
     streak2 = deltaPositive ? streak2+1 : 0;
     t2StreakEl.textContent = `Streak: ${streak2}`;
-    if(streak2>=3){
-      score2+=1; streak2=0; t2StreakEl.textContent = `Streak: ${streak2} (bonus applied)`;
-      renderScores(); ding();
-    }
+    if(streak2>=3){ score2+=1; streak2=0; t2StreakEl.textContent=`Streak: ${streak2} (bonus applied)`; renderScores(); }
   }
 }
 
-/* ------------- Rounds ------------- */
+/* ------------- Rounds / Games ------------- */
 function setRounds(n){
   totalRounds = n;
   roundTotalEl.textContent = String(totalRounds);
@@ -390,41 +410,90 @@ function setRounds(n){
   roundFillEl.style.width = (currentRound-1)/Math.max(1,totalRounds)*100 + '%';
   banner.classList.add('hidden');
   roundStartScores = {t1:score1, t2:score2};
+  endNote.classList.add('hidden');
+  nextBtn.textContent = 'Next Question';
+  justFinishedGame = false;
 }
 function finishRoundAndAdvance(){
-  // compute deltas
+  // compute deltas for the round
   const d1 = score1 - roundStartScores.t1;
   const d2 = score2 - roundStartScores.t2;
+  const name1 = t1Name.value.trim() || 'Team 1';
+  const name2 = t2Name.value.trim() || 'Team 2';
   let text = '';
-  if(d1> d2) text = 'Round winner: Team 1';
-  else if(d2> d1) text = 'Round winner: Team 2';
+  if(d1> d2) text = `Round winner: ${name1}`;
+  else if(d2> d1) text = `Round winner: ${name2}`;
   else text = 'Round tied';
   banner.textContent = text;
   banner.classList.remove('hidden');
 
-  // advance
+  // if final round, decide game winner now
+  if(currentRound >= totalRounds){
+    const gameText = score1===score2 ? 'Game tied' : ((score1>score2) ? `Game winner: ${name1}` : `Game winner: ${name2}`);
+    // Update games tally and modal only if not tie
+    if(score1!==score2){
+      if(score1>score2) gamesWon1++; else gamesWon2++;
+      // Congrats modal
+      modalTitle.textContent = 'Congratulations!';
+      modalBody.textContent = `${gameText}`;
+      modalWrap.classList.remove('hidden');
+      // confetti with winning color
+      const c = (score1>score2) ? t1Color.value : t2Color.value;
+      confettiBurst(c, '#ffffff');
+    } else {
+      // Tie modal
+      modalTitle.textContent = 'Game Tied';
+      modalBody.textContent = 'No game winner this time.';
+      modalWrap.classList.remove('hidden');
+    }
+    updateGamesPanel();
+    // Prepare Next button note
+    endNote.innerHTML = 'Please call over Mr. Sargool and show your results before clicking <strong>Next Question</strong>.<br>(Next game will begin and scores will be reset, but you can see the games counter below.)';
+    endNote.classList.remove('hidden');
+    nextBtn.textContent = 'Next Question (Next game will begin and scores will be reset …)';
+    justFinishedGame = true;
+  }
+
+  // advance round counter (visual)
   if(currentRound < totalRounds){
     currentRound++;
     roundNowEl.textContent = String(currentRound);
     roundFillEl.style.width = ((currentRound-1)/Math.max(1,totalRounds))*100 + '%';
     roundStartScores = {t1:score1, t2:score2};
-  } else {
-    // end-of-game banner
-    const final = score1===score2 ? 'Game tied' : (score1>score2 ? 'Game winner: Team 1' : 'Game winner: Team 2');
-    banner.textContent = final;
   }
+}
+function updateGamesPanel(){
+  const name1 = t1Name.value.trim() || 'Team 1';
+  const name2 = t2Name.value.trim() || 'Team 2';
+  gamesTally.textContent = `${name1}: ${gamesWon1}  •  ${name2}: ${gamesWon2}`;
+  if(gamesWon1===gamesWon2) gameLeader.textContent = 'Games leader: tied';
+  else gameLeader.textContent = `Games leader: ${gamesWon1>gamesWon2 ? name1 : name2}`;
+}
+function startNewGame(){
+  // reset scores and rounds, keep gamesWon counters
+  score1=0; score2=0; streak1=0; streak2=0;
+  renderScores();
+  t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0';
+  setRounds(parseInt(roundsSelect.value,10));
 }
 
 /* ------------- Flow ------------- */
 function nextQuestion(){
-  // close previous round and move to next
+  // If we just finished a game and the modal is open, do nothing until closed
+  if(!modalWrap.classList.contains('hidden')) return;
+
+  // If last game just finished, clicking Next starts a fresh game
+  if(justFinishedGame){
+    startNewGame();
+  }
+
+  // close previous round and move to next (or end game)
   finishRoundAndAdvance();
 
   // reset timer to selected value
   currentTime = timerSeconds;
   updateTimerLabel();
   answerLabel.textContent = '';
-  banner.scrollIntoView({behavior:'smooth', block:'center'});
 
   // pick prompt (English only)
   currentPrompt = randomPromptFromPool();
@@ -445,6 +514,9 @@ function nextQuestion(){
 }
 
 function showAnswer(){
+  // stop timer when showing answer
+  stopTimer();
+
   // Syriac-only answer: pronoun + (ܒܸܕ if future) + verb (+ Syriac food)
   const base = PHRASES[currentPrompt] || '';
   const pron = detectPronoun(currentPrompt);
@@ -466,16 +538,13 @@ function addPoints(team, delta){
     renderScores();
     updateStreak(2, delta>0);
   }
-  if(delta>0) ding(); else if(delta<0) beep(300,0.06,'square',0.06);
 }
 function addBonus(team){
   if(!isBonus) return;
   addPoints(team, 2);
-  bonusSnd();
-  // confetti in team color
+  // celebration confetti per team color (visual only)
   const cA = team===1 ? t1Color.value : t2Color.value;
-  const cB = '#ffffff';
-  confettiBurst(cA, cB);
+  confettiBurst(cA, '#ffffff');
 }
 
 t1Plus.onclick = ()=>addPoints(1,1);
@@ -493,13 +562,38 @@ nextBtn.onclick = nextQuestion;
 
 timerSelect.onchange = (e)=>{ timerSeconds = parseInt(e.target.value,10); currentTime = timerSeconds; updateTimerLabel(); };
 roundsSelect.onchange = (e)=>{ setRounds(parseInt(e.target.value,10)); };
-t1Color.oninput = ()=>{ t1Bar.style.background = t1Color.value; };
-t2Color.oninput = ()=>{ t2Bar.style.background = t2Color.value; };
-muteToggle.onchange = (e)=>{ muted = e.target.checked; };
 
+/* Live-updating team names and colors */
+function updateTeamTitle(which){
+  const name = (which===1 ? t1Name.value.trim() : t2Name.value.trim()) || (which===1?'Team 1':'Team 2');
+  (which===1? t1Title : t2Title).textContent = name;
+  updateGamesPanel();
+}
+t1Name.addEventListener('input', ()=>updateTeamTitle(1));
+t2Name.addEventListener('input', ()=>updateTeamTitle(2));
+
+function applyTeamColor(which){
+  const color = which===1 ? t1Color.value : t2Color.value;
+  const card  = which===1 ? t1Card : t2Card;
+  const bar   = which===1 ? t1Bar  : t2Bar;
+  card.style.background = hexToRgba(color, 0.10);   // soft tint
+  card.style.borderColor = hexToRgba(color, 0.6);
+  bar.style.background = color;
+}
+t1Color.oninput = ()=>applyTeamColor(1);
+t2Color.oninput = ()=>applyTeamColor(2);
+
+/* Fullscreen */
 fullscreenBtn.onclick = ()=>{
   const el = document.documentElement;
   if(!document.fullscreenElement){ el.requestFullscreen?.(); } else { document.exitFullscreen?.(); }
+};
+
+/* Modal */
+modalClose.onclick = ()=>{
+  modalWrap.classList.add('hidden');
+  // After closing results, allow Next to start new game
+  justFinishedGame = true;
 };
 
 /* ------------- Keyboard shortcuts ------------- */
@@ -527,7 +621,14 @@ document.addEventListener('keydown', (e)=>{
   renderScores();
   updateTimerLabel();
   roundStartScores = {t1:score1, t2:score2};
-  nextQuestion(); // loads first prompt and starts timer if not bonus
+  applyTeamColor(1); applyTeamColor(2);
+  updateTeamTitle(1); updateTeamTitle(2);
+  updateGamesPanel();
+  // First question
+  currentPrompt = randomPromptFromPool();
+  promptLabel.textContent = currentPrompt;
+  // Not a bonus by default; start timer
+  currentFoodIndex = null; foodLabel.textContent=''; setBonusUI(false); startTimer();
 })();
 </script>
 </body>
