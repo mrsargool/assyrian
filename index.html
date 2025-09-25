@@ -16,7 +16,7 @@
     }
     *{box-sizing:border-box}
     body{margin:0; background:var(--bg); color:var(--ink); font:16px/1.4 "Segoe UI", system-ui, Arial, sans-serif;}
-    .wrap{max-width:1160px; margin:24px auto; padding:0 16px;}
+    .wrap{max-width:1220px; margin:24px auto; padding:0 16px;}
     header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px;}
     h1{font-size:22px; margin:0; font-weight:800;}
     .controls{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
@@ -35,10 +35,13 @@
     .prompt{font-size:30px; font-weight:800; margin:8px 0 6px}
     .food{font-size:18px; font-style:italic; color:var(--warn); margin:0 0 6px}
     .answer{font-family:"Noto Sans Syriac Eastern","Segoe UI",system-ui,Arial,sans-serif; font-size:48px; color:var(--success); margin:12px 0 18px}
-    .card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 1px 0 rgba(0,0,0,.04); border:1px solid var(--line);}
+
     .row{display:flex; gap:16px; flex-wrap:wrap; align-items:center}
     .spacer{flex:1}
     .legend{color:var(--muted); font-size:12px}
+
+    .card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 1px 0 rgba(0,0,0,.04); border:1px solid var(--line);}
+    .grid2{display:grid; grid-template-columns:1fr 310px; gap:16px;}
 
     .scores .team{min-width:260px; border-radius:16px; padding:14px; border:2px solid var(--line); background:#fff; transition:background .2s,border-color .2s, box-shadow .2s; cursor:pointer; position:relative}
     .scores .team:hover{box-shadow:0 0 0 3px rgba(14,165,233,.15)}
@@ -64,8 +67,9 @@
     .games-card .big{font-size:18px; font-weight:800}
     .note{font-size:12px; color:var(--muted)}
     .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:50}
-    .modal{background:#fff; border-radius:16px; padding:20px; max-width:640px; width:92%; border:1px solid var(--line); text-align:center}
-    .modal h2{margin-top:0; font-size:24px}
+    .modal{background:#fff; border-radius:16px; padding:20px; max-width:720px; width:92%; border:1px solid var(--line); text-align:left}
+    .modal h2{margin:6px 0 10px; font-size:22px}
+    .modal .muted{color:#475569; font-size:14px}
     /* Multiple choice */
     .mc{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
     .mc .opt{flex:1 1 48%; padding:10px; border:1px solid var(--line); border-radius:10px; background:#fff; cursor:not-allowed}
@@ -74,6 +78,11 @@
     .mc .opt.wrong{border-color:#DC2626; background:#FEF2F2}
     .lockpill{margin-left:8px}
     #currentTeamPill{border:1px solid var(--line)}
+
+    /* History list */
+    .history-list{max-height:340px; overflow:auto; margin-top:8px}
+    .history-item{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px; border:1px solid var(--line); border-radius:10px; margin-bottom:6px; background:#fff}
+    .history-item .meta{font-size:12px; color:#475569}
   </style>
 </head>
 <body>
@@ -102,7 +111,7 @@
           <option value="BOTH">Both</option>
         </select>
 
-        <label class="legend" for="qtypeSelect">Question type:</label>
+        <label class="legend" for="qtypeSelect">Type:</label>
         <select id="qtypeSelect" title="Free / Multiple Choice / Mixed">
           <option value="FREE" selected>Free Response</option>
           <option value="MC">Multiple Choice</option>
@@ -117,107 +126,142 @@
 
         <button class="btn warn" id="resetGameBtn" title="Reset rounds, scores, and start from Round 1">Reset Game</button>
         <button class="btn danger" id="resetScoresBtn" title="Reset all teams to 0">Reset Scores</button>
+        <button class="btn primary" id="instructionsBtn" title="Show instructions">Instructions</button>
       </div>
     </header>
 
-    <div class="card" style="margin-bottom:10px">
-      <div class="row">
-        <div><strong>Round:</strong> <span id="roundNow">1</span>/<span id="roundTotal">10</span></div>
-        <div class="spacer"></div>
-        <div style="min-width:280px">
-          <div class="roundbar" title="Round progress"><div class="fill" id="roundFill"></div></div>
+    <div class="grid2">
+      <!-- Left: Main play area -->
+      <div>
+        <div class="card" style="margin-bottom:10px">
+          <div class="row">
+            <div><strong>Round:</strong> <span id="roundNow">1</span>/<span id="roundTotal">10</span></div>
+            <div class="spacer"></div>
+            <div style="min-width:280px">
+              <div class="roundbar" title="Round progress"><div class="fill" id="roundFill"></div></div>
+            </div>
+          </div>
+          <div id="endNote" class="note hidden" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="timer" id="timerLabel">30 sec</div>
+
+        <!-- Current team pill -->
+        <div id="currentTeamPill" class="pill hidden">Current Team: —</div>
+
+        <div class="prompt" id="promptLabel"></div>
+        <div class="food" id="foodLabel"></div>
+
+        <div class="answer" id="answerLabel"></div>
+
+        <!-- Multiple choice answers -->
+        <div id="mcWrap" class="mc hidden"></div>
+        <span id="mcLock" class="pill lockpill hidden">Options unlock after 10 sec</span>
+        <span id="teamLock" class="pill lockpill hidden">Select your team to award points</span>
+
+        <div class="row" style="margin-top:8px">
+          <button class="btn success" id="showAnswerBtn" title="Reveal the answer and stop the timer" disabled>Show Answer</button>
+          <button class="btn primary" id="nextBtn" title="Next random prompt (auto-starts timer)" disabled>Next Question</button>
+          <span id="bonusPill" class="pill hidden">BONUS ROUND</span>
+          <div class="spacer"></div>
+          <div class="note">Multiple Choice: select your team first to earn/lose points • Space=Start/Pause • Enter=Next • A=Show</div>
+        </div>
+
+        <!-- Scores -->
+        <div class="card scores" style="margin-top:14px">
+          <div class="row">
+            <!-- Team 1 -->
+            <div class="team" id="t1Card">
+              <div class="team-title" id="t1Title">Team 1</div>
+              <div class="row">
+                <input id="t1Name" type="text" value="Team 1" />
+                <label class="legend">Color <input type="color" id="t1Color" value="#2563EB"></label>
+              </div>
+              <div class="score" id="t1Score">0</div>
+              <div class="team-bar"><div class="fill" id="t1Bar" style="background:#2563EB"></div></div>
+              <div class="legend" id="t1Streak">Streak: 0</div>
+              <div class="grid" style="margin-top:6px">
+                <button class="point" id="t1Plus">+1 (Correct)</button>
+                <button class="point" id="t1Minus">-1 (Penalty)</button>
+                <button class="point" id="t1Bonus" disabled>+2 BONUS</button>
+              </div>
+            </div>
+
+            <!-- Team 2 -->
+            <div class="team" id="t2Card">
+              <div class="team-title" id="t2Title">Team 2</div>
+              <div class="row">
+                <input id="t2Name" type="text" value="Team 2" />
+                <label class="legend">Color <input type="color" id="t2Color" value="#16A34A"></label>
+              </div>
+              <div class="score" id="t2Score">0</div>
+              <div class="team-bar"><div class="fill" id="t2Bar" style="background:#16A34A"></div></div>
+              <div class="legend" id="t2Streak">Streak: 0</div>
+              <div class="grid" style="margin-top:6px">
+                <button class="point" id="t2Plus">+1 (Correct)</button>
+                <button class="point" id="t2Minus">-1 (Penalty)</button>
+                <button class="point" id="t2Bonus" disabled>+2 BONUS</button>
+              </div>
+            </div>
+
+            <!-- Team 3 (hidden unless selected) -->
+            <div class="team hidden" id="t3Card">
+              <div class="team-title" id="t3Title">Team 3</div>
+              <div class="row">
+                <input id="t3Name" type="text" value="Team 3" />
+                <label class="legend">Color <input type="color" id="t3Color" value="#9333EA"></label>
+              </div>
+              <div class="score" id="t3Score">0</div>
+              <div class="team-bar"><div class="fill" id="t3Bar" style="background:#9333EA"></div></div>
+              <div class="legend" id="t3Streak">Streak: 0</div>
+              <div class="grid" style="margin-top:6px">
+                <button class="point" id="t3Plus">+1 (Correct)</button>
+                <button class="point" id="t3Minus">-1 (Penalty)</button>
+                <button class="point" id="t3Bonus" disabled>+2 BONUS</button>
+              </div>
+            </div>
+
+            <div class="spacer"></div>
+            <div class="games-card" style="min-width:280px">
+              <div class="legend">Round & Game Results</div>
+              <div id="banner" class="banner hidden">Round result will appear here.</div>
+              <div class="card" style="padding:12px">
+                <div class="big">Games Won</div>
+                <div id="gamesTally" class="legend" style="margin-top:6px">—</div>
+                <div id="gameLeader" class="legend" style="margin-top:6px">—</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div id="endNote" class="note hidden" style="margin-top:8px;"></div>
-    </div>
 
-    <div class="timer" id="timerLabel">30 sec</div>
-
-    <!-- Current team pill -->
-    <div id="currentTeamPill" class="pill hidden">Current Team: —</div>
-
-    <div class="prompt" id="promptLabel"></div>
-    <div class="food" id="foodLabel"></div>
-
-    <div class="answer" id="answerLabel"></div>
-
-    <!-- Multiple choice answers -->
-    <div id="mcWrap" class="mc hidden"></div>
-    <span id="mcLock" class="pill lockpill hidden">Options unlock after 10 sec</span>
-    <span id="teamLock" class="pill lockpill hidden">Select your team to award points</span>
-
-    <div class="row" style="margin-top:8px">
-      <button class="btn success" id="showAnswerBtn" title="Reveal the answer and stop the timer" disabled>Show Answer</button>
-      <button class="btn primary" id="nextBtn" title="Next random prompt (auto-starts timer)" disabled>Next Question</button>
-      <span id="bonusPill" class="pill hidden">BONUS ROUND</span>
-      <div class="spacer"></div>
-      <div class="note">Click a team card to select who’s answering (MC only) • Space=Start/Pause • Enter=Next • A=Show</div>
-    </div>
-
-    <div class="card scores" style="margin-top:14px">
-      <div class="row">
-        <!-- Team 1 -->
-        <div class="team" id="t1Card">
-          <div class="team-title" id="t1Title">Team 1</div>
+      <!-- Right: Instructions + History -->
+      <aside>
+        <div class="card">
           <div class="row">
-            <input id="t1Name" type="text" value="Team 1" />
-            <label class="legend">Color <input type="color" id="t1Color" value="#2563EB"></label>
+            <div><strong>Instructions</strong></div>
+            <div class="spacer"></div>
+            <button class="btn neutral" id="toggleInstr">Hide</button>
           </div>
-          <div class="score" id="t1Score">0</div>
-          <div class="team-bar"><div class="fill" id="t1Bar" style="background:#2563EB"></div></div>
-          <div class="legend" id="t1Streak">Streak: 0</div>
-          <div class="grid" style="margin-top:6px">
-            <button class="point" id="t1Plus">+1 (Correct)</button>
-            <button class="point" id="t1Minus">-1 (Penalty)</button>
-            <button class="point" id="t1Bonus" disabled>+2 BONUS</button>
-          </div>
-        </div>
-
-        <!-- Team 2 -->
-        <div class="team" id="t2Card">
-          <div class="team-title" id="t2Title">Team 2</div>
-          <div class="row">
-            <input id="t2Name" type="text" value="Team 2" />
-            <label class="legend">Color <input type="color" id="t2Color" value="#16A34A"></label>
-          </div>
-          <div class="score" id="t2Score">0</div>
-          <div class="team-bar"><div class="fill" id="t2Bar" style="background:#16A34A"></div></div>
-          <div class="legend" id="t2Streak">Streak: 0</div>
-          <div class="grid" style="margin-top:6px">
-            <button class="point" id="t2Plus">+1 (Correct)</button>
-            <button class="point" id="t2Minus">-1 (Penalty)</button>
-            <button class="point" id="t2Bonus" disabled>+2 BONUS</button>
+          <div id="instrBody" style="margin-top:8px">
+            <ul style="margin:0 0 6px 18px; padding:0">
+              <li>Select <em>Direction</em>: English → Assyrian, Assyrian → English, or Both.</li>
+              <li>Select <em>Type</em>: Free Response, Multiple Choice, or Mixed.</li>
+              <li>Click <strong>Next Question</strong> to start. Timer begins automatically (except during Bonus).</li>
+              <li><strong>Free Response</strong>: discuss as a class; the host reveals the answer and assigns points manually.</li>
+              <li><strong>Multiple Choice</strong>: select your team, then choose an answer. Correct = +1 (or +2 in Bonus). Wrong = −1.</li>
+              <li>Bonus rounds may include food items; be careful—choices are mixed to avoid easy tells.</li>
+              <li>Use the <strong>History</strong> list to review any previous question and answer.</li>
+            </ul>
+            <div class="note">Show Answer unlocks after 10 seconds (Free). Multiple Choice options unlock after 10 seconds (score only if a team is selected).</div>
           </div>
         </div>
 
-        <!-- Team 3 (hidden unless selected) -->
-        <div class="team hidden" id="t3Card">
-          <div class="team-title" id="t3Title">Team 3</div>
-          <div class="row">
-            <input id="t3Name" type="text" value="Team 3" />
-            <label class="legend">Color <input type="color" id="t3Color" value="#9333EA"></label>
-          </div>
-          <div class="score" id="t3Score">0</div>
-          <div class="team-bar"><div class="fill" id="t3Bar" style="background:#9333EA"></div></div>
-          <div class="legend" id="t3Streak">Streak: 0</div>
-          <div class="grid" style="margin-top:6px">
-            <button class="point" id="t3Plus">+1 (Correct)</button>
-            <button class="point" id="t3Minus">-1 (Penalty)</button>
-            <button class="point" id="t3Bonus" disabled>+2 BONUS</button>
-          </div>
+        <div class="card" style="margin-top:12px">
+          <div class="row"><strong>History</strong><div class="spacer"></div><span class="legend" id="historyCount">0 items</span></div>
+          <div class="history-list" id="historyList"></div>
         </div>
-
-        <div class="spacer"></div>
-        <div class="games-card" style="min-width:280px">
-          <div class="legend">Round & Game Results</div>
-          <div id="banner" class="banner hidden">Round result will appear here.</div>
-          <div class="card" style="padding:12px">
-            <div class="big">Games Won</div>
-            <div id="gamesTally" class="legend" style="margin-top:6px">—</div>
-            <div id="gameLeader" class="legend" style="margin-top:6px">—</div>
-          </div>
-        </div>
-      </div>
+      </aside>
     </div>
   </div>
 
@@ -230,7 +274,24 @@
       <h2 id="modalTitle">Congratulations!</h2>
       <p id="modalBody">Game winner goes here.</p>
       <p class="note" style="margin-top:10px">Please call over Mr. Sargool and show your results before clicking Next Question.</p>
-      <button class="btn primary" id="modalClose">Continue</button>
+      <div style="text-align:right; margin-top:12px">
+        <button class="btn primary" id="modalClose">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal (History Viewer) -->
+  <div id="historyModalWrap" class="modal-backdrop hidden">
+    <div class="modal">
+      <h2>Review Question</h2>
+      <div id="histMeta" class="muted" style="margin-bottom:8px"></div>
+      <div id="histPrompt" class="prompt"></div>
+      <div id="histFood" class="food"></div>
+      <div id="histAnswer" class="answer"></div>
+      <div id="histMC" class="mc"></div>
+      <div style="text-align:right; margin-top:12px">
+        <button class="btn neutral" id="historyClose">Close</button>
+      </div>
     </div>
   </div>
 
@@ -341,6 +402,19 @@ const modalTitle=document.getElementById('modalTitle');
 const modalBody=document.getElementById('modalBody');
 const modalClose=document.getElementById('modalClose');
 
+const historyList=document.getElementById('historyList');
+const historyCount=document.getElementById('historyCount');
+const historyModalWrap=document.getElementById('historyModalWrap');
+const histMeta=document.getElementById('histMeta');
+const histPrompt=document.getElementById('histPrompt');
+const histFood=document.getElementById('histFood');
+const histAnswer=document.getElementById('histAnswer');
+const histMC=document.getElementById('histMC');
+
+const instructionsBtn=document.getElementById('instructionsBtn');
+const toggleInstr=document.getElementById('toggleInstr');
+const instrBody=document.getElementById('instrBody');
+
 const confettiLayer=document.getElementById('confetti');
 
 /* ---------------- State ---------------- */
@@ -365,8 +439,12 @@ let lastRenderedMode='FREE';
 let selectedTeam=0;
 let teamSelectable=true; // disabled in FREE
 
-/* For MC options as objects (no string-equality checks) */
+/* For MC options */
 let mcOptions = []; // [{text, correct:boolean, button:HTMLElement}]
+
+/* History (read-only snapshots) */
+const history = []; // { round, dir, mode, isBonus, foodIdx, prompt, answerText, mcOptions:[{text,correct}] }
+const MAX_HISTORY = 100;
 
 /* ---------------- Utils ---------------- */
 function hexToRgba(hex, alpha){
@@ -579,7 +657,6 @@ function setupLocksForNewQuestion(){
 
   canShowAnswer=false;
   mcEnabled=false;
-  // DO NOT CLEAR mcOptions here (bug previously prevented enabling)
   mcLock.classList.add('hidden');
 
   // Team prompt only meaningful in MC
@@ -613,15 +690,13 @@ function unlockAfterDelay(){
   }
 }
 function maybeEnableMC(){
-  // Enable MC options once 10s passed, regardless of team selection
   const ready = canShowAnswer;
   enableMCOptions(ready);
-  // If no team is selected, remind but still allow clicking (no scoring)
   const showTeamNag = (lastRenderedMode==='MC') && canShowAnswer && (selectedTeam===0);
   teamLock.classList.toggle('hidden', !showTeamNag);
 }
 
-/* Multiple choice */
+/* Multiple choice helpers (NO REPEATS) */
 function uniqueFoodIndices(count, excludeIndex){
   const exclude = Array.isArray(excludeIndex) ? new Set(excludeIndex) :
                   (excludeIndex==null ? new Set() : new Set([excludeIndex]));
@@ -634,62 +709,60 @@ function uniqueFoodIndices(count, excludeIndex){
   }
   return picks;
 }
-function makeDistractorKey(correctKey){
-  const pool=Object.keys(PHRASES).filter(k=>k!==correctKey);
-  return pool[Math.floor(Math.random()*pool.length)];
+function getUniqueDistractorKeys(correctKey, needed){
+  const pool = Object.keys(PHRASES).filter(k=>k!==correctKey);
+  const picks = new Set();
+  while(picks.size < needed && pool.length){
+    const k = pool.splice(Math.floor(Math.random()*pool.length),1)[0];
+    picks.add(k);
+  }
+  return Array.from(picks);
 }
-function clearMC(){
-  mcWrap.innerHTML='';
-  mcWrap.classList.add('hidden');
-  mcLock.classList.add('hidden');
-  mcOptions=[];
+function ensureUniqueOptionTexts(optionsBuilder){
+  // Keeps calling optionsBuilder() until all 4 texts are unique (guarded attempts)
+  for(let tries=0; tries<15; tries++){
+    const opts = optionsBuilder();
+    const texts = opts.map(o=>o.text);
+    const uniq = new Set(texts);
+    if(uniq.size === texts.length) return opts;
+  }
+  return optionsBuilder(); // fallback
 }
+
+/* MC renderers (with harder bonus mixing, no repeats) */
 function renderMC_EN2SY(correctKey){
-  // Build the correct text (with announced food if bonus)
-  const correctText = buildSyAnswerFromKey(correctKey, currentFoodIndex);
-
-  // Choose 3 distractor keys
-  const distractorKeys = [makeDistractorKey(correctKey), makeDistractorKey(correctKey), makeDistractorKey(correctKey)];
-
-  // Decide the distraction mode for BONUS rounds:
-  //  - "ALL": all 4 options include some food (correct uses announced food, distractors use other foods)
-  //  - "HALF": exactly 2 options include food (correct + one distractor), other 2 have no food
-  // For NON-bonus: no options have food.
   const isBonusRound = isBonus && currentFoodIndex != null;
   const mode = isBonusRound ? (Math.random() < 0.5 ? 'ALL' : 'HALF') : 'NONE';
 
-  let options = [];
+  const build = ()=>{
+    const distractorKeys = getUniqueDistractorKeys(correctKey, 3);
+    if (mode === 'ALL'){
+      const otherFoods = uniqueFoodIndices(3, currentFoodIndex);
+      return [
+        { text: buildSyAnswerFromKey(correctKey, currentFoodIndex), correct:true },
+        { text: buildSyAnswerFromKey(distractorKeys[0], otherFoods[0]), correct:false },
+        { text: buildSyAnswerFromKey(distractorKeys[1], otherFoods[1]), correct:false },
+        { text: buildSyAnswerFromKey(distractorKeys[2], otherFoods[2]), correct:false },
+      ].sort(()=>Math.random()-0.5);
+    } else if (mode === 'HALF'){
+      const oneOtherFood = uniqueFoodIndices(1, currentFoodIndex)[0];
+      return [
+        { text: buildSyAnswerFromKey(correctKey, currentFoodIndex), correct:true },
+        { text: buildSyAnswerFromKey(distractorKeys[0], oneOtherFood), correct:false },
+        { text: buildSyAnswerFromKey(distractorKeys[1], null), correct:false },
+        { text: buildSyAnswerFromKey(distractorKeys[2], null), correct:false },
+      ].sort(()=>Math.random()-0.5);
+    } else {
+      return [
+        { text: buildSyAnswerFromKey(correctKey, null), correct:true },
+        { text: buildSyAnswerFromKey(distractorKeys[0], null), correct:false },
+        { text: buildSyAnswerFromKey(distractorKeys[1], null), correct:false },
+        { text: buildSyAnswerFromKey(distractorKeys[2], null), correct:false },
+      ].sort(()=>Math.random()-0.5);
+    }
+  };
 
-  if (mode === 'ALL'){
-    // Need 3 other foods for the distractors, none equal to currentFoodIndex
-    const otherFoods = uniqueFoodIndices(3, currentFoodIndex);
-    options = [
-      { text: correctText, correct: true },
-      { text: buildSyAnswerFromKey(distractorKeys[0], otherFoods[0]), correct: false },
-      { text: buildSyAnswerFromKey(distractorKeys[1], otherFoods[1]), correct: false },
-      { text: buildSyAnswerFromKey(distractorKeys[2], otherFoods[2]), correct: false },
-    ].sort(()=>Math.random()-0.5);
-
-  } else if (mode === 'HALF'){
-    // Exactly 2 with food: the correct option + exactly 1 distractor with a different food
-    const oneOtherFood = uniqueFoodIndices(1, currentFoodIndex)[0]; // may be undefined if not enough foods
-    options = [
-      { text: correctText, correct: true },                                                // has food
-      { text: buildSyAnswerFromKey(distractorKeys[0], oneOtherFood), correct: false },     // has other food
-      { text: buildSyAnswerFromKey(distractorKeys[1], null), correct: false },             // no food
-      { text: buildSyAnswerFromKey(distractorKeys[2], null), correct: false },             // no food
-    ].sort(()=>Math.random()-0.5);
-
-  } else {
-    // NON-bonus: no foods anywhere
-    options = [
-      { text: buildSyAnswerFromKey(correctKey, null), correct: true },
-      { text: buildSyAnswerFromKey(distractorKeys[0], null), correct: false },
-      { text: buildSyAnswerFromKey(distractorKeys[1], null), correct: false },
-      { text: buildSyAnswerFromKey(distractorKeys[2], null), correct: false },
-    ].sort(()=>Math.random()-0.5);
-  }
-
+  const options = ensureUniqueOptionTexts(build);
   mcOptions = options;
   mcWrap.innerHTML='';
   options.forEach((opt, idx)=>{
@@ -702,17 +775,17 @@ function renderMC_EN2SY(correctKey){
   });
   enableMCOptions(false);
 }
-  
 function renderMC_SY2EN(correctKey){
-  const correctText = buildEnAnswerFromKey(correctKey);
-  const distractorKeys = [makeDistractorKey(correctKey), makeDistractorKey(correctKey), makeDistractorKey(correctKey)];
-  const options = [
-    {text: correctText, correct:true},
-    {text: buildEnAnswerFromKey(distractorKeys[0]), correct:false},
-    {text: buildEnAnswerFromKey(distractorKeys[1]), correct:false},
-    {text: buildEnAnswerFromKey(distractorKeys[2]), correct:false},
+  const distractorKeys = getUniqueDistractorKeys(correctKey, 3);
+
+  const build = ()=>[
+    { text: buildEnAnswerFromKey(correctKey), correct:true },
+    { text: buildEnAnswerFromKey(distractorKeys[0]), correct:false },
+    { text: buildEnAnswerFromKey(distractorKeys[1]), correct:false },
+    { text: buildEnAnswerFromKey(distractorKeys[2]), correct:false },
   ].sort(()=>Math.random()-0.5);
 
+  const options = ensureUniqueOptionTexts(build);
   mcOptions = options;
   mcWrap.innerHTML='';
   options.forEach((opt, idx)=>{
@@ -741,18 +814,14 @@ function pulseTeamCards(){
 }
 function onMCClick(idx){
   if(!mcEnabled) return;
-
   stopTimer();
 
-  // Paint results immediately
   mcOptions.forEach(opt => { if (opt.correct) opt.button.classList.add('correct'); });
   if (!mcOptions[idx].correct) mcOptions[idx].button.classList.add('wrong');
 
-  // Disable further clicks
   enableMCOptions(false);
   mcEnabled=false;
 
-  // If no team selected, show nag but do not score
   if(!teamSelectable || selectedTeam===0){
     teamLock.classList.remove('hidden');
     pulseTeamCards();
@@ -760,7 +829,6 @@ function onMCClick(idx){
     return;
   }
 
-  // Score
   const deltaCorrect = isBonus ? 2 : 1;
   if (mcOptions[idx].correct) {
     score[selectedTeam]=Math.max(0, score[selectedTeam] + deltaCorrect);
@@ -775,6 +843,60 @@ function onMCClick(idx){
   nextBtn.disabled=false;
 }
 
+/* History */
+function pushHistorySnapshot(){
+  const snapshot = {
+    round: currentRound,
+    dir: lastRenderedDir,
+    mode: lastRenderedMode,
+    isBonus: isBonus,
+    foodIdx: currentFoodIndex,
+    prompt: promptLabel.textContent,
+    answerText: (lastRenderedDir==='EN2SY'
+      ? buildSyAnswerFromKey(currentPromptKey, currentFoodIndex)
+      : buildEnAnswerFromKey(currentPromptKey)),
+    mcOptions: mcOptions.map(o=>({text:o.text, correct:o.correct})),
+  };
+  history.push(snapshot);
+  if(history.length>MAX_HISTORY) history.shift();
+  renderHistoryList();
+}
+function renderHistoryList(){
+  historyCount.textContent = `${history.length} item${history.length===1?'':'s'}`;
+  historyList.innerHTML='';
+  history.forEach((h, i)=>{
+    const row=document.createElement('div');
+    row.className='history-item';
+    const left=document.createElement('div');
+    left.innerHTML = `<div><strong>Q${i+1}</strong> • Round ${h.round} • ${h.dir} • ${h.mode}${h.isBonus?' • Bonus':''}</div>
+                      <div class="meta">${h.prompt}</div>`;
+    const right=document.createElement('div');
+    const btn=document.createElement('button');
+    btn.className='btn neutral';
+    btn.textContent='View';
+    btn.onclick=()=>openHistoryModal(h);
+    right.appendChild(btn);
+    row.appendChild(left); row.appendChild(right);
+    historyList.appendChild(row);
+  });
+}
+function openHistoryModal(h){
+  histMeta.textContent = `Round ${h.round} • ${h.dir} • ${h.mode}${h.isBonus?' • Bonus':''}`;
+  histPrompt.textContent = h.prompt;
+  histFood.textContent = (h.isBonus && h.foodIdx!=null) ? `Bonus Food: ${FOODS_EN[h.foodIdx]}` : '';
+  histAnswer.textContent = h.answerText;
+  histMC.innerHTML='';
+  if(h.mode==='MC' && h.mcOptions.length){
+    h.mcOptions.forEach(o=>{
+      const div=document.createElement('div');
+      div.className='opt ' + (o.correct ? 'correct':'wrong');
+      div.textContent = o.text;
+      histMC.appendChild(div);
+    });
+  }
+  historyModalWrap.classList.remove('hidden');
+}
+
 /* Flow */
 function chooseActualMode(){
   if(qtype==='MIXED'){
@@ -786,13 +908,17 @@ function nextQuestion(){
   if(!modalWrap.classList.contains('hidden')) return;
   if(justFinishedGame){ startNewGameHardReset(); return; }
 
+  // Save the just-finished question to history (if any was onscreen)
+  if(promptLabel.textContent){
+    pushHistorySnapshot();
+  }
+
   finishRoundAndAdvance();
 
   currentTime=timerSeconds; updateTimerLabel();
   answerLabel.textContent='';
-  clearMC();
+  mcWrap.innerHTML=''; mcOptions=[];
 
-  // Compute new dir and mode for the upcoming question
   directionMode=document.getElementById('dirSelect').value;
   const dir = (directionMode==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionMode;
   lastRenderedDir = dir;
@@ -813,14 +939,13 @@ function nextQuestion(){
     isBonus=false;
   }
 
-  // Setup locks for this question (DO THIS BEFORE rendering options to avoid clearing)
+  // Setup locks for this question
   setupLocksForNewQuestion();
 
   // New prompt
   currentPromptKey=randomPromptFromPool();
 
   if(dir==='EN2SY'){
-    // English prompt only
     promptLabel.textContent = currentPromptKey;
     if(lastRenderedMode==='FREE'){
       answerLabel.textContent='';
@@ -830,7 +955,6 @@ function nextQuestion(){
       if(!isBonus) startTimer();
     }
   }else{
-    // Assyrian prompt
     const promptSY = buildSyAnswerFromKey(currentPromptKey, currentFoodIndex);
     promptLabel.textContent = promptSY;
     if(lastRenderedMode==='FREE'){
@@ -896,12 +1020,12 @@ playersSelect.onchange=()=>{
   renderScores(); updateGamesPanel();
 };
 
-/* Team selection: click the entire team card (ignored in FREE) */
+/* Team selection (ignored in FREE) */
 [t1Card, t2Card, t3Card].forEach((el,idx)=>{
   if(!el) return;
   const team=idx+1;
   el.onclick=()=>{
-    if(!teamSelectable) return; // ignore in FREE
+    if(!teamSelectable) return;
     if(team===3 && players!==3) return;
     selectedTeam = team;
     setActiveTeamHighlight();
@@ -931,14 +1055,23 @@ function applyTeamColor(which){
 }
 [t1Color,t2Color,t3Color].forEach((el,i)=>{ if(el) el.oninput=()=>applyTeamColor(i+1); });
 
+/* Instructions toggle */
+instructionsBtn.onclick=()=>{ instrBody.classList.toggle('hidden'); };
+toggleInstr.onclick=()=>{ 
+  const hide = !instrBody.classList.contains('hidden');
+  instrBody.classList.toggle('hidden', hide);
+  toggleInstr.textContent = hide ? 'Show' : 'Hide';
+};
+
 /* Fullscreen */
 fullscreenBtn.onclick=()=>{
   const el=document.documentElement;
   if(!document.fullscreenElement){ el.requestFullscreen?.(); } else { document.exitFullscreen?.(); }
 };
 
-/* Modal */
+/* Modals */
 modalClose.onclick=()=>{ modalWrap.classList.add('hidden'); justFinishedGame=true; };
+document.getElementById('historyClose').onclick=()=>{ historyModalWrap.classList.add('hidden'); };
 
 /* Keyboard shortcuts */
 document.addEventListener('keydown',(e)=>{
@@ -962,13 +1095,10 @@ function initFirstQuestion(forceFresh=false){
   lastRenderedDir = (directionModeInit==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionModeInit;
   lastRenderedMode = (qtypeInit==='MIXED') ? (Math.random()<0.5?'FREE':'MC') : qtypeInit;
 
-  // bonus off at start
   isBonus=false; currentFoodIndex=null; foodLabel.textContent=''; bonusPill.classList.add('hidden');
 
-  // Prepare locks first
   setupLocksForNewQuestion();
 
-  // First prompt
   currentPromptKey=randomPromptFromPool();
   if(lastRenderedDir==='EN2SY'){
     promptLabel.textContent=currentPromptKey;
