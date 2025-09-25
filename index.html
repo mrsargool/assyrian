@@ -143,15 +143,15 @@
 
     <!-- Multiple choice answers -->
     <div id="mcWrap" class="mc hidden"></div>
-    <span id="mcLock" class="pill lockpill hidden">Options unlock after 10 sec and when a team is selected</span>
-    <span id="teamLock" class="pill lockpill hidden">Select your team to enable answering</span>
+    <span id="mcLock" class="pill lockpill hidden">Options unlock after 10 sec</span>
+    <span id="teamLock" class="pill lockpill hidden">Select your team to award points</span>
 
     <div class="row" style="margin-top:8px">
       <button class="btn success" id="showAnswerBtn" title="Reveal the answer and stop the timer" disabled>Show Answer</button>
       <button class="btn primary" id="nextBtn" title="Next random prompt (auto-starts timer)" disabled>Next Question</button>
       <span id="bonusPill" class="pill hidden">BONUS ROUND</span>
       <div class="spacer"></div>
-      <div class="note">Click a team card to select who’s answering • Space=Start/Pause • Enter=Next • A=Show</div>
+      <div class="note">Click a team card to select who’s answering (MC only) • Space=Start/Pause • Enter=Next • A=Show</div>
     </div>
 
     <div class="card scores" style="margin-top:14px">
@@ -363,9 +363,10 @@ let mcEnabled=false;
 let lastRenderedDir='EN2SY';
 let lastRenderedMode='FREE';
 let selectedTeam=0;
+let teamSelectable=true; // disabled in FREE
 
-/* For MC: we store option objects with a stable flag, not string equality */
-let mcOptions = []; // [{text, correct:true/false, button}]
+/* For MC options as objects (no string-equality checks) */
+let mcOptions = []; // [{text, correct:boolean, button:HTMLElement}]
 
 /* ---------------- Utils ---------------- */
 function hexToRgba(hex, alpha){
@@ -385,9 +386,9 @@ function setActiveTeamHighlight(){
   [t1Card,t2Card,t3Card].forEach((el,idx)=>{
     if(!el) return;
     const i=idx+1;
-    el.classList.toggle('active', selectedTeam===i);
+    el.classList.toggle('active', teamSelectable && selectedTeam===i);
   });
-  if(selectedTeam===0){
+  if(!teamSelectable || selectedTeam===0){
     currentTeamPill.classList.add('hidden');
     currentTeamPill.textContent='Current Team: —';
   }else{
@@ -562,14 +563,27 @@ function startNewGameHardReset(){
 }
 
 /* Locks / gating */
+function setTeamSelectable(on){
+  teamSelectable = on;
+  if(!on){ selectedTeam=0; }
+  setActiveTeamHighlight();
+}
 function setupLocksForNewQuestion(){
   nextBtn.disabled=true;
+
+  // FREE: disable team selection entirely; MC: enable it
+  setTeamSelectable(lastRenderedMode !== 'FREE');
+
+  // FREE: Show Answer is time-gated; MC: hidden
   showAnswerBtn.disabled = (lastRenderedMode==='FREE');
-  canShowAnswer=false; mcEnabled=false;
-  mcOptions = [];
+
+  canShowAnswer=false;
+  mcEnabled=false;
+  // DO NOT CLEAR mcOptions here (bug previously prevented enabling)
   mcLock.classList.add('hidden');
-  // Team prompt is ONLY for MC
-  teamLock.classList.toggle('hidden', !(lastRenderedMode==='MC' && selectedTeam===0));
+
+  // Team prompt only meaningful in MC
+  teamLock.classList.toggle('hidden', lastRenderedMode!=='MC');
 
   if(answerUnlockTimeout){ clearTimeout(answerUnlockTimeout); answerUnlockTimeout=null; }
   answerUnlockTimeout=setTimeout(unlockAfterDelay, 10000);
@@ -579,12 +593,12 @@ function setupLocksForNewQuestion(){
     answerLabel.classList.remove('hidden');
     mcWrap.classList.add('hidden');
     mcLock.classList.add('hidden');
-    teamLock.classList.add('hidden');
+    teamLock.classList.add('hidden'); // never show in FREE
   }else{
     showAnswerBtn.classList.add('hidden');
     answerLabel.classList.add('hidden');
     mcWrap.classList.remove('hidden');
-    mcLock.classList.remove('hidden');
+    mcLock.classList.remove('hidden'); // show “10s” pill
     enableMCOptions(false);
   }
 }
@@ -592,21 +606,25 @@ function unlockAfterDelay(){
   canShowAnswer=true;
   if(lastRenderedMode==='FREE'){
     showAnswerBtn.disabled=false;
+    teamLock.classList.add('hidden');
   }else{
     maybeEnableMC();
     mcLock.classList.add('hidden');
   }
 }
 function maybeEnableMC(){
-  const ready = canShowAnswer && selectedTeam!==0;
+  // Enable MC options once 10s passed, regardless of team selection
+  const ready = canShowAnswer;
   enableMCOptions(ready);
-  teamLock.classList.toggle('hidden', selectedTeam!==0);
+  // If no team is selected, remind but still allow clicking (no scoring)
+  const showTeamNag = (lastRenderedMode==='MC') && canShowAnswer && (selectedTeam===0);
+  teamLock.classList.toggle('hidden', !showTeamNag);
 }
 
 /* Multiple choice */
 function uniqueFoodIndices(count, excludeIndex){
   const all=[...Array(FOODS_EN.length).keys()];
-  const pool=all.filter(i=>i!==excludeIndex);
+  const pool=excludeIndex==null ? all : all.filter(i=>i!==excludeIndex);
   const picks=[];
   while(picks.length<count && pool.length){
     const idx=Math.floor(Math.random()*pool.length);
@@ -622,9 +640,9 @@ function clearMC(){
   mcWrap.innerHTML='';
   mcWrap.classList.add('hidden');
   mcLock.classList.add('hidden');
+  mcOptions=[];
 }
 function renderMC_EN2SY(correctKey){
-  // Correct option: uses announced (currentFoodIndex) when bonus; distractors use DIFFERENT foods
   const correctText = buildSyAnswerFromKey(correctKey, currentFoodIndex);
   const distractorKeys = [makeDistractorKey(correctKey), makeDistractorKey(correctKey), makeDistractorKey(correctKey)];
   const foodAlt = isBonus ? uniqueFoodIndices(3, currentFoodIndex) : [null,null,null];
@@ -685,32 +703,33 @@ function pulseTeamCards(){
 }
 function onMCClick(idx){
   if(!mcEnabled) return;
-  if(selectedTeam===0){
-    teamLock.classList.remove('hidden');
-    pulseTeamCards();
-    return;
-  }
 
   stopTimer();
 
-  // Mark correct/incorrect via flags, not string compare
-  mcOptions.forEach((opt, i)=>{
-    if(opt.correct) opt.button.classList.add('correct');
-  });
-  if(!mcOptions[idx].correct){
-    mcOptions[idx].button.classList.add('wrong');
-  }
-  enableMCOptions(false); // disables clicks
+  // Paint results immediately
+  mcOptions.forEach(opt => { if (opt.correct) opt.button.classList.add('correct'); });
+  if (!mcOptions[idx].correct) mcOptions[idx].button.classList.add('wrong');
+
+  // Disable further clicks
+  enableMCOptions(false);
   mcEnabled=false;
 
-  // Scoring
+  // If no team selected, show nag but do not score
+  if(!teamSelectable || selectedTeam===0){
+    teamLock.classList.remove('hidden');
+    pulseTeamCards();
+    nextBtn.disabled=false;
+    return;
+  }
+
+  // Score
   const deltaCorrect = isBonus ? 2 : 1;
-  if(mcOptions[idx].correct){
-    score[selectedTeam]=Math.max(0, score[selectedTeam]+deltaCorrect);
+  if (mcOptions[idx].correct) {
+    score[selectedTeam]=Math.max(0, score[selectedTeam] + deltaCorrect);
     updateStreak(selectedTeam, true);
     confettiBurst(teamColor(selectedTeam),'#ffffff');
-  }else{
-    score[selectedTeam]=Math.max(0, score[selectedTeam]-1);
+  } else {
+    score[selectedTeam]=Math.max(0, score[selectedTeam] - 1);
     updateStreak(selectedTeam, false);
   }
   renderScores();
@@ -735,8 +754,7 @@ function nextQuestion(){
   answerLabel.textContent='';
   clearMC();
 
-  selectedTeam=0; setActiveTeamHighlight();
-
+  // Compute new dir and mode for the upcoming question
   directionMode=document.getElementById('dirSelect').value;
   const dir = (directionMode==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionMode;
   lastRenderedDir = dir;
@@ -744,42 +762,47 @@ function nextQuestion(){
   qtype = document.getElementById('qtypeSelect').value;
   lastRenderedMode = chooseActualMode();
 
-  currentPromptKey=randomPromptFromPool();
-
-  // BONUS: 20% chance, announce one food (correct option must use THIS food)
+  // BONUS selection BEFORE rendering
   if(Math.random()<0.20){
     currentFoodIndex=Math.floor(Math.random()*FOODS_EN.length);
     foodLabel.textContent=`Bonus Round: ${FOODS_EN[currentFoodIndex]}`;
     bonusPill.classList.remove('hidden');
     isBonus=true;
-    stopTimer(); // no timer in bonus (per earlier behavior)
+    stopTimer();
   }else{
     currentFoodIndex=null; foodLabel.textContent='';
     bonusPill.classList.add('hidden');
     isBonus=false;
-    startTimer();
   }
+
+  // Setup locks for this question (DO THIS BEFORE rendering options to avoid clearing)
+  setupLocksForNewQuestion();
+
+  // New prompt
+  currentPromptKey=randomPromptFromPool();
 
   if(dir==='EN2SY'){
     // English prompt only
     promptLabel.textContent = currentPromptKey;
     if(lastRenderedMode==='FREE'){
       answerLabel.textContent='';
+      if(!isBonus) startTimer();
     }else{
       renderMC_EN2SY(currentPromptKey);
+      if(!isBonus) startTimer();
     }
   }else{
-    // Assyrian prompt (includes pronoun and possibly food if bonus)
+    // Assyrian prompt
     const promptSY = buildSyAnswerFromKey(currentPromptKey, currentFoodIndex);
     promptLabel.textContent = promptSY;
     if(lastRenderedMode==='FREE'){
       answerLabel.textContent='';
+      if(!isBonus) startTimer();
     }else{
       renderMC_SY2EN(currentPromptKey);
+      if(!isBonus) startTimer();
     }
   }
-
-  setupLocksForNewQuestion();
 }
 
 function showAnswer(){
@@ -835,11 +858,12 @@ playersSelect.onchange=()=>{
   renderScores(); updateGamesPanel();
 };
 
-/* Team selection: click the entire team card */
+/* Team selection: click the entire team card (ignored in FREE) */
 [t1Card, t2Card, t3Card].forEach((el,idx)=>{
   if(!el) return;
   const team=idx+1;
   el.onclick=()=>{
+    if(!teamSelectable) return; // ignore in FREE
     if(team===3 && players!==3) return;
     selectedTeam = team;
     setActiveTeamHighlight();
@@ -865,7 +889,7 @@ function applyTeamColor(which){
   card.style.background=hexToRgba(color,0.10);
   card.style.borderColor=hexToRgba(color,0.6);
   bar.style.background=color;
-  if(selectedTeam===which) tintPill(currentTeamPill,color);
+  if(teamSelectable && selectedTeam===which) tintPill(currentTeamPill,color);
 }
 [t1Color,t2Color,t3Color].forEach((el,i)=>{ if(el) el.oninput=()=>applyTeamColor(i+1); });
 
@@ -900,22 +924,23 @@ function initFirstQuestion(forceFresh=false){
   lastRenderedDir = (directionModeInit==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionModeInit;
   lastRenderedMode = (qtypeInit==='MIXED') ? (Math.random()<0.5?'FREE':'MC') : qtypeInit;
 
-  selectedTeam=0; setActiveTeamHighlight();
+  // bonus off at start
   isBonus=false; currentFoodIndex=null; foodLabel.textContent=''; bonusPill.classList.add('hidden');
 
-  currentPromptKey=randomPromptFromPool();
-  if(lastRenderedDir==='EN2SY'){ promptLabel.textContent=currentPromptKey; }
-  else{ promptLabel.textContent=buildSyAnswerFromKey(currentPromptKey, currentFoodIndex); }
+  // Prepare locks first
+  setupLocksForNewQuestion();
 
-  if(lastRenderedMode==='MC'){
-    if(lastRenderedDir==='EN2SY'){ renderMC_EN2SY(currentPromptKey); }
-    else{ renderMC_SY2EN(currentPromptKey); }
+  // First prompt
+  currentPromptKey=randomPromptFromPool();
+  if(lastRenderedDir==='EN2SY'){
+    promptLabel.textContent=currentPromptKey;
+    if(lastRenderedMode==='MC'){ renderMC_EN2SY(currentPromptKey); }
   }else{
-    clearMC(); answerLabel.textContent='';
+    promptLabel.textContent=buildSyAnswerFromKey(currentPromptKey, currentFoodIndex);
+    if(lastRenderedMode==='MC'){ renderMC_SY2EN(currentPromptKey); }
   }
 
   startTimer();
-  setupLocksForNewQuestion();
 }
 
 (function init(){
