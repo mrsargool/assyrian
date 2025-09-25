@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Assyrian Ordering Quiz</title>
+  <title>AssyrianVerb To Order Game</title>
 
   <!-- Noto Sans Syriac Eastern for answers -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Syriac+Eastern:wght@400;700&display=swap" rel="stylesheet">
@@ -48,7 +48,7 @@
 <body>
   <div class="wrap">
     <header>
-      <h1>Assyrian Ordering Quiz</h1>
+      <h1>AssyrianVerb To Order Game</h1>
       <div class="controls">
         <button class="btn neutral" id="fullscreenBtn" title="Toggle fullscreen">Fullscreen</button>
         <label class="legend" for="timerSelect">Timer:</label>
@@ -68,7 +68,7 @@
 
     <div class="row">
       <button class="btn success" id="showAnswerBtn" title="Reveal Syriac answer (pronoun + (ܒܸܕ) + verb + food in Syriac)">Show Answer</button>
-      <button class="btn primary" id="nextBtn" title="Next random prompt">Next Question</button>
+      <button class="btn primary" id="nextBtn" title="Next random prompt (auto-starts timer)">Next Question</button>
       <span id="bonusPill" class="pill hidden">BONUS ROUND (+2)</span>
       <div class="spacer"></div>
     </div>
@@ -99,7 +99,7 @@
 
         <div class="legend" style="align-self:flex-end">
           <strong>Highlights:</strong>
-          Start = begin/pause timer • Show Answer = Syriac only • Next Question = new prompt • Bonus buttons appear only in bonus rounds (+2)
+          Next Question = new prompt & auto-start timer • Show Answer = Syriac only • Bonus buttons appear only in bonus rounds (+2)
         </div>
       </div>
     </div>
@@ -211,7 +211,7 @@ function detectPronoun(prompt){
   if(p.startsWith('you '))     return p.includes('(fem') ? PRONOUNS.you_fem : PRONOUNS.you_masc;
   if(p.startsWith('he '))      return PRONOUNS.he;
   if(p.startsWith('she '))     return PRONOUNS.she;
-  if(p.startsWith('we '))      return PRONOUNS.we;
+  if(p.startswith('we '))      return PRONOUNS.we;
   if(p.startsWith('they '))    return PRONOUNS.they;
   if(p.startsWith('y’all'))    return PRONOUNS.yall;
   return '';
@@ -230,16 +230,32 @@ function setBonusUI(on){
   updateTimerLabel();
 }
 
-/* ------------- Flow ------------- */
-function nextQuestion(){
-  // stop timer
+/* ------------- Timer controls ------------- */
+function stopTimer(){
   if(timerId){ clearInterval(timerId); timerId = null; }
   timerRunning = false;
   startPauseBtn.textContent = 'Start';
+}
+function startTimer(){
+  if(isBonus) return; // frozen during bonus
+  stopTimer();
+  timerRunning = true;
+  startPauseBtn.textContent = 'Pause';
+  timerId = setInterval(()=>{
+    if(currentTime>0){ currentTime--; updateTimerLabel(); }
+    else { stopTimer(); }
+  },1000);
+}
+function startPause(){
+  if(isBonus) return;
+  if(timerRunning) stopTimer(); else startTimer();
+}
+
+/* ------------- Flow ------------- */
+function nextQuestion(){
+  // reset timer to selected value
   currentTime = timerSeconds;
   updateTimerLabel();
-
-  // clear answer (Syriac only)
   answerLabel.textContent = '';
 
   // choose new prompt (English only)
@@ -251,10 +267,13 @@ function nextQuestion(){
     currentFoodIndex = Math.floor(Math.random()*FOODS_EN.length);
     foodLabel.textContent = `Bonus Round: with ${FOODS_EN[currentFoodIndex]}`;
     setBonusUI(true);
+    stopTimer(); // frozen during bonus
   }else{
     currentFoodIndex = null;
     foodLabel.textContent = '';
     setBonusUI(false);
+    // auto-start timer on Next Question (as requested)
+    startTimer();
   }
 }
 
@@ -269,20 +288,6 @@ function showAnswer(){
     built += `  ${FOODS_SY[currentFoodIndex]}`; // Syriac only (no English gloss)
   }
   answerLabel.textContent = built;
-}
-
-/* ------------- Timer ------------- */
-function startPause(){
-  if(isBonus) return; // frozen
-  if(timerRunning){
-    clearInterval(timerId); timerId=null; timerRunning=false; startPauseBtn.textContent='Start';
-  }else{
-    timerRunning=true; startPauseBtn.textContent='Pause';
-    timerId = setInterval(()=>{
-      if(currentTime>0){ currentTime--; updateTimerLabel(); }
-      else { clearInterval(timerId); timerId=null; timerRunning=false; startPauseBtn.textContent='Start'; }
-    },1000);
-  }
 }
 
 /* ------------- Scores ------------- */
@@ -316,7 +321,7 @@ fullscreenBtn.onclick = ()=>{
   currentTime = timerSeconds;
   updateTimerLabel();
   renderScores();
-  nextQuestion();
+  nextQuestion(); // load first prompt (will auto-start timer if not a bonus)
 })();
 </script>
 </body>
