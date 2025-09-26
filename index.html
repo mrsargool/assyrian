@@ -24,43 +24,48 @@
   .btn.neutral{background:#334155} .btn.danger{background:var(--danger)} .btn.warn{background:var(--warn)}
   .btn:disabled{opacity:.6;cursor:not-allowed}
   .pill{display:inline-block;padding:6px 12px;border-radius:999px;background:#EEF2FF;color:#3730A3;font-weight:800;font-size:13px;border:1px solid var(--line)}
-  .timer{font-size:56px;font-weight:800;color:var(--accent);margin:4px 0 8px}
+
+  .grid2{display:grid;grid-template-columns:1fr 320px;gap:16px}
+  .card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:0 1px 0 rgba(0,0,0,.04);border:1px solid var(--line)}
+  .row{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  .spacer{flex:1} .legend{color:var(--muted);font-size:12px}
+
+  /* Stage (centered timer/prompt/answer) */
+  .stage{text-align:center}
+  .timer{font-size:56px;font-weight:800;color:var(--accent);margin:8px 0}
   .prompt{font-size:30px;font-weight:800;margin:8px 0 6px}
   .food{font-size:18px;font-style:italic;color:var(--warn);margin:0 0 6px}
   .answer{font-family:"Noto Sans Syriac Eastern","Segoe UI",system-ui,Arial,sans-serif;font-size:48px;color:var(--success);margin:12px 0 18px}
-  .row{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
-  .spacer{flex:1} .legend{color:var(--muted);font-size:12px}
-  .card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:0 1px 0 rgba(0,0,0,.04);border:1px solid var(--line)}
-  .grid2{display:grid;grid-template-columns:1fr 320px;gap:16px}
-  .scores .team{min-width:260px;border-radius:16px;padding:14px;border:2px solid var(--line);background:#fff;transition:.2s;cursor:pointer;position:relative}
+
+  /* Progress */
+  .roundbar{height:8px;background:#E5E7EB;border-radius:8px;overflow:hidden}
+  .roundbar .fill{height:100%;width:0%;background:var(--accent);transition:width .4s ease}
+  .banner{margin:10px 0;padding:10px 14px;border-radius:10px;background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0;font-weight:700}
+  .hidden{display:none!important}
+
+  /* Multiple choice */
+  .mc{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;justify-content:center}
+  .mc .opt{flex:1 1 46%;max-width:480px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:not-allowed}
+  .mc .opt.enabled{cursor:pointer;background:#F8FAFC}
+  .mc .opt.correct{border-color:#16A34A;background:#ECFDF5}
+  .mc .opt.wrong{border-color:#DC2626;background:#FEF2F2}
+
+  /* Teams (kept compact and visible) */
+  .scores .team{flex:1 1 0;min-width:280px;border-radius:16px;padding:14px;border:2px solid var(--line);background:#fff;transition:.2s;cursor:pointer;position:relative}
   .scores .team:hover{box-shadow:0 0 0 3px rgba(14,165,233,.12)}
   .scores .team.active{box-shadow:0 0 0 3px rgba(14,165,233,.35);border-color:var(--active)}
   .scores .team.active::after{content:"Selected";position:absolute;top:10px;right:12px;background:#0ea5e9;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px}
   .team-title{font-size:18px;font-weight:800;margin-bottom:6px}
   .score{font-size:26px;font-weight:800;margin:6px 0}
+  .team-bar{height:6px;border-radius:6px;background:#E5E7EB;overflow:hidden;margin-top:6px}
+  .team-bar .fill{height:100%;width:0%;transition:width .3s ease}
   .grid{display:flex;gap:6px;flex-wrap:wrap}
   .point{padding:8px 10px;border-radius:10px;background:#E2E8F0;color:var(--ink);font-weight:800;border:1px solid #CBD5E1;cursor:pointer}
   .point:hover{background:#CBD5E1}
-  .team-bar{height:6px;border-radius:6px;background:#E5E7EB;overflow:hidden;margin-top:6px}
-  .team-bar .fill{height:100%;width:0%;transition:width .3s ease}
-  .roundbar{height:8px;background:#E5E7EB;border-radius:8px;overflow:hidden}
-  .roundbar .fill{height:100%;width:0%;background:var(--accent);transition:width .4s ease}
-  .banner{margin:10px 0;padding:10px 14px;border-radius:10px;background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0;font-weight:700}
-  .hidden{display:none!important}
-  /* MC */
-  .mc{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-  .mc .opt{flex:1 1 48%;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:not-allowed}
-  .mc .opt.enabled{cursor:pointer;background:#F8FAFC}
-  .mc .opt.correct{border-color:#16A34A;background:#ECFDF5}
-  .mc .opt.wrong{border-color:#DC2626;background:#FEF2F2}
-  /* Buzzers */
-  .buzzers{display:flex;gap:8px;margin-top:8px}
-  .buzz{padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer}
-  .buzz.locked{opacity:.5;cursor:not-allowed}
-  /* Achievements */
   .badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
   .badge{font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:#F1F5F9}
-  /* Modals */
+
+  /* Modal */
   .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:50}
   .modal{background:#fff;border-radius:16px;padding:20px;max-width:760px;width:92%;border:1px solid var(--line);text-align:left}
   .modal h2{margin:6px 0 10px;font-size:22px}
@@ -119,10 +124,9 @@
   </header>
 
   <div class="grid2">
-    <!-- Main -->
     <div>
-      <div class="card" style="margin-bottom:10px">
-        <div class="row">
+      <div class="card stage" style="margin-bottom:10px">
+        <div class="row" style="justify-content:center">
           <div><strong>Round:</strong> <span id="roundNow">1</span>/<span id="roundTotal">10</span></div>
           <div class="spacer"></div>
           <div style="min-width:280px">
@@ -132,32 +136,27 @@
         <div id="endNote" class="note hidden" style="margin-top:8px;"></div>
       </div>
 
-      <div class="timer" id="timerLabel">30 sec</div>
-      <div id="currentTeamPill" class="pill hidden">Current Team: —</div>
+      <div class="card stage">
+        <div class="timer" id="timerLabel">30 sec</div>
+        <div id="currentTeamPill" class="pill hidden" style="margin-bottom:8px">Current Team: —</div>
 
-      <div class="prompt" id="promptLabel"></div>
-      <div class="food" id="foodLabel"></div>
-      <div class="answer" id="answerLabel"></div>
+        <div class="prompt" id="promptLabel"></div>
+        <div class="food" id="foodLabel"></div>
+        <div class="answer" id="answerLabel"></div>
 
-      <div class="mc hidden" id="mcWrap"></div>
-      <div class="buzzers">
-        <button class="buzz" id="buzz1" title="Key 1">Buzz T1</button>
-        <button class="buzz" id="buzz2" title="Key 2">Buzz T2</button>
-        <button class="buzz hidden" id="buzz3" title="Key 3">Buzz T3</button>
-        <span class="pill" id="buzzInfo">Buzzer open</span>
+        <div class="mc hidden" id="mcWrap"></div>
+
+        <div style="margin-top:10px">
+          <button class="btn success" id="showAnswerBtn" disabled>Show Answer</button>
+          <button class="btn primary" id="nextBtn" disabled>Next Question</button>
+          <span id="bonusPill" class="pill hidden" style="margin-left:8px">BONUS ROUND (45s)</span>
+        </div>
+        <div class="note" style="margin-top:8px">MC: answer first or select team first — either order works. Show Answer / MC unlock after 10s (Teacher Mode bypasses).</div>
       </div>
 
-      <div class="row" style="margin-top:8px">
-        <button class="btn success" id="showAnswerBtn" disabled>Show Answer</button>
-        <button class="btn primary" id="nextBtn" disabled>Next Question</button>
-        <span id="bonusPill" class="pill hidden">BONUS ROUND (45s)</span>
-        <div class="spacer"></div>
-        <div class="note">MC: answer first or select team first — either order works. Space=Start/Pause • Enter=Next • A=Show • 1/2/3=Buzz</div>
-      </div>
-
-      <!-- Scores & Teams -->
+      <!-- Teams row stays visible without scrolling -->
       <div class="card scores" style="margin-top:14px">
-        <div class="row">
+        <div class="row" style="align-items:flex-start">
           <!-- Team 1 -->
           <div class="team" id="t1Card">
             <div class="team-title" id="t1Title">Team 1</div>
@@ -169,11 +168,9 @@
             <div class="team-bar"><div class="fill" id="t1Bar" style="background:#2563EB"></div></div>
             <div class="legend" id="t1Streak">Streak: 0</div>
 
-            <!-- Power-ups & Bonus -->
+            <!-- Per-team Bonus + Power-up (+5s only) -->
             <div class="grid" style="margin-top:6px">
-              <button class="point" id="t1PUReveal">Reveal Wrong (0)</button>
               <button class="point" id="t1PUTime">+5 sec (0)</button>
-              <button class="point" id="t1PUFreeze">Freeze 3s (0)</button>
               <button class="point" id="t1BonusCredit" disabled>Activate Bonus (0)</button>
             </div>
 
@@ -198,9 +195,7 @@
             <div class="legend" id="t2Streak">Streak: 0</div>
 
             <div class="grid" style="margin-top:6px">
-              <button class="point" id="t2PUReveal">Reveal Wrong (0)</button>
               <button class="point" id="t2PUTime">+5 sec (0)</button>
-              <button class="point" id="t2PUFreeze">Freeze 3s (0)</button>
               <button class="point" id="t2BonusCredit" disabled>Activate Bonus (0)</button>
             </div>
 
@@ -224,9 +219,7 @@
             <div class="legend" id="t3Streak">Streak: 0</div>
 
             <div class="grid" style="margin-top:6px">
-              <button class="point" id="t3PUReveal">Reveal Wrong (0)</button>
               <button class="point" id="t3PUTime">+5 sec (0)</button>
-              <button class="point" id="t3PUFreeze">Freeze 3s (0)</button>
               <button class="point" id="t3BonusCredit" disabled>Activate Bonus (0)</button>
             </div>
 
@@ -238,7 +231,7 @@
             <div class="badges" id="t3Badges"></div>
           </div>
 
-          <!-- Games/Stats -->
+          <!-- Games/Stats (compact) -->
           <div class="spacer"></div>
           <div style="min-width:300px">
             <div class="legend">Round & Game Results</div>
@@ -278,9 +271,7 @@
             <li>Click <strong>Next Question</strong> to start. Timer auto-starts (bonus = 45s).</li>
             <li><strong>Free Response</strong>: host reveals answer; assign points manually.</li>
             <li><strong>Multiple Choice</strong>: answer first <em>or</em> select your team first — either order works. If you answered before picking a team, select your team afterward to award/deduct points.</li>
-            <li><strong>Buzzers</strong>: press team Buzz or keys 1/2/3. First buzz locks others for 3s.</li>
-            <li><strong>Power-ups</strong> (every 3 correct): Reveal one wrong option, +5 seconds, Freeze other teams’ buzzers 3s.</li>
-            <li><strong>Bonus</strong>: each team can activate bonus for the **next question** using their credits. All bonus rounds are 45s.</li>
+            <li><strong>Bonus</strong>: each team can activate bonus for the <em>next question</em> using their credits. All bonus rounds are 45s; unlock at 10s unless Teacher Mode is on.</li>
             <li><strong>Teacher Mode</strong>: disables 10-second unlock (password: mrsargool).</li>
             <li><strong>Online</strong>: Create/Join Online Game to play from multiple Chromebooks.</li>
           </ul>
@@ -325,21 +316,22 @@
   </div>
 </div>
 
-<!-- Firebase (optional, only if you enable online play) -->
-<script type="module" id="firebaseBlock">
-/*** FIREBASE_CONFIG — fill to enable online mode
-const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
+<!-- STEP 3: Paste your Firebase config here (remove the /* */ to enable) -->
+<script type="module" id="firebase-config">
+  
+export const firebaseConfig = {
+  apiKey: "AIzaSyBPHRt-A17lXnzEDghxQDdXOjdHgkOjpo8",
+  authDomain: "verb-to-order-86170.firebaseapp.com",
+  projectId: "verb-to-order-86170",
+  storageBucket: "verb-to-order-86170.appspot.com",
+  messagingSenderId: "701246321735",
+  appId: "1:701246321735:web:882917e49b14bfa4c7ad62"
 };
-***/
+
 </script>
+
 <script type="module">
-/* ================= CORE DATA (phrases/foods) ================= */
+/* ================= PHRASES / FOODS ================= */
 const PHRASES = {
   "I order (masc.)":"ܛܵܠܒܹܢ","I will order (masc.)":"ܛܵܠܒܹܢ ܒܸܕ","I order (fem.)":"ܛܵܠܒܵܢ","I will order (fem.)":"ܛܵܠܒܵܢ ܒܸܕ",
   "you order (masc.)":"ܛܵܠܒܹܬ","you will order (masc.)":"ܛܵܠܒܹܬ ܒܸܕ","you order (fem.)":"ܛܵܠܒܵܬܝ","you will order (fem.)":"ܛܵܠܒܵܬܝ ܒܸܕ",
@@ -351,10 +343,8 @@ const PRONOUNS = { i_masc:"ܐܵܢܵܐ", i_fem:"ܐܵܢܵܐ", you_masc:"ܐܲܢ݇ܬ
 const FOODS_EN = ["potatoes","rice","beans","stew","kabobs","chicken","steak","lamb","fish","fries","water","fizzy drinks","yogurt drink","lemonade","orange juice","dolma","red rice","okra stew","yogurt","Assyrian egg rolls","tea","coffee","hummus","baba ganosh","salad","pickles","meatballs"];
 const FOODS_SY = ["ܟܸܪܬܘܿܦܹ̈ܐ","ܪܸܙܵܐ","ܚܲܒ̣ܨܹ̈ܐ","ܫܘܼܪܒ̣ܵܐ","ܟܵܒܵܒܹ̈ܐ","ܟܬܵܝܬܵܐ","ܒܸܣܪܵܐ","ܥܸܪܒܵܐ","ܢܘܼܢܵܐ","ܟܸܪܬܘܿܦܹ̈ܐ ܩܸܠܝܹ̈ܐ","ܡܝܼܵܐ","ܫܬܵܝܬܵܐ ܒܲܩܒܸܩܵܢܵܐ","ܕܲܘܹ̈ܐ","ܡܝܼܵܐ ܕܠܝܼܡܘܿܢܹ̈ܐ","ܡܝܼܵܐ ܕܦܘܼܪ̈ܬܩܵܠܹܐ","ܕܘܿܠܡܵܐ","ܪܸܙܵܐ ܣܡܘܿܩܵܐ","ܒܲܡܝܹ̈ܐ","ܡܲܣܬܵܐ","ܒܘܼܪܲܟ","ܟ̰ܵܐܝ","ܩܲܗܘܵܐ","ܚܲܪ̈ܛܡܵܢܹܐ ܓܪ̈ܝܼܣܹܐ","ܒܵܕܸܡܓ̰ܵܢܹ̈ܐ ܓܪ̈ܝܼܣܹܐ","ܣܲܠܵܛܵܐ","ܛܘܼܪ̈ܫܝܹܐ","ܟܸܦܬܹ̈ܐ"];
 
-/* ================== DOM HOOKS ================== */
+/* ================= DOM HOOKS ================= */
 const el = (id)=>document.getElementById(id);
-/* (All the elements are identical to the earlier version; to keep this message shorter,
-   assume the same querySelectors as previously shared. They are referenced below.) */
 const timerLabel=el('timerLabel'), promptLabel=el('promptLabel'), foodLabel=el('foodLabel'), answerLabel=el('answerLabel');
 const mcWrap=el('mcWrap'), nextBtn=el('nextBtn'), showAnswerBtn=el('showAnswerBtn'), bonusPill=el('bonusPill');
 const timerSelect=el('timerSelect'), roundsSelect=el('roundsSelect'), dirSelect=el('dirSelect'), qtypeSelect=el('qtypeSelect'), playersSelect=el('playersSelect');
@@ -363,14 +353,12 @@ const t1Name=el('t1Name'), t2Name=el('t2Name'), t3Name=el('t3Name'), t1Title=el(
 const t1Color=el('t1Color'), t2Color=el('t2Color'), t3Color=el('t3Color'), t1Bar=el('t1Bar'), t2Bar=el('t2Bar'), t3Bar=el('t3Bar');
 const t1ScoreEl=el('t1Score'), t2ScoreEl=el('t2Score'), t3ScoreEl=el('t3Score');
 const t1StreakEl=el('t1Streak'), t2StreakEl=el('t2Streak'), t3StreakEl=el('t3Streak');
-const t1PUReveal=el('t1PUReveal'), t1PUTime=el('t1PUTime'), t1PUFreeze=el('t1PUFreeze'), t1BonusBtn=el('t1BonusCredit');
-const t2PUReveal=el('t2PUReveal'), t2PUTime=el('t2PUTime'), t2PUFreeze=el('t2PUFreeze'), t2BonusBtn=el('t2BonusCredit');
-const t3PUReveal=el('t3PUReveal'), t3PUTime=el('t3PUTime'), t3PUFreeze=el('t3PUFreeze'), t3BonusBtn=el('t3BonusCredit');
+const t1PUTime=el('t1PUTime'), t2PUTime=el('t2PUTime'), t3PUTime=el('t3PUTime');
+const t1BonusBtn=el('t1BonusCredit'), t2BonusBtn=el('t2BonusCredit'), t3BonusBtn=el('t3BonusCredit');
 const t1Plus=el('t1Plus'), t1Minus=el('t1Minus'), t2Plus=el('t2Plus'), t2Minus=el('t2Minus'), t3Plus=el('t3Plus'), t3Minus=el('t3Minus');
 const t1Badges=el('t1Badges'), t2Badges=el('t2Badges'), t3Badges=el('t3Badges');
 const roundNowEl=el('roundNow'), roundTotalEl=el('roundTotal'), roundFillEl=el('roundFill'), banner=el('banner'), endNote=el('endNote');
 const exportCsvBtn=el('exportCsvBtn'), clearHistoryBtn=el('clearHistoryBtn'), statsBox=el('statsBox'), historyList=el('historyList'), historyCount=el('historyCount');
-const buzz1=el('buzz1'), buzz2=el('buzz2'), buzz3=el('buzz3'), buzzInfo=el('buzzInfo');
 const teacherBtn=el('teacherBtn'), teacherBadge=el('teacherBadge');
 const createGameBtn=el('createGameBtn'), joinGameBtn=el('joinGameBtn'), onlineInfo=el('onlineInfo');
 const fullscreenBtn=el('fullscreenBtn'), instructionsBtn=el('instructionsBtn'), toggleInstr=el('toggleInstr'), instrBody=el('instrBody');
@@ -378,26 +366,23 @@ const currentTeamPill=el('currentTeamPill');
 const modalWrap=el('modalWrap'), modalTitle=el('modalTitle'), modalBody=el('modalBody'), modalClose=el('modalClose');
 const historyModalWrap=el('historyModalWrap'), histMeta=el('histMeta'), histPrompt=el('histPrompt'), histFood=el('histFood'), histAnswer=el('histAnswer'), histMC=el('histMC');
 
-/* ================== STATE ================== */
+/* ================= STATE ================= */
 let timerSeconds=30, currentTime=30, timerId=null, timerRunning=false;
 let directionMode='EN2SY', qtype='FREE', players=2;
 let currentPromptKey='', lastRenderedDir='EN2SY', lastRenderedMode='FREE';
-let isBonus=false, currentFoodIndex=null;       // per-question
-let forceBonusForTeam=0;                        // team id that activated bonus for NEXT question
+let isBonus=false, currentFoodIndex=null;
+let forceBonusForTeam=0; // which team made the next question a bonus
 let canShowAnswer=false, answerUnlockTimeout=null, mcEnabled=false, selectedTeam=0, teamSelectable=true, teacherMode=false;
-let score=[0,0,0,0];                            // negatives allowed
-let streak=[0,0,0,0];                           // per team
-let pu={ reveal:[0,0,0,0], extraTime:[0,0,0,0], freeze:[0,0,0,0] };  // power-ups by team
-let bonusCredits=[0,0,0,0];                     // per-team
+let score=[0,0,0,0]; // negatives allowed
+let streak=[0,0,0,0]; // per team
+let bonusCredits=[0,0,0,0]; // per-team
 let gamesWon=[0,0,0,0];
 let totalRounds=10, currentRound=1, roundStartScores=[0,0,0,0], justFinishedGame=false;
-let mcOptions=[], pendingMCOutcome=null;        // MC handling
+let mcOptions=[], pendingMCOutcome=null;
 let unusedPrompts = Object.keys(PHRASES);
-let noRepeat = document.getElementById('noRepeat');
-let buzzLock=false, buzzOwner=0, buzzTimer=null;
-let eventsLog=[]; // for CSV / stats  {ts, round, dir, mode, bonus, promptKey, promptText, correctKey, answerShownAt, answeredAt, teamAwarded, correct, delta}
+let eventsLog=[]; // for CSV / stats
 
-/* ================== UTILS ================== */
+/* ================= UTILS ================= */
 const now=()=>Date.now();
 function hexToRgba(hex,a){const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);if(!m)return`rgba(0,0,0,${a})`;const r=parseInt(m[1],16),g=parseInt(m[2],16),b=parseInt(m[3],16);return`rgba(${r},${g},${b},${a})`;}
 const teamName=(i)=> (i===1?t1Name.value.trim():i===2?t2Name.value.trim():t3Name.value.trim())||`Team ${i}`;
@@ -407,7 +392,7 @@ function setActiveTeamHighlight(){
   [t1Card,t2Card,players===3?t3Card:null].filter(Boolean).forEach((el,idx)=>el.classList.toggle('active', teamSelectable && selectedTeam===idx+1));
   if(!teamSelectable||selectedTeam===0){currentTeamPill.classList.add('hidden');currentTeamPill.textContent='Current Team: —';}
   else{currentTeamPill.textContent=`Current Team: ${teamName(selectedTeam)}`;tintPill(currentTeamPill,teamColor(selectedTeam));currentTeamPill.classList.remove('hidden');}
-  tryApplyPendingMCOutcome(); // retro-scoring
+  tryApplyPendingMCOutcome();
 }
 function isFuture(key){ return key.toLowerCase().includes('will'); }
 function detectPronSy(key){
@@ -444,65 +429,49 @@ function randomPromptFromPool(){
   return all[Math.floor(Math.random()*all.length)];
 }
 
-/* ================== TIMER ================== */
+/* ================= TIMER ================= */
 function updateTimerLabel(){ timerLabel.textContent=isBonus?'45 sec':`${currentTime} sec`; }
 function stopTimer(){ if(timerId){clearInterval(timerId);timerId=null;} timerRunning=false; }
 function startTimer(){
-  if(isBonus){ currentTime=45; } else { currentTime=timerSeconds; }
+  currentTime = isBonus ? 45 : timerSeconds;
   updateTimerLabel();
   stopTimer(); timerRunning=true;
   timerId=setInterval(()=>{ if(currentTime>0){ currentTime--; updateTimerLabel(); if(!canShowAnswer && (teacherMode || (!isBonus && currentTime<=timerSeconds-10) || (isBonus && currentTime<=45-10))){ unlockAfterDelay(); } } else { stopTimer(); } },1000);
 }
 
-/* ================== POWER-UPS & STREAKS ================== */
+/* ================= STREAKS / BONUS CREDITS ================= */
 function incStreak(team, gotCorrect){
   streak[team]=gotCorrect?streak[team]+1:0;
   (team===1?t1StreakEl:team===2?t2StreakEl:t3StreakEl).textContent=`Streak: ${streak[team]}`;
   if(streak[team] && streak[team]%3===0){
-    // +1 point, +1 bonus credit, +1 to each power-up
+    // +1 point, +1 bonus credit, +5s power-up
     score[team]+=1;
     bonusCredits[team]+=1;
-    pu.reveal[team]+=1; pu.extraTime[team]+=1; pu.freeze[team]+=1;
     renderScores(); renderPUButtons();
     addBadge(team, '3-in-a-row');
   }
 }
 function renderPUButtons(){
-  t1PUReveal.textContent=`Reveal Wrong (${pu.reveal[1]||0})`;
-  t1PUTime.textContent=`+5 sec (${pu.extraTime[1]||0})`;
-  t1PUFreeze.textContent=`Freeze 3s (${pu.freeze[1]||0})`;
+  t1PUTime.textContent=`+5 sec (${streak[1] ? Math.floor(streak[1]/3) : 0})`;
+  t2PUTime.textContent=`+5 sec (${streak[2] ? Math.floor(streak[2]/3) : 0})`;
+  if(players===3) t3PUTime.textContent=`+5 sec (${streak[3] ? Math.floor(streak[3]/3) : 0})`;
+
   t1BonusBtn.textContent=`Activate Bonus (${bonusCredits[1]||0})`;
   t1BonusBtn.disabled = !(bonusCredits[1]>0);
-
-  t2PUReveal.textContent=`Reveal Wrong (${pu.reveal[2]||0})`;
-  t2PUTime.textContent=`+5 sec (${pu.extraTime[2]||0})`;
-  t2PUFreeze.textContent=`Freeze 3s (${pu.freeze[2]||0})`;
   t2BonusBtn.textContent=`Activate Bonus (${bonusCredits[2]||0})`;
   t2BonusBtn.disabled = !(bonusCredits[2]>0);
-
   if(players===3){
-    t3PUReveal.textContent=`Reveal Wrong (${pu.reveal[3]||0})`;
-    t3PUTime.textContent=`+5 sec (${pu.extraTime[3]||0})`;
-    t3PUFreeze.textContent=`Freeze 3s (${pu.freeze[3]||0})`;
     t3BonusBtn.textContent=`Activate Bonus (${bonusCredits[3]||0})`;
     t3BonusBtn.disabled = !(bonusCredits[3]>0);
   }
 }
-function spendPU(team, type){
-  if(type==='reveal' && pu.reveal[team]>0 && mcOptions.length){
-    pu.reveal[team]--;
-    // hide one wrong enabled option
-    const wrong = mcOptions.find(o=>!o.correct && o.button && !o.button.classList.contains('hidden'));
-    if(wrong){ wrong.button.classList.add('hidden'); }
-  }
-  if(type==='extraTime' && pu.extraTime[team]>0){
-    pu.extraTime[team]--;
-    currentTime += 5; updateTimerLabel();
-  }
-  if(type==='freeze' && pu.freeze[team]>0){
-    pu.freeze[team]--;
-    freezeOtherBuzzers(team, 3000);
-  }
+function spendExtraTime(team){
+  // consume one +5sec credit if available (based on streaks bucket)
+  if(Math.floor((streak[team]||0)/3) <= 0){ return; }
+  // decrement a virtual bucket by reducing streak by 3 (keeps UI simple)
+  streak[team] = Math.max(0, streak[team]-3);
+  (team===1?t1StreakEl:team===2?t2StreakEl:t3StreakEl).textContent=`Streak: ${streak[team]}`;
+  currentTime += 5; updateTimerLabel();
   renderPUButtons();
 }
 function activateTeamBonus(team){
@@ -511,7 +480,7 @@ function activateTeamBonus(team){
   addBadge(team, 'Bonus Caller');
 }
 
-/* ================== ACHIEVEMENTS ================== */
+/* ================= ACHIEVEMENTS ================= */
 const badges = { 1:new Set(), 2:new Set(), 3:new Set() };
 function addBadge(team, label){
   if(badges[team].has(label)) return;
@@ -520,37 +489,7 @@ function addBadge(team, label){
   const b=document.createElement('span'); b.className='badge'; b.textContent=label; container.appendChild(b);
 }
 
-/* ================== BUZZERS ================== */
-function setBuzzLock(on, owner=0){
-  buzzLock=on; buzzOwner=owner;
-  [buzz1,buzz2,players===3?buzz3:null].filter(Boolean).forEach((b,i)=>{
-    const id=i+1;
-    b.classList.toggle('locked', on && id!==owner);
-  });
-  buzzInfo.textContent = on ? `Buzzer: ${teamName(owner)} locked in` : 'Buzzer open';
-}
-function freezeOtherBuzzers(team, ms){
-  [1,2].concat(players===3?[3]:[]).forEach(t=>{
-    const btn = t===1?buzz1:t===2?buzz2:buzz3;
-    if(t!==team){ btn.classList.add('locked'); }
-  });
-  setTimeout(()=>{ if(!buzzLock){ [buzz1,buzz2,(players===3?buzz3:null)].filter(Boolean).forEach(b=>b.classList.remove('locked')); } }, ms);
-}
-[buzz1,buzz2,buzz3].forEach((btn,idx)=>{ if(!btn) return; const t=idx+1;
-  btn.onclick=()=>{ if(btn.classList.contains('locked')) return;
-    setBuzzLock(true, t);
-    clearTimeout(buzzTimer);
-    buzzTimer=setTimeout(()=>setBuzzLock(false,0), 3000);
-  };
-});
-document.addEventListener('keydown',(e)=>{
-  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
-  if(e.key==='1' && !buzz1.classList.contains('hidden')) buzz1.click();
-  if(e.key==='2' && !buzz2.classList.contains('hidden')) buzz2.click();
-  if(e.key==='3' && players===3 && !buzz3.classList.contains('hidden')) buzz3.click();
-});
-
-/* ================== MC RENDER & CLICK ================== */
+/* ================= MC RENDER ================= */
 function getUniqueDistractorKeys(correctKey, n){
   const pool=Object.keys(PHRASES).filter(k=>k!==correctKey); const out=new Set();
   while(out.size<n && pool.length){ out.add(pool.splice(Math.floor(Math.random()*pool.length),1)[0]); }
@@ -598,7 +537,7 @@ function renderMC_EN2SY(correctKey){
   };
   mcOptions=ensureUniqueOptionTexts(build);
   mcWrap.innerHTML=''; mcOptions.forEach((opt,idx)=>{ const b=document.createElement('button'); b.className='opt'; b.textContent=opt.text; b.onclick=()=>onMCClick(idx); opt.button=b; mcWrap.appendChild(b); });
-  enableMCOptions(teacherMode); // teacher unlocks immediately
+  enableMCOptions(teacherMode);
 }
 function renderMC_SY2EN(correctKey){
   const D=getUniqueDistractorKeys(correctKey,3);
@@ -613,15 +552,19 @@ function renderMC_SY2EN(correctKey){
   enableMCOptions(teacherMode);
 }
 function enableMCOptions(on){ mcEnabled=on; mcWrap.classList.toggle('hidden', !on && lastRenderedMode==='MC'); mcOptions.forEach(o=>{ o.button.classList.toggle('enabled', on); o.button.style.cursor=on?'pointer':'not-allowed'; }); }
+
+/* Retro scoring support */
 function tryApplyPendingMCOutcome(){
   if(!pendingMCOutcome || pendingMCOutcome.applied) return;
   if(selectedTeam===0) return;
   const delta = pendingMCOutcome.correct ? pendingMCOutcome.delta : -1;
-  score[selectedTeam] += delta;  // negatives allowed
+  score[selectedTeam] += delta;
   incStreak(selectedTeam, pendingMCOutcome.correct);
   renderScores();
   pendingMCOutcome.applied=true;
 }
+
+/* MC click */
 function onMCClick(idx){
   if(!mcEnabled) return;
   stopTimer();
@@ -638,28 +581,27 @@ function onMCClick(idx){
     promptText:promptLabel.textContent, correctKey:currentPromptKey, answeredAt:now(), teamAwarded:selectedTeam||null, correct:mcOptions[idx].correct, delta:mcOptions[idx].correct?deltaCorrect:-1});
 }
 
-/* ================== ROUNDS / FLOW ================== */
+/* ================= ROUNDS / FLOW ================= */
+function setTeamSelectable(on){ teamSelectable=on; if(!on) selectedTeam=0; setActiveTeamHighlight(); }
+function updateTimerLabel(){ timerLabel.textContent=isBonus?'45 sec':`${currentTime} sec`; }
 function setupLocksForNewQuestion(){
   nextBtn.disabled=true;
   setTeamSelectable(lastRenderedMode!=='FREE');
   showAnswerBtn.disabled=(lastRenderedMode==='FREE' && !teacherMode);
-  canShowAnswer = teacherMode; // teacher bypass
+  canShowAnswer = teacherMode;
   if(answerUnlockTimeout){clearTimeout(answerUnlockTimeout);answerUnlockTimeout=null;}
   if(!teacherMode){ answerUnlockTimeout=setTimeout(unlockAfterDelay, 10000); } else { unlockAfterDelay(); }
   if(lastRenderedMode==='FREE'){ showAnswerBtn.classList.remove('hidden'); answerLabel.classList.remove('hidden'); mcWrap.classList.add('hidden'); }
   else { showAnswerBtn.classList.add('hidden'); answerLabel.classList.add('hidden'); mcWrap.classList.remove('hidden'); enableMCOptions(teacherMode); }
-  setBuzzLock(false,0);
 }
 function unlockAfterDelay(){ canShowAnswer=true; if(lastRenderedMode==='MC') enableMCOptions(true); else showAnswerBtn.disabled=false; }
-function setTeamSelectable(on){ teamSelectable=on; if(!on) selectedTeam=0; setActiveTeamHighlight(); }
-function updateBars(){
+function renderScores(){
   t1ScoreEl.textContent=score[1]; t2ScoreEl.textContent=score[2]; if(players===3) t3ScoreEl.textContent=score[3];
   const total=Math.max(1, Math.abs(score[1])+Math.abs(score[2])+(players===3?Math.abs(score[3]):0));
   t1Bar.style.width=(Math.abs(score[1])/total*100).toFixed(0)+'%';
   t2Bar.style.width=(Math.abs(score[2])/total*100).toFixed(0)+'%';
   t3Bar.style.width=(players===3?(Math.abs(score[3])/total*100).toFixed(0):'0')+'%';
 }
-function renderScores(){ updateBars(); }
 function chooseActualMode(){ return qtype==='MIXED' ? (Math.random()<0.5?'FREE':'MC') : qtype; }
 function finishRoundAndAdvance(){
   const d=[0, score[1]-roundStartScores[1], score[2]-roundStartScores[2], players===3?score[3]-roundStartScores[3]:-Infinity];
@@ -698,12 +640,10 @@ function nextQuestion(){
   if(!modalWrap.classList.contains('hidden')) return;
   if(justFinishedGame){ startNewGameHardReset(); return; }
 
-  // history snapshot
   if(promptLabel.textContent) pushHistory();
 
   finishRoundAndAdvance();
 
-  // bonus decide
   isBonus = decideBonusForThisQuestion();
   if(isBonus){
     currentFoodIndex = Math.floor(Math.random()*FOODS_EN.length);
@@ -713,7 +653,6 @@ function nextQuestion(){
     currentFoodIndex=null; foodLabel.textContent=''; bonusPill.classList.add('hidden');
   }
 
-  // reset UI
   answerLabel.textContent=''; mcWrap.innerHTML=''; mcOptions=[]; pendingMCOutcome=null;
 
   directionMode=dirSelect.value; qtype=qtypeSelect.value; lastRenderedMode=chooseActualMode();
@@ -730,6 +669,8 @@ function nextQuestion(){
     if(lastRenderedMode==='FREE'){ startTimer(); }
     else { renderMC_SY2EN(currentPromptKey); startTimer(); }
   }
+
+  pushHostState(); // if online host, sync state
 }
 function showAnswer(){
   if(lastRenderedMode!=='FREE') return;
@@ -740,7 +681,6 @@ function showAnswer(){
 }
 function startNewGameHardReset(){
   score=[0,0,0,0]; streak=[0,0,0,0];
-  pu={reveal:[0,0,0,0],extraTime:[0,0,0,0],freeze:[0,0,0,0]};
   bonusCredits=[0,0,0,0]; badges[1].clear(); badges[2].clear(); badges[3].clear();
   [t1Badges,t2Badges,t3Badges].forEach(b=>b.innerHTML='');
   renderPUButtons();
@@ -758,7 +698,7 @@ function setRounds(n){
   roundStartScores=[0, score[1], score[2], players===3?score[3]:0];
 }
 
-/* ================== HISTORY & STATS ================== */
+/* ================= HISTORY & STATS ================= */
 const history=[];
 function pushHistory(){
   const snapshot = {
@@ -774,16 +714,12 @@ function renderHistoryList(){
   historyCount.textContent=`${history.length} item${history.length===1?'':'s'}`;
   historyList.innerHTML='';
   history.forEach((h,i)=>{
-    const row=document.createElement('div'); row.className='row'; row.style.marginBottom='6px';
-    row.innerHTML=`<div><strong>Q${i+1}</strong> • Round ${h.round} • ${h.dir} • ${h.mode}${h.isBonus?' • Bonus':''}<div class="note">${h.prompt}</div></div>`;
-    const btn=document.createElement('button'); btn.className='btn neutral'; btn.textContent='View';
-    btn.onclick=()=>openHistoryModal(h);
-    const wrap=document.createElement('div'); wrap.className='spacer';
-    const right=document.createElement('div'); right.appendChild(btn);
-    const container=document.createElement('div'); container.className='row'; container.style.width='100%';
-    container.appendChild(row.firstChild); container.appendChild(right);
-    const box=document.createElement('div'); box.className='card'; box.style.padding='8px'; box.appendChild(container);
-    historyList.appendChild(box);
+    const box=document.createElement('div'); box.className='card'; box.style.padding='8px'; box.style.marginBottom='6px';
+    const top=document.createElement('div'); top.innerHTML=`<strong>Q${i+1}</strong> • Round ${h.round} • ${h.dir} • ${h.mode}${h.isBonus?' • Bonus':''}<div class="note">${h.prompt}</div>`;
+    const right=document.createElement('div'); const btn=document.createElement('button'); btn.className='btn neutral'; btn.textContent='View';
+    btn.onclick=()=>openHistoryModal(h); right.appendChild(btn);
+    const row=document.createElement('div'); row.className='row'; row.appendChild(top); row.appendChild(right);
+    box.appendChild(row); historyList.appendChild(box);
   });
 }
 function openHistoryModal(h){
@@ -803,17 +739,12 @@ function openHistoryModal(h){
 el('historyClose').onclick=()=>historyModalWrap.classList.add('hidden');
 clearHistoryBtn.onclick=()=>{ history.length=0; eventsLog.length=0; renderHistoryList(); renderStats(); };
 function renderStats(){
-  // Simple aggregate
   const totalMC=eventsLog.filter(e=>e.mode!=='FREE').length;
   const correct=eventsLog.filter(e=>e.correct).length;
   const acc = totalMC? Math.round((correct/totalMC)*100):0;
   const misses={}; eventsLog.filter(e=>!e.correct && e.promptKey).forEach(e=>{ misses[e.promptKey]=(misses[e.promptKey]||0)+1; });
   const topMiss = Object.entries(misses).sort((a,b)=>b[1]-a[1])[0];
-  statsBox.innerHTML = `
-    Total MC: ${totalMC}<br>
-    Accuracy: ${acc}%<br>
-    Most-missed: ${topMiss?`${topMiss[0]} (${topMiss[1]})`:'—'}
-  `;
+  statsBox.innerHTML = `Total MC: ${totalMC}<br>Accuracy: ${acc}%<br>Most-missed: ${topMiss?`${topMiss[0]} (${topMiss[1]})`:'—'}`;
 }
 exportCsvBtn.onclick=()=>{
   const rows=[["timestamp","round","dir","mode","bonus","promptKey","promptText","teamAwarded","correct","delta"]];
@@ -823,7 +754,7 @@ exportCsvBtn.onclick=()=>{
   const a=document.createElement('a'); a.href=url; a.download='assyrian_game_stats.csv'; a.click(); URL.revokeObjectURL(url);
 };
 
-/* ================== TEACHER & MISC ================== */
+/* ================= TEACHER & MISC ================= */
 teacherBtn.onclick=()=>{
   if(teacherMode){ teacherMode=false; teacherBadge.classList.add('hidden'); }
   else{ const pw=prompt('Enter teacher password:'); if(pw==='mrsargool'){ teacherMode=true; teacherBadge.classList.remove('hidden'); canShowAnswer=true; enableMCOptions(true); } else if(pw!==null){ alert('Incorrect password.'); } }
@@ -832,7 +763,7 @@ fullscreenBtn.onclick=()=>{ const de=document.documentElement; if(!document.full
 instructionsBtn.onclick=()=>{ instrBody.classList.toggle('hidden'); };
 toggleInstr.onclick=()=>{ const hide=!instrBody.classList.contains('hidden'); instrBody.classList.toggle('hidden', hide); toggleInstr.textContent=hide?'Show':'Hide'; };
 
-/* ================== BUTTON WIRING ================== */
+/* ================= BUTTONS ================= */
 t1Plus.onclick=()=>{ score[1]+=1; renderScores(); incStreak(1,true); };
 t1Minus.onclick=()=>{ score[1]-=1; renderScores(); incStreak(1,false); };
 t2Plus.onclick=()=>{ score[2]+=1; renderScores(); incStreak(2,true); };
@@ -840,29 +771,28 @@ t2Minus.onclick=()=>{ score[2]-=1; renderScores(); incStreak(2,false); };
 if(t3Plus) t3Plus.onclick=()=>{ score[3]+=1; renderScores(); incStreak(3,true); };
 if(t3Minus) t3Minus.onclick=()=>{ score[3]-=1; renderScores(); incStreak(3,false); };
 
-t1PUReveal.onclick=()=>spendPU(1,'reveal'); t1PUTime.onclick=()=>spendPU(1,'extraTime'); t1PUFreeze.onclick=()=>spendPU(1,'freeze'); t1BonusBtn.onclick=()=>activateTeamBonus(1);
-t2PUReveal.onclick=()=>spendPU(2,'reveal'); t2PUTime.onclick=()=>spendPU(2,'extraTime'); t2PUFreeze.onclick=()=>spendPU(2,'freeze'); t2BonusBtn.onclick=()=>activateTeamBonus(2);
-if(t3PUReveal) t3PUReveal.onclick=()=>spendPU(3,'reveal');
-if(t3PUTime)   t3PUTime.onclick=()=>spendPU(3,'extraTime');
-if(t3PUFreeze) t3PUFreeze.onclick=()=>spendPU(3,'freeze');
+t1PUTime.onclick=()=>spendExtraTime(1);
+t2PUTime.onclick=()=>spendExtraTime(2);
+if(t3PUTime) t3PUTime.onclick=()=>spendExtraTime(3);
+
+t1BonusBtn.onclick=()=>activateTeamBonus(1);
+t2BonusBtn.onclick=()=>activateTeamBonus(2);
 if(t3BonusBtn) t3BonusBtn.onclick=()=>activateTeamBonus(3);
 
 [t1Card,t2Card,t3Card].forEach((el,idx)=>{ if(!el)return; const t=idx+1; el.onclick=()=>{ if(!teamSelectable) return; if(t===3 && players!==3) return; selectedTeam=t; setActiveTeamHighlight(); }; });
 [t1Name,t2Name,t3Name].forEach((inp,i)=>{ if(!inp) return; inp.addEventListener('input',()=>{ const t=i+1; (t===1?t1Title:t===2?t2Title:t3Title).textContent=teamName(t); setActiveTeamHighlight(); updateGamesPanel(); }); });
 [t1Color,t2Color,t3Color].forEach((inp,i)=>{ if(!inp) return; inp.oninput=()=>{ const t=i+1; const card=t===1?t1Card:t===2?t2Card:t3Card; const bar=t===1?t1Bar:t===2?t2Bar:t3Bar; card.style.background=hexToRgba(inp.value,.10); card.style.borderColor=hexToRgba(inp.value,.6); bar.style.background=inp.value; if(selectedTeam===t) tintPill(currentTeamPill, inp.value); }; });
 
-resetScoresBtn.onclick=()=>{ score=[0,0,0,0]; streak=[0,0,0,0]; t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0'; if(players===3) t3StreakEl.textContent='Streak: 0'; renderScores(); banner.classList.add('hidden'); roundStartScores=[0,score[1],score[2],players===3?score[3]:0]; };
 el('resetGameBtn').onclick=startNewGameHardReset;
+resetScoresBtn.onclick=()=>{ score=[0,0,0,0]; streak=[0,0,0,0]; t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0'; if(players===3) t3StreakEl.textContent='Streak: 0'; renderScores(); banner.classList.add('hidden'); roundStartScores=[0,score[1],score[2],players===3?score[3]:0]; };
 nextBtn.onclick=nextQuestion;
 showAnswerBtn.onclick=showAnswer;
 
 timerSelect.onchange=(e)=>{ timerSeconds=parseInt(e.target.value,10); };
 roundsSelect.onchange=(e)=>{ setRounds(parseInt(e.target.value,10)); };
-playersSelect.onchange=()=>{ players=parseInt(playersSelect.value,10); t3Card.classList.toggle('hidden', players!==3); buzz3.classList.toggle('hidden', players!==3); renderScores(); updateGamesPanel(); };
-dirSelect.onchange=()=>{};
-qtypeSelect.onchange=()=>{};
+playersSelect.onchange=()=>{ players=parseInt(playersSelect.value,10); t3Card.classList.toggle('hidden', players!==3); renderScores(); updateGamesPanel(); };
 
-/* ================== KEYBOARD ================== */
+/* ================= KEYBOARD ================= */
 document.addEventListener('keydown',(e)=>{
   if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
   if(e.key===' '){ e.preventDefault(); if(isBonus) return; if(timerRunning){ stopTimer(); } else { startTimer(); } }
@@ -870,37 +800,58 @@ document.addEventListener('keydown',(e)=>{
   if(e.key.toLowerCase()==='a'){ e.preventDefault(); if(lastRenderedMode==='FREE'&&(canShowAnswer||teacherMode)) showAnswer(); }
 });
 
-/* ================== ONLINE (FIREBASE OPTIONAL) ================== */
+/* ================= ONLINE (FIREBASE) ================= */
+import { firebaseConfig as _cfg } from '#firebase-config';
 let online=false, isHost=false, gameId=null, db=null, gameRef=null;
-async function maybeInitFirebase(){
-  const block=document.getElementById('firebaseBlock').textContent;
-  if(!block.includes('firebaseConfig')) return false;
-  // Import
-  const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
-  const { getFirestore, doc, setDoc, updateDoc, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
-  // eslint-disable-next-line no-eval
-  const cfgEval = (new Function(block.replace('/***','').replace('***/','')+'; return firebaseConfig;'))();
-  const app = initializeApp(cfgEval);
-  db = getFirestore(app);
-  return {doc,setDoc,updateDoc,onSnapshot};
+let Firebase=null;
+
+async function initFirebase(){
+  try{
+    if(!_cfg) return null;
+  }catch{ return null; }
+  const appMod = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+  const fsMod  = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+  const app = appMod.initializeApp(_cfg);
+  db = fsMod.getFirestore(app);
+  Firebase = {doc:fsMod.doc,setDoc:fsMod.setDoc,updateDoc:fsMod.updateDoc,onSnapshot:fsMod.onSnapshot};
+  return Firebase;
 }
-createGameBtn.onclick=async()=>{
-  const fb=await maybeInitFirebase(); if(!fb){ alert('Add Firebase config first (see FIREBASE_CONFIG block).'); return; }
+
+// simple virtual module shim to import config above
+const cfgScript = document.querySelector('#firebase-config');
+const cfgText = cfgScript?.textContent || '';
+const hasCfg = cfgText.includes('export const firebaseConfig');
+const blob = new Blob([cfgText||'export const firebaseConfig = null;'], {type:'text/javascript'});
+const cfgUrl = URL.createObjectURL(blob);
+const moduleMap = new Map(); // trivial loader
+// eslint-disable-next-line no-unused-vars
+const importMapShim = (id)=> (id==='#firebase-config'?cfgUrl:id);
+
+const origImport = window.importShim || ((x)=>import(x));
+window.importShim = async (id)=> origImport(importMapShim(id));
+
+// Hook Create / Join buttons
+createGameBtn.onclick = async ()=>{
+  const fb = await initFirebase();
+  if(!fb){ alert('Online play: please paste your Firebase config (see the FIREBASE CONFIG block) and try again.'); return; }
   isHost=true; online=true; gameId = Math.random().toString(36).slice(2,8).toUpperCase();
   onlineInfo.classList.remove('hidden'); onlineInfo.textContent=`HOST • PIN ${gameId}`;
-  const {doc,setDoc,onSnapshot} = fb; gameRef = doc(db,'games',gameId);
-  await setDoc(gameRef,{ state:null, scores:{1:0,2:0,3:0}, ts:Date.now() });
-  onSnapshot(gameRef,(snap)=>{ const g=snap.data(); if(!g) return; if(!isHost && g.state){ applyRemoteState(g.state); } if(g.scores){ score[1]=g.scores[1]; score[2]=g.scores[2]; if(players===3) score[3]=g.scores[3]; renderScores(); } });
-  alert(`Share PIN ${gameId}. Players click Join Online Game and enter the PIN.`);
+  gameRef = Firebase.doc(db,'games',gameId);
+  await Firebase.setDoc(gameRef,{ state:null, scores:{1:0,2:0,3:0}, ts:Date.now() });
+  Firebase.onSnapshot(gameRef,(snap)=>{ const g=snap.data(); if(!g) return; if(!isHost && g.state){ applyRemoteState(g.state); } if(g.scores){ score[1]=g.scores[1]; score[2]=g.scores[2]; score[3]=g.scores[3]; renderScores(); } });
+  alert(`Share PIN ${gameId}. Students click Join Online Game and enter the PIN.`);
 };
-joinGameBtn.onclick=async()=>{
-  const fb=await maybeInitFirebase(); if(!fb){ alert('Add Firebase config first.'); return; }
+joinGameBtn.onclick = async ()=>{
+  const fb = await initFirebase();
+  if(!fb){ alert('Online play: please paste your Firebase config (see the FIREBASE CONFIG block) and try again.'); return; }
   const pin=prompt('Enter Game PIN:'); if(!pin) return;
   isHost=false; online=true; gameId=pin.trim().toUpperCase();
   onlineInfo.classList.remove('hidden'); onlineInfo.textContent=`PLAYER • PIN ${gameId}`;
-  const {doc,onSnapshot} = fb; gameRef = doc(db,'games',gameId);
-  onSnapshot(gameRef,(snap)=>{ const g=snap.data(); if(!g) return; if(g.state) applyRemoteState(g.state); if(g.scores){ score[1]=g.scores[1]; score[2]=g.scores[2]; if(players===3) score[3]=g.scores[3]; renderScores(); } });
+  gameRef = Firebase.doc(db,'games',gameId);
+  Firebase.onSnapshot(gameRef,(snap)=>{ const g=snap.data(); if(!g) return; if(g.state) applyRemoteState(g.state); if(g.scores){ score[1]=g.scores[1]; score[2]=g.scores[2]; score[3]=g.scores[3]; renderScores(); } });
 };
+
+// Host pushes state after rendering a new question
 async function pushHostState(){
   if(!online||!isHost||!gameRef) return;
   const state = {
@@ -908,27 +859,27 @@ async function pushHostState(){
     promptKey: currentPromptKey, promptText: promptLabel.textContent, foodIndex: currentFoodIndex,
     options: mcOptions.map(o=>({t:o.text,c:o.correct}))
   };
-  const {updateDoc} = await maybeInitFirebase();
-  await updateDoc(gameRef,{ state, scores:{1:score[1],2:score[2],3:players===3?score[3]:0}, ts:Date.now() });
+  await Firebase.updateDoc(gameRef,{ state, scores:{1:score[1],2:score[2],3:players===3?score[3]:0}, ts:Date.now() });
 }
 function applyRemoteState(s){
-  // players mirror the host state
   currentRound=s.round; roundNowEl.textContent=String(currentRound);
   lastRenderedDir=s.dir; lastRenderedMode=s.mode; isBonus=s.isBonus; currentFoodIndex=s.foodIndex; currentPromptKey=s.promptKey;
   bonusPill.classList.toggle('hidden', !isBonus);
   promptLabel.textContent=s.promptText; foodLabel.textContent=isBonus?`Bonus Round: ${FOODS_EN[currentFoodIndex]}`:'';
-  // options
   mcWrap.innerHTML=''; mcOptions = (s.options||[]).map(o=>({text:o.t,correct:o.c}));
   mcOptions.forEach((opt,i)=>{ const b=document.createElement('button'); b.className='opt enabled'; b.textContent=opt.text; b.onclick=()=>onMCClick(i); opt.button=b; mcWrap.appendChild(b); });
   enableMCOptions(true);
   startTimer();
 }
 
-/* push host state after rendering a new question */
-const origNext = nextQuestion;
-nextQuestion = async function(){ origNext(); await pushHostState(); };
-
-/* ================== INIT ================== */
+/* ================= INIT ================= */
+function updateGamesPanel(){
+  const parts=[1,2].concat(players===3?[3]:[]).map(t=>`${teamName(t)}: ${gamesWon[t]}`);
+  document.getElementById('gamesTally').textContent=parts.join(' • ');
+  const max=Math.max(...[1,2].concat(players===3?[3]:[]).map(t=>gamesWon[t]));
+  const leaders=[1,2].concat(players===3?[3]:[]).filter(t=>gamesWon[t]===max);
+  document.getElementById('gameLeader').textContent=(leaders.length>1)?'Games leader: tied':`Games leader: ${teamName(leaders[0])}`;
+}
 function initFirstQuestion(forceFresh=false){
   timerSeconds=parseInt(timerSelect.value,10);
   totalRounds=parseInt(roundsSelect.value,10); roundTotalEl.textContent=String(totalRounds);
@@ -943,10 +894,10 @@ function initFirstQuestion(forceFresh=false){
   else { promptLabel.textContent=buildSyAnswerFromKey(currentPromptKey,currentFoodIndex); if(lastRenderedMode==='MC') renderMC_SY2EN(currentPromptKey); }
   startTimer();
 }
-(function(){
-  initFirstQuestion();
-})();
+(function(){ initFirstQuestion(); })();
 
+/* Expose for host sync */
+window.pushHostState = pushHostState;
 </script>
 </body>
 </html>
