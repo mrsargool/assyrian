@@ -425,7 +425,10 @@ function randomPromptFromPool(){
 }
 
 /* ================= TIMER ================= */
-function updateTimerLabel(){ timerLabel.textContent=isBonus?'45 sec':`${currentTime} sec`; }
+// Replace your current updateTimerLabel with this:
+function updateTimerLabel() {
+  timerLabel.textContent = `${currentTime} sec`;
+}
 function stopTimer(){ if(timerId){clearInterval(timerId);timerId=null;} timerRunning=false; }
 function startTimer(){
   currentTime = isBonus ? 45 : timerSeconds;
