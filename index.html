@@ -1,516 +1,416 @@
 <!doctype html>
 <html lang="en" dir="ltr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Assyrian III: Verb to Order Game</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Assyrian III: Verb to Order Game</title>
 
-  <!-- Noto Sans Syriac Eastern -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Syriac+Eastern:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Syriac+Eastern:wght@400;700&display=swap" rel="stylesheet">
 
-  <style>
-    :root{
-      --bg:#F7F9FC; --card:#FFFFFF; --ink:#0F172A; --muted:#475569;
-      --accent:#2563EB; --success:#16A34A; --warn:#D97706; --danger:#DC2626; --line:#E5E7EB;
-      --radius:16px; --active:#0ea5e9;
-    }
-    *{box-sizing:border-box}
-    body{margin:0; background:var(--bg); color:var(--ink); font:16px/1.4 "Segoe UI", system-ui, Arial, sans-serif;}
-    .wrap{max-width:1220px; margin:24px auto; padding:0 16px;}
-    header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px;}
-    h1{font-size:22px; margin:0; font-weight:800;}
-    .controls{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
-    select, input[type="text"]{
-      padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; color:#0F172A;
-    }
-    .btn{appearance:none; border:0; padding:10px 14px; border-radius:10px; color:#fff; font-weight:700; cursor:pointer;}
-    .btn.primary{background:var(--accent)}
-    .btn.success{background:var(--success)}
-    .btn.neutral{background:#334155}
-    .btn.danger{background:#DC2626}
-    .btn.warn{background:#D97706}
-    .btn:disabled{opacity:.6; cursor:not-allowed}
-    .pill{display:inline-block; padding:6px 12px; border-radius:999px; background:#EEF2FF; color:#3730A3; font-weight:800; font-size:13px;}
-    .timer{font-size:56px; font-weight:800; color:var(--accent); margin:4px 0 8px}
-    .prompt{font-size:30px; font-weight:800; margin:8px 0 6px}
-    .food{font-size:18px; font-style:italic; color:var(--warn); margin:0 0 6px}
-    .answer{font-family:"Noto Sans Syriac Eastern","Segoe UI",system-ui,Arial,sans-serif; font-size:48px; color:var(--success); margin:12px 0 18px}
-
-    .row{display:flex; gap:16px; flex-wrap:wrap; align-items:center}
-    .spacer{flex:1}
-    .legend{color:var(--muted); font-size:12px}
-
-    .card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 1px 0 rgba(0,0,0,.04); border:1px solid var(--line);}
-    .grid2{display:grid; grid-template-columns:1fr 310px; gap:16px;}
-
-    .scores .team{min-width:260px; border-radius:16px; padding:14px; border:2px solid var(--line); background:#fff; transition:background .2s,border-color .2s, box-shadow .2s; cursor:pointer; position:relative}
-    .scores .team:hover{box-shadow:0 0 0 3px rgba(14,165,233,.15)}
-    .scores .team.active{box-shadow:0 0 0 3px rgba(14,165,233,.35); border-color:var(--active)}
-    .scores .team.active::after{
-      content:"Selected"; position:absolute; top:10px; right:12px;
-      background:#0ea5e9; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:999px;
-    }
-    .scores .team-title{font-size:18px; font-weight:800; margin-bottom:6px}
-    .scores .score{font-size:26px; font-weight:800; margin:6px 0}
-    .scores .grid{display:flex; gap:6px; flex-wrap:wrap}
-    .point{padding:8px 10px; border-radius:10px; background:#E2E8F0; color:#0F172A; font-weight:800; border:1px solid #CBD5E1; cursor:pointer;}
-    .point:hover{background:#CBD5E1}
-    .team-bar{height:6px; border-radius:6px; background:#E5E7EB; overflow:hidden; margin-top:6px; position:relative}
-    .team-bar .fill{height:100%; width:0%; transition:width .3s ease}
-    .roundbar{height:8px; background:#E5E7EB; border-radius:8px; overflow:hidden}
-    .roundbar .fill{height:100%; width:0%; background:var(--accent); transition:width .4s ease}
-    .banner{margin:10px 0; padding:10px 14px; border-radius:10px; background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; font-weight:700}
-    .hidden{display:none !important}
-    .confetti{position:fixed; left:0; top:0; width:100%; height:100%; pointer-events:none; overflow:hidden}
-    .piece{position:absolute; width:8px; height:12px; opacity:.9; transform:translate3d(0,0,0); animation:fall 1400ms linear forwards;}
-    @keyframes fall{0%{transform:translate3d(var(--x),-10vh,0) rotate(0deg);}100%{transform:translate3d(calc(var(--x) + var(--dx)),110vh,0) rotate(360deg);opacity:.7;}}
-    .games-card .big{font-size:18px; font-weight:800}
-    .note{font-size:12px; color:var(--muted)}
-    .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:50}
-    .modal{background:#fff; border-radius:16px; padding:20px; max-width:720px; width:92%; border:1px solid var(--line); text-align:left}
-    .modal h2{margin:6px 0 10px; font-size:22px}
-    .modal .muted{color:#475569; font-size:14px}
-    /* Multiple choice */
-    .mc{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
-    .mc .opt{flex:1 1 48%; padding:10px; border:1px solid var(--line); border-radius:10px; background:#fff; cursor:not-allowed}
-    .mc .opt.enabled{cursor:pointer; background:#F8FAFC}
-    .mc .opt.correct{border-color:#16A34A; background:#ECFDF5}
-    .mc .opt.wrong{border-color:#DC2626; background:#FEF2F2}
-    .lockpill{margin-left:8px}
-    #currentTeamPill{border:1px solid var(--line)}
-
-    /* History list */
-    .history-list{max-height:340px; overflow:auto; margin-top:8px}
-    .history-item{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px; border:1px solid var(--line); border-radius:10px; margin-bottom:6px; background:#fff}
-    .history-item .meta{font-size:12px; color:#475569}
-
-    /* Teacher Mode */
-    .teacher-on{outline:3px solid #f59e0b; outline-offset:3px; border-radius:10px; padding:2px 6px; background:#FFFBEB; color:#92400E; font-weight:800}
-  </style>
+<style>
+  :root{
+    --bg:#F7F9FC; --card:#FFFFFF; --ink:#0F172A; --muted:#475569; --line:#E5E7EB;
+    --accent:#2563EB; --success:#16A34A; --warn:#D97706; --danger:#DC2626; --active:#0ea5e9; --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 "Segoe UI",system-ui,Arial,sans-serif}
+  .wrap{max-width:1240px;margin:24px auto;padding:0 16px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+  h1{font-size:22px;margin:0;font-weight:800}
+  .controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  select,input[type="text"],input[type="number"]{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+  .btn{appearance:none;border:0;padding:10px 14px;border-radius:10px;color:#fff;font-weight:700;cursor:pointer}
+  .btn.primary{background:var(--accent)} .btn.success{background:var(--success)}
+  .btn.neutral{background:#334155} .btn.danger{background:var(--danger)} .btn.warn{background:var(--warn)}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .pill{display:inline-block;padding:6px 12px;border-radius:999px;background:#EEF2FF;color:#3730A3;font-weight:800;font-size:13px;border:1px solid var(--line)}
+  .timer{font-size:56px;font-weight:800;color:var(--accent);margin:4px 0 8px}
+  .prompt{font-size:30px;font-weight:800;margin:8px 0 6px}
+  .food{font-size:18px;font-style:italic;color:var(--warn);margin:0 0 6px}
+  .answer{font-family:"Noto Sans Syriac Eastern","Segoe UI",system-ui,Arial,sans-serif;font-size:48px;color:var(--success);margin:12px 0 18px}
+  .row{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  .spacer{flex:1} .legend{color:var(--muted);font-size:12px}
+  .card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:0 1px 0 rgba(0,0,0,.04);border:1px solid var(--line)}
+  .grid2{display:grid;grid-template-columns:1fr 320px;gap:16px}
+  .scores .team{min-width:260px;border-radius:16px;padding:14px;border:2px solid var(--line);background:#fff;transition:.2s;cursor:pointer;position:relative}
+  .scores .team:hover{box-shadow:0 0 0 3px rgba(14,165,233,.12)}
+  .scores .team.active{box-shadow:0 0 0 3px rgba(14,165,233,.35);border-color:var(--active)}
+  .scores .team.active::after{content:"Selected";position:absolute;top:10px;right:12px;background:#0ea5e9;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px}
+  .team-title{font-size:18px;font-weight:800;margin-bottom:6px}
+  .score{font-size:26px;font-weight:800;margin:6px 0}
+  .grid{display:flex;gap:6px;flex-wrap:wrap}
+  .point{padding:8px 10px;border-radius:10px;background:#E2E8F0;color:var(--ink);font-weight:800;border:1px solid #CBD5E1;cursor:pointer}
+  .point:hover{background:#CBD5E1}
+  .team-bar{height:6px;border-radius:6px;background:#E5E7EB;overflow:hidden;margin-top:6px}
+  .team-bar .fill{height:100%;width:0%;transition:width .3s ease}
+  .roundbar{height:8px;background:#E5E7EB;border-radius:8px;overflow:hidden}
+  .roundbar .fill{height:100%;width:0%;background:var(--accent);transition:width .4s ease}
+  .banner{margin:10px 0;padding:10px 14px;border-radius:10px;background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0;font-weight:700}
+  .hidden{display:none!important}
+  /* MC */
+  .mc{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .mc .opt{flex:1 1 48%;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:not-allowed}
+  .mc .opt.enabled{cursor:pointer;background:#F8FAFC}
+  .mc .opt.correct{border-color:#16A34A;background:#ECFDF5}
+  .mc .opt.wrong{border-color:#DC2626;background:#FEF2F2}
+  /* Buzzers */
+  .buzzers{display:flex;gap:8px;margin-top:8px}
+  .buzz{padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  .buzz.locked{opacity:.5;cursor:not-allowed}
+  /* Achievements */
+  .badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .badge{font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:#F1F5F9}
+  /* Modals */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:50}
+  .modal{background:#fff;border-radius:16px;padding:20px;max-width:760px;width:92%;border:1px solid var(--line);text-align:left}
+  .modal h2{margin:6px 0 10px;font-size:22px}
+  .note{font-size:12px;color:var(--muted)}
+  .teacher-on{outline:3px solid #f59e0b;outline-offset:3px;border-radius:10px;padding:2px 6px;background:#FFFBEB;color:#92400E;font-weight:800}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>Assyrian III: Verb to Order Game</h1>
-      <div class="controls">
-        <button class="btn neutral" id="fullscreenBtn" title="Toggle fullscreen">Fullscreen</button>
+<div class="wrap">
+  <header>
+    <h1>Assyrian III: Verb to Order Game</h1>
+    <div class="controls">
+      <button class="btn neutral" id="fullscreenBtn">Fullscreen</button>
 
-        <label class="legend" for="timerSelect">Timer:</label>
-        <select id="timerSelect" title="Seconds per round">
-          <option>20</option><option selected>30</option><option>45</option><option>60</option>
-        </select>
+      <label class="legend">Timer:</label>
+      <select id="timerSelect"><option>20</option><option selected>30</option><option>45</option><option>60</option></select>
 
-        <label class="legend" for="roundsSelect">Rounds:</label>
-        <select id="roundsSelect" title="Number of rounds">
-          <option>5</option><option selected>10</option><option>15</option><option>20</option>
-        </select>
+      <label class="legend">Rounds:</label>
+      <select id="roundsSelect"><option>5</option><option selected>10</option><option>15</option><option>20</option></select>
 
-        <label class="legend"><input type="checkbox" id="noRepeat" checked> No-repeat</label>
+      <label class="legend"><input type="checkbox" id="noRepeat" checked> No-repeat</label>
 
-        <label class="legend" for="dirSelect">Direction:</label>
-        <select id="dirSelect" title="Question direction">
-          <option value="EN2SY" selected>English → Assyrian</option>
-          <option value="SY2EN">Assyrian → English</option>
-          <option value="BOTH">Both</option>
-        </select>
+      <label class="legend">Direction:</label>
+      <select id="dirSelect">
+        <option value="EN2SY" selected>English → Assyrian</option>
+        <option value="SY2EN">Assyrian → English</option>
+        <option value="BOTH">Both</option>
+      </select>
 
-        <label class="legend" for="qtypeSelect">Type:</label>
-        <select id="qtypeSelect" title="Free / Multiple Choice / Mixed">
-          <option value="FREE" selected>Free Response</option>
-          <option value="MC">Multiple Choice</option>
-          <option value="MIXED">Mixed</option>
-        </select>
+      <label class="legend">Type:</label>
+      <select id="qtypeSelect">
+        <option value="FREE" selected>Free Response</option>
+        <option value="MC">Multiple Choice</option>
+        <option value="MIXED">Mixed</option>
+      </select>
 
-        <label class="legend" for="playersSelect">Players:</label>
-        <select id="playersSelect" title="2 or 3 players">
-          <option value="2" selected>2 Players</option>
-          <option value="3">3 Players</option>
-        </select>
+      <label class="legend">Players:</label>
+      <select id="playersSelect">
+        <option value="2" selected>2 Players</option>
+        <option value="3">3 Players</option>
+      </select>
 
-        <button class="btn warn" id="resetGameBtn" title="Reset rounds, scores, and start from Round 1">Reset Game</button>
-        <button class="btn danger" id="resetScoresBtn" title="Reset all teams to 0">Reset Scores</button>
-        <button class="btn primary" id="instructionsBtn" title="Show instructions">Instructions</button>
-        <button class="btn success" id="bonusModeBtn" title="Activate Bonus Mode (all questions are bonus)" disabled>Activate Bonus Mode (0)</button>
-        <button class="btn neutral" id="teacherBtn" title="Teacher Mode (disable 10s lock)">Teacher</button>
-        <span id="teacherBadge" class="hidden teacher-on">Teacher Mode</span>
-      </div>
-    </header>
+      <button class="btn warn" id="resetGameBtn">Reset Game</button>
+      <button class="btn danger" id="resetScoresBtn">Reset Scores</button>
+      <button class="btn primary" id="instructionsBtn">Instructions</button>
 
-    <div class="grid2">
-      <!-- Left: Main play area -->
-      <div>
-        <div class="card" style="margin-bottom:10px">
-          <div class="row">
-            <div><strong>Round:</strong> <span id="roundNow">1</span>/<span id="roundTotal">10</span></div>
-            <div class="spacer"></div>
-            <div style="min-width:280px">
-              <div class="roundbar" title="Round progress"><div class="fill" id="roundFill"></div></div>
-            </div>
-          </div>
-          <div id="endNote" class="note hidden" style="margin-top:8px;"></div>
-        </div>
+      <!-- Online -->
+      <button class="btn primary" id="createGameBtn">Create Online Game</button>
+      <button class="btn neutral" id="joinGameBtn">Join Online Game</button>
+      <span id="onlineInfo" class="pill hidden">Offline</span>
 
-        <div class="timer" id="timerLabel">30 sec</div>
+      <!-- Teacher -->
+      <button class="btn neutral" id="teacherBtn">Teacher</button>
+      <span id="teacherBadge" class="hidden teacher-on">Teacher Mode</span>
+    </div>
+  </header>
 
-        <!-- Current team pill -->
-        <div id="currentTeamPill" class="pill hidden">Current Team: —</div>
-
-        <div class="prompt" id="promptLabel"></div>
-        <div class="food" id="foodLabel"></div>
-
-        <div class="answer" id="answerLabel"></div>
-
-        <!-- Multiple choice answers -->
-        <div id="mcWrap" class="mc hidden"></div>
-        <span id="mcLock" class="pill lockpill hidden">Options unlock after 10 sec</span>
-        <span id="teamLock" class="pill lockpill hidden">Select a team to award points (can be after answering)</span>
-
-        <div class="row" style="margin-top:8px">
-          <button class="btn success" id="showAnswerBtn" title="Reveal the answer and stop the timer" disabled>Show Answer</button>
-          <button class="btn primary" id="nextBtn" title="Next random prompt (auto-starts timer)" disabled>Next Question</button>
-          <span id="bonusPill" class="pill hidden">BONUS ROUND</span>
+  <div class="grid2">
+    <!-- Main -->
+    <div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="row">
+          <div><strong>Round:</strong> <span id="roundNow">1</span>/<span id="roundTotal">10</span></div>
           <div class="spacer"></div>
-          <div class="note">Multiple Choice: you may answer first and select your team afterwards to earn/lose points • Space=Start/Pause • Enter=Next • A=Show</div>
+          <div style="min-width:280px">
+            <div class="roundbar"><div class="fill" id="roundFill"></div></div>
+          </div>
         </div>
+        <div id="endNote" class="note hidden" style="margin-top:8px;"></div>
+      </div>
 
-        <!-- Scores -->
-        <div class="card scores" style="margin-top:14px">
-          <div class="row">
-            <!-- Team 1 -->
-            <div class="team" id="t1Card">
-              <div class="team-title" id="t1Title">Team 1</div>
-              <div class="row">
-                <input id="t1Name" type="text" value="Team 1" />
-                <label class="legend">Color <input type="color" id="t1Color" value="#2563EB"></label>
-              </div>
-              <div class="score" id="t1Score">0</div>
-              <div class="team-bar"><div class="fill" id="t1Bar" style="background:#2563EB"></div></div>
-              <div class="legend" id="t1Streak">Streak: 0</div>
-              <div class="grid" style="margin-top:6px">
-                <button class="point" id="t1Plus">+1 (Correct)</button>
-                <button class="point" id="t1Minus">-1 (Penalty)</button>
-                <button class="point" id="t1Bonus" disabled>+2 BONUS</button>
-              </div>
+      <div class="timer" id="timerLabel">30 sec</div>
+      <div id="currentTeamPill" class="pill hidden">Current Team: —</div>
+
+      <div class="prompt" id="promptLabel"></div>
+      <div class="food" id="foodLabel"></div>
+      <div class="answer" id="answerLabel"></div>
+
+      <div class="mc hidden" id="mcWrap"></div>
+      <div class="buzzers">
+        <button class="buzz" id="buzz1" title="Key 1">Buzz T1</button>
+        <button class="buzz" id="buzz2" title="Key 2">Buzz T2</button>
+        <button class="buzz hidden" id="buzz3" title="Key 3">Buzz T3</button>
+        <span class="pill" id="buzzInfo">Buzzer open</span>
+      </div>
+
+      <div class="row" style="margin-top:8px">
+        <button class="btn success" id="showAnswerBtn" disabled>Show Answer</button>
+        <button class="btn primary" id="nextBtn" disabled>Next Question</button>
+        <span id="bonusPill" class="pill hidden">BONUS ROUND (45s)</span>
+        <div class="spacer"></div>
+        <div class="note">MC: answer first or select team first — either order works. Space=Start/Pause • Enter=Next • A=Show • 1/2/3=Buzz</div>
+      </div>
+
+      <!-- Scores & Teams -->
+      <div class="card scores" style="margin-top:14px">
+        <div class="row">
+          <!-- Team 1 -->
+          <div class="team" id="t1Card">
+            <div class="team-title" id="t1Title">Team 1</div>
+            <div class="row">
+              <input id="t1Name" type="text" value="Team 1" />
+              <label class="legend">Color <input type="color" id="t1Color" value="#2563EB"></label>
+            </div>
+            <div class="score" id="t1Score">0</div>
+            <div class="team-bar"><div class="fill" id="t1Bar" style="background:#2563EB"></div></div>
+            <div class="legend" id="t1Streak">Streak: 0</div>
+
+            <!-- Power-ups & Bonus -->
+            <div class="grid" style="margin-top:6px">
+              <button class="point" id="t1PUReveal">Reveal Wrong (0)</button>
+              <button class="point" id="t1PUTime">+5 sec (0)</button>
+              <button class="point" id="t1PUFreeze">Freeze 3s (0)</button>
+              <button class="point" id="t1BonusCredit" disabled>Activate Bonus (0)</button>
             </div>
 
-            <!-- Team 2 -->
-            <div class="team" id="t2Card">
-              <div class="team-title" id="t2Title">Team 2</div>
-              <div class="row">
-                <input id="t2Name" type="text" value="Team 2" />
-                <label class="legend">Color <input type="color" id="t2Color" value="#16A34A"></label>
-              </div>
-              <div class="score" id="t2Score">0</div>
-              <div class="team-bar"><div class="fill" id="t2Bar" style="background:#16A34A"></div></div>
-              <div class="legend" id="t2Streak">Streak: 0</div>
-              <div class="grid" style="margin-top:6px">
-                <button class="point" id="t2Plus">+1 (Correct)</button>
-                <button class="point" id="t2Minus">-1 (Penalty)</button>
-                <button class="point" id="t2Bonus" disabled>+2 BONUS</button>
-              </div>
+            <!-- Manual points -->
+            <div class="grid" style="margin-top:6px">
+              <button class="point" id="t1Plus">+1</button>
+              <button class="point" id="t1Minus">-1</button>
             </div>
 
-            <!-- Team 3 (hidden unless selected) -->
-            <div class="team hidden" id="t3Card">
-              <div class="team-title" id="t3Title">Team 3</div>
-              <div class="row">
-                <input id="t3Name" type="text" value="Team 3" />
-                <label class="legend">Color <input type="color" id="t3Color" value="#9333EA"></label>
-              </div>
-              <div class="score" id="t3Score">0</div>
-              <div class="team-bar"><div class="fill" id="t3Bar" style="background:#9333EA"></div></div>
-              <div class="legend" id="t3Streak">Streak: 0</div>
-              <div class="grid" style="margin-top:6px">
-                <button class="point" id="t3Plus">+1 (Correct)</button>
-                <button class="point" id="t3Minus">-1 (Penalty)</button>
-                <button class="point" id="t3Bonus" disabled>+2 BONUS</button>
-              </div>
+            <div class="badges" id="t1Badges"></div>
+          </div>
+
+          <!-- Team 2 -->
+          <div class="team" id="t2Card">
+            <div class="team-title" id="t2Title">Team 2</div>
+            <div class="row">
+              <input id="t2Name" type="text" value="Team 2" />
+              <label class="legend">Color <input type="color" id="t2Color" value="#16A34A"></label>
+            </div>
+            <div class="score" id="t2Score">0</div>
+            <div class="team-bar"><div class="fill" id="t2Bar" style="background:#16A34A"></div></div>
+            <div class="legend" id="t2Streak">Streak: 0</div>
+
+            <div class="grid" style="margin-top:6px">
+              <button class="point" id="t2PUReveal">Reveal Wrong (0)</button>
+              <button class="point" id="t2PUTime">+5 sec (0)</button>
+              <button class="point" id="t2PUFreeze">Freeze 3s (0)</button>
+              <button class="point" id="t2BonusCredit" disabled>Activate Bonus (0)</button>
             </div>
 
-            <div class="spacer"></div>
-            <div class="games-card" style="min-width:280px">
-              <div class="legend">Round & Game Results</div>
-              <div id="banner" class="banner hidden">Round result will appear here.</div>
-              <div class="card" style="padding:12px">
-                <div class="big">Games Won</div>
-                <div id="gamesTally" class="legend" style="margin-top:6px">—</div>
-                <div id="gameLeader" class="legend" style="margin-top:6px">—</div>
+            <div class="grid" style="margin-top:6px">
+              <button class="point" id="t2Plus">+1</button>
+              <button class="point" id="t2Minus">-1</button>
+            </div>
+
+            <div class="badges" id="t2Badges"></div>
+          </div>
+
+          <!-- Team 3 -->
+          <div class="team hidden" id="t3Card">
+            <div class="team-title" id="t3Title">Team 3</div>
+            <div class="row">
+              <input id="t3Name" type="text" value="Team 3" />
+              <label class="legend">Color <input type="color" id="t3Color" value="#9333EA"></label>
+            </div>
+            <div class="score" id="t3Score">0</div>
+            <div class="team-bar"><div class="fill" id="t3Bar" style="background:#9333EA"></div></div>
+            <div class="legend" id="t3Streak">Streak: 0</div>
+
+            <div class="grid" style="margin-top:6px">
+              <button class="point" id="t3PUReveal">Reveal Wrong (0)</button>
+              <button class="point" id="t3PUTime">+5 sec (0)</button>
+              <button class="point" id="t3PUFreeze">Freeze 3s (0)</button>
+              <button class="point" id="t3BonusCredit" disabled>Activate Bonus (0)</button>
+            </div>
+
+            <div class="grid" style="margin-top:6px">
+              <button class="point" id="t3Plus">+1</button>
+              <button class="point" id="t3Minus">-1</button>
+            </div>
+
+            <div class="badges" id="t3Badges"></div>
+          </div>
+
+          <!-- Games/Stats -->
+          <div class="spacer"></div>
+          <div style="min-width:300px">
+            <div class="legend">Round & Game Results</div>
+            <div id="banner" class="banner hidden">—</div>
+
+            <div class="card" style="margin-top:8px;padding:12px">
+              <div style="font-weight:800">Games Won</div>
+              <div id="gamesTally" class="legend" style="margin-top:6px">—</div>
+              <div id="gameLeader" class="legend" style="margin-top:6px">—</div>
+            </div>
+
+            <div class="card" style="margin-top:8px;padding:12px">
+              <div style="font-weight:800">Stats</div>
+              <div id="statsBox" class="legend" style="margin-top:6px">—</div>
+              <div class="row" style="margin-top:8px">
+                <button class="btn neutral" id="exportCsvBtn">Export CSV</button>
+                <button class="btn danger" id="clearHistoryBtn">Clear History</button>
               </div>
             </div>
           </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Instructions + History -->
+    <aside>
+      <div class="card">
+        <div class="row">
+          <div><strong>Instructions</strong></div>
+          <div class="spacer"></div>
+          <button class="btn neutral" id="toggleInstr">Hide</button>
+        </div>
+        <div id="instrBody" style="margin-top:8px">
+          <ul style="margin:0 0 6px 18px;padding:0">
+            <li>Choose Direction (EN→SY / SY→EN / Both) and Type (Free / MC / Mixed).</li>
+            <li>Click <strong>Next Question</strong> to start. Timer auto-starts (bonus = 45s).</li>
+            <li><strong>Free Response</strong>: host reveals answer; assign points manually.</li>
+            <li><strong>Multiple Choice</strong>: answer first <em>or</em> select your team first — either order works. If you answered before picking a team, select your team afterward to award/deduct points.</li>
+            <li><strong>Buzzers</strong>: press team Buzz or keys 1/2/3. First buzz locks others for 3s.</li>
+            <li><strong>Power-ups</strong> (every 3 correct): Reveal one wrong option, +5 seconds, Freeze other teams’ buzzers 3s.</li>
+            <li><strong>Bonus</strong>: each team can activate bonus for the **next question** using their credits. All bonus rounds are 45s.</li>
+            <li><strong>Teacher Mode</strong>: disables 10-second unlock (password: mrsargool).</li>
+            <li><strong>Online</strong>: Create/Join Online Game to play from multiple Chromebooks.</li>
+          </ul>
+          <div class="note">History → Stats → Export CSV available at any time.</div>
         </div>
       </div>
 
-      <!-- Right: Instructions + History -->
-      <aside>
-        <div class="card">
-          <div class="row">
-            <div><strong>Instructions</strong></div>
-            <div class="spacer"></div>
-            <button class="btn neutral" id="toggleInstr">Hide</button>
-          </div>
-          <div id="instrBody" style="margin-top:8px">
-            <ul style="margin:0 0 6px 18px; padding:0">
-              <li>Select <em>Direction</em>: English → Assyrian, Assyrian → English, or Both.</li>
-              <li>Select <em>Type</em>: Free Response, Multiple Choice, or Mixed.</li>
-              <li>Click <strong>Next Question</strong> to start. Timer begins automatically (except during Bonus).</li>
-              <li><strong>Free Response</strong>: the host reveals the answer and assigns points manually.</li>
-              <li><strong>Multiple Choice</strong>: answer first <em>or</em> select your team first — either order works. After answering, select your team to award/deduct points if needed.</li>
-              <li>Bonus rounds may include food items; options are mixed to avoid obvious tells.</li>
-              <li>Build a <strong>streak</strong> of 3 correct answers to earn +1 point and +1 <em>Bonus Credit</em>. Spend a credit to <strong>Activate Bonus Mode</strong> (all upcoming questions are bonus) until you turn it off.</li>
-              <li>Use the <strong>History</strong> list to review any previous question and answer.</li>
-            </ul>
-            <div class="note">Show Answer (Free) and MC options normally unlock after 10 seconds. Enable <strong>Teacher Mode</strong> to remove the wait.</div>
-          </div>
+      <div class="card" style="margin-top:12px">
+        <div class="row">
+          <strong>History</strong><div class="spacer"></div><span class="legend" id="historyCount">0 items</span>
         </div>
-
-        <div class="card" style="margin-top:12px">
-          <div class="row">
-            <strong>History</strong>
-            <div class="spacer"></div>
-            <span class="legend" id="historyCount">0 items</span>
-            <button class="btn danger" id="clearHistoryBtn" title="Clear all history">Clear</button>
-          </div>
-          <div class="history-list" id="historyList"></div>
-        </div>
-      </aside>
-    </div>
-  </div>
-
-  <!-- Confetti layer -->
-  <div class="confetti" id="confetti"></div>
-
-  <!-- Modal (Congrats / New Game) -->
-  <div id="modalWrap" class="modal-backdrop hidden">
-    <div class="modal">
-      <h2 id="modalTitle">Congratulations!</h2>
-      <p id="modalBody">Game winner goes here.</p>
-      <p class="note" style="margin-top:10px">Please call over Mr. Sargool and show your results before clicking Next Question.</p>
-      <div style="text-align:right; margin-top:12px">
-        <button class="btn primary" id="modalClose">Continue</button>
+        <div class="history-list" id="historyList" style="max-height:360px;overflow:auto;margin-top:8px"></div>
       </div>
+    </aside>
+  </div>
+</div>
+
+<!-- Winner Modal -->
+<div id="modalWrap" class="modal-backdrop hidden">
+  <div class="modal">
+    <h2 id="modalTitle">Congratulations!</h2>
+    <p id="modalBody">Game winner goes here.</p>
+    <p class="note" style="margin-top:10px">Please call over Mr. Sargool and show your results before clicking Next Question.</p>
+    <div style="text-align:right;margin-top:12px">
+      <button class="btn primary" id="modalClose">Continue</button>
     </div>
   </div>
+</div>
 
-  <!-- Modal (History Viewer) -->
-  <div id="historyModalWrap" class="modal-backdrop hidden">
-    <div class="modal">
-      <h2>Review Question</h2>
-      <div id="histMeta" class="muted" style="margin-bottom:8px"></div>
-      <div id="histPrompt" class="prompt"></div>
-      <div id="histFood" class="food"></div>
-      <div id="histAnswer" class="answer"></div>
-      <div id="histMC" class="mc"></div>
-      <div style="text-align:right; margin-top:12px">
-        <button class="btn neutral" id="historyClose">Close</button>
-      </div>
+<!-- History Modal -->
+<div id="historyModalWrap" class="modal-backdrop hidden">
+  <div class="modal">
+    <h2>Review Question</h2>
+    <div id="histMeta" class="note" style="margin-bottom:8px"></div>
+    <div id="histPrompt" class="prompt"></div>
+    <div id="histFood" class="food"></div>
+    <div id="histAnswer" class="answer"></div>
+    <div id="histMC" class="mc"></div>
+    <div style="text-align:right;margin-top:12px">
+      <button class="btn neutral" id="historyClose">Close</button>
     </div>
   </div>
+</div>
 
-<script>
-/* ---------------- DATA ---------------- */
+<!-- Firebase (optional, only if you enable online play) -->
+<script type="module" id="firebaseBlock">
+/*** FIREBASE_CONFIG — fill to enable online mode
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
+***/
+</script>
+<script type="module">
+/* ================= CORE DATA (phrases/foods) ================= */
 const PHRASES = {
-  "I order (masc.)": "ܛܵܠܒܹܢ",
-  "I will order (masc.)": "ܛܵܠܒܹܢ ܒܸܕ",
-  "I order (fem.)": "ܛܵܠܒܵܢ",
-  "I will order (fem.)": "ܛܵܠܒܵܢ ܒܸܕ",
-  "you order (masc.)": "ܛܵܠܒܹܬ",
-  "you will order (masc.)": "ܛܵܠܒܹܬ ܒܸܕ",
-  "you order (fem.)": "ܛܵܠܒܵܬܝ",
-  "you will order (fem.)": "ܛܵܠܒܵܬܝ ܒܸܕ",
-  "he orders": "ܛܵܠܹܒ",
-  "he will order": "ܛܵܠܹܒ ܒܸܕ",
-  "she orders": "ܛܵܠܒܵܐ",
-  "she will order": "ܛܵܠܒܵܐ ܒܸܕ",
-  "we order": "ܛܵܠܒܲܚ",
-  "we will order": "ܛܵܠܒܲܚ ܒܸܕ",
-  "they order": "ܛܵܠܒܝܼ",
-  "they will order": "ܛܵܠܒܝܼ ܒܸܕ",
-  "y’all order": "ܛܵܠܒܝܼܬܘܿܢ",
-  "y’all will order": "ܛܵܠܒܝܼܬܘܿܢ ܒܸܕ",
+  "I order (masc.)":"ܛܵܠܒܹܢ","I will order (masc.)":"ܛܵܠܒܹܢ ܒܸܕ","I order (fem.)":"ܛܵܠܒܵܢ","I will order (fem.)":"ܛܵܠܒܵܢ ܒܸܕ",
+  "you order (masc.)":"ܛܵܠܒܹܬ","you will order (masc.)":"ܛܵܠܒܹܬ ܒܸܕ","you order (fem.)":"ܛܵܠܒܵܬܝ","you will order (fem.)":"ܛܵܠܒܵܬܝ ܒܸܕ",
+  "he orders":"ܛܵܠܹܒ","he will order":"ܛܵܠܹܒ ܒܸܕ","she orders":"ܛܵܠܒܵܐ","she will order":"ܛܵܠܒܵܐ ܒܸܕ",
+  "we order":"ܛܵܠܒܲܚ","we will order":"ܛܵܠܒܲܚ ܒܸܕ","they order":"ܛܵܠܒܝܼ","they will order":"ܛܵܠܒܝܼ ܒܸܕ",
+  "y’all order":"ܛܵܠܒܝܼܬܘܿܢ","y’all will order":"ܛܵܠܒܝܼܬܘܿܢ ܒܸܕ",
 };
-
-const PRONOUNS = {
-  i_masc: "ܐܵܢܵܐ", i_fem: "ܐܵܢܵܐ",
-  you_masc:"ܐܲܢ݇ܬ", you_fem:"ܐܲܢ݇ܬܝ",
-  he:"ܗ̇ܘ", she:"ܗ̇ܝ",
-  we:"ܐܲܚܢܲܢ", yall:"ܐܲܚܬܘܿܢ", they:"ܐܵܢܝܼ",
-};
-
+const PRONOUNS = { i_masc:"ܐܵܢܵܐ", i_fem:"ܐܵܢܵܐ", you_masc:"ܐܲܢ݇ܬ", you_fem:"ܐܲܢ݇ܬܝ", he:"ܗ̇ܘ", she:"ܗ̇ܝ", we:"ܐܲܚܢܲܢ", yall:"ܐܲܚܬܘܿܢ", they:"ܐܵܢܝܼ" };
 const FOODS_EN = ["potatoes","rice","beans","stew","kabobs","chicken","steak","lamb","fish","fries","water","fizzy drinks","yogurt drink","lemonade","orange juice","dolma","red rice","okra stew","yogurt","Assyrian egg rolls","tea","coffee","hummus","baba ganosh","salad","pickles","meatballs"];
 const FOODS_SY = ["ܟܸܪܬܘܿܦܹ̈ܐ","ܪܸܙܵܐ","ܚܲܒ̣ܨܹ̈ܐ","ܫܘܼܪܒ̣ܵܐ","ܟܵܒܵܒܹ̈ܐ","ܟܬܵܝܬܵܐ","ܒܸܣܪܵܐ","ܥܸܪܒܵܐ","ܢܘܼܢܵܐ","ܟܸܪܬܘܿܦܹ̈ܐ ܩܸܠܝܹ̈ܐ","ܡܝܼܵܐ","ܫܬܵܝܬܵܐ ܒܲܩܒܸܩܵܢܵܐ","ܕܲܘܹ̈ܐ","ܡܝܼܵܐ ܕܠܝܼܡܘܿܢܹ̈ܐ","ܡܝܼܵܐ ܕܦܘܼܪ̈ܬܩܵܠܹܐ","ܕܘܿܠܡܵܐ","ܪܸܙܵܐ ܣܡܘܿܩܵܐ","ܒܲܡܝܹ̈ܐ","ܡܲܣܬܵܐ","ܒܘܼܪܲܟ","ܟ̰ܵܐܝ","ܩܲܗܘܵܐ","ܚܲܪ̈ܛܡܵܢܹܐ ܓܪ̈ܝܼܣܹܐ","ܒܵܕܸܡܓ̰ܵܢܹ̈ܐ ܓܪ̈ܝܼܣܹܐ","ܣܲܠܵܛܵܐ","ܛܘܼܪ̈ܫܝܹܐ","ܟܸܦܬܹ̈ܐ"];
 
-/* ---------------- DOM ---------------- */
-const timerLabel=document.getElementById('timerLabel');
-const promptLabel=document.getElementById('promptLabel');
-const foodLabel=document.getElementById('foodLabel');
-const answerLabel=document.getElementById('answerLabel');
-const mcWrap=document.getElementById('mcWrap');
-const mcLock=document.getElementById('mcLock');
-const teamLock=document.getElementById('teamLock');
-const currentTeamPill=document.getElementById('currentTeamPill');
+/* ================== DOM HOOKS ================== */
+const el = (id)=>document.getElementById(id);
+/* (All the elements are identical to the earlier version; to keep this message shorter,
+   assume the same querySelectors as previously shared. They are referenced below.) */
+const timerLabel=el('timerLabel'), promptLabel=el('promptLabel'), foodLabel=el('foodLabel'), answerLabel=el('answerLabel');
+const mcWrap=el('mcWrap'), nextBtn=el('nextBtn'), showAnswerBtn=el('showAnswerBtn'), bonusPill=el('bonusPill');
+const timerSelect=el('timerSelect'), roundsSelect=el('roundsSelect'), dirSelect=el('dirSelect'), qtypeSelect=el('qtypeSelect'), playersSelect=el('playersSelect');
+const t1Card=el('t1Card'), t2Card=el('t2Card'), t3Card=el('t3Card');
+const t1Name=el('t1Name'), t2Name=el('t2Name'), t3Name=el('t3Name'), t1Title=el('t1Title'), t2Title=el('t2Title'), t3Title=el('t3Title');
+const t1Color=el('t1Color'), t2Color=el('t2Color'), t3Color=el('t3Color'), t1Bar=el('t1Bar'), t2Bar=el('t2Bar'), t3Bar=el('t3Bar');
+const t1ScoreEl=el('t1Score'), t2ScoreEl=el('t2Score'), t3ScoreEl=el('t3Score');
+const t1StreakEl=el('t1Streak'), t2StreakEl=el('t2Streak'), t3StreakEl=el('t3Streak');
+const t1PUReveal=el('t1PUReveal'), t1PUTime=el('t1PUTime'), t1PUFreeze=el('t1PUFreeze'), t1BonusBtn=el('t1BonusCredit');
+const t2PUReveal=el('t2PUReveal'), t2PUTime=el('t2PUTime'), t2PUFreeze=el('t2PUFreeze'), t2BonusBtn=el('t2BonusCredit');
+const t3PUReveal=el('t3PUReveal'), t3PUTime=el('t3PUTime'), t3PUFreeze=el('t3PUFreeze'), t3BonusBtn=el('t3BonusCredit');
+const t1Plus=el('t1Plus'), t1Minus=el('t1Minus'), t2Plus=el('t2Plus'), t2Minus=el('t2Minus'), t3Plus=el('t3Plus'), t3Minus=el('t3Minus');
+const t1Badges=el('t1Badges'), t2Badges=el('t2Badges'), t3Badges=el('t3Badges');
+const roundNowEl=el('roundNow'), roundTotalEl=el('roundTotal'), roundFillEl=el('roundFill'), banner=el('banner'), endNote=el('endNote');
+const exportCsvBtn=el('exportCsvBtn'), clearHistoryBtn=el('clearHistoryBtn'), statsBox=el('statsBox'), historyList=el('historyList'), historyCount=el('historyCount');
+const buzz1=el('buzz1'), buzz2=el('buzz2'), buzz3=el('buzz3'), buzzInfo=el('buzzInfo');
+const teacherBtn=el('teacherBtn'), teacherBadge=el('teacherBadge');
+const createGameBtn=el('createGameBtn'), joinGameBtn=el('joinGameBtn'), onlineInfo=el('onlineInfo');
+const fullscreenBtn=el('fullscreenBtn'), instructionsBtn=el('instructionsBtn'), toggleInstr=el('toggleInstr'), instrBody=el('instrBody');
+const currentTeamPill=el('currentTeamPill');
+const modalWrap=el('modalWrap'), modalTitle=el('modalTitle'), modalBody=el('modalBody'), modalClose=el('modalClose');
+const historyModalWrap=el('historyModalWrap'), histMeta=el('histMeta'), histPrompt=el('histPrompt'), histFood=el('histFood'), histAnswer=el('histAnswer'), histMC=el('histMC');
 
-const nextBtn=document.getElementById('nextBtn');
-const showAnswerBtn=document.getElementById('showAnswerBtn');
-
-const timerSelect=document.getElementById('timerSelect');
-const roundsSelect=document.getElementById('roundsSelect');
-const dirSelect=document.getElementById('dirSelect');
-const qtypeSelect=document.getElementById('qtypeSelect');
-const playersSelect=document.getElementById('playersSelect');
-
-const noRepeat=document.getElementById('noRepeat');
-const fullscreenBtn=document.getElementById('fullscreenBtn');
-const resetScoresBtn=document.getElementById('resetScoresBtn');
-const resetGameBtn=document.getElementById('resetGameBtn');
-const bonusPill=document.getElementById('bonusPill');
-const endNote=document.getElementById('endNote');
-
-const t1ScoreEl=document.getElementById('t1Score');
-const t2ScoreEl=document.getElementById('t2Score');
-const t3ScoreEl=document.getElementById('t3Score');
-const t1Plus=document.getElementById('t1Plus');
-const t1Minus=document.getElementById('t1Minus');
-const t1Bonus=document.getElementById('t1Bonus');
-const t2Plus=document.getElementById('t2Plus');
-const t2Minus=document.getElementById('t2Minus');
-const t2Bonus=document.getElementById('t2Bonus');
-const t3Plus=document.getElementById('t3Plus');
-const t3Minus=document.getElementById('t3Minus');
-const t3Bonus=document.getElementById('t3Bonus');
-
-const t1Color=document.getElementById('t1Color');
-const t2Color=document.getElementById('t2Color');
-const t3Color=document.getElementById('t3Color');
-const t1Bar=document.getElementById('t1Bar');
-const t2Bar=document.getElementById('t2Bar');
-const t3Bar=document.getElementById('t3Bar');
-
-const t1Card=document.getElementById('t1Card');
-const t2Card=document.getElementById('t2Card');
-const t3Card=document.getElementById('t3Card');
-
-const t1Title=document.getElementById('t1Title');
-const t2Title=document.getElementById('t2Title');
-const t3Title=document.getElementById('t3Title');
-
-const t1Name=document.getElementById('t1Name');
-const t2Name=document.getElementById('t2Name');
-const t3Name=document.getElementById('t3Name');
-
-const t1StreakEl=document.getElementById('t1Streak');
-const t2StreakEl=document.getElementById('t2Streak');
-const t3StreakEl=document.getElementById('t3Streak');
-
-const roundNowEl=document.getElementById('roundNow');
-const roundTotalEl=document.getElementById('roundTotal');
-const roundFillEl=document.getElementById('roundFill');
-const banner=document.getElementById('banner');
-const gamesTally=document.getElementById('gamesTally');
-const gameLeader=document.getElementById('gameLeader');
-
-const modalWrap=document.getElementById('modalWrap');
-const modalTitle=document.getElementById('modalTitle');
-const modalBody=document.getElementById('modalBody');
-const modalClose=document.getElementById('modalClose');
-
-const historyList=document.getElementById('historyList');
-const historyCount=document.getElementById('historyCount');
-const historyModalWrap=document.getElementById('historyModalWrap');
-const histMeta=document.getElementById('histMeta');
-const histPrompt=document.getElementById('histPrompt');
-const histFood=document.getElementById('histFood');
-const histAnswer=document.getElementById('histAnswer');
-const histMC=document.getElementById('histMC');
-
-const instructionsBtn=document.getElementById('instructionsBtn');
-const toggleInstr=document.getElementById('toggleInstr');
-const instrBody=document.getElementById('instrBody');
-
-const bonusModeBtn=document.getElementById('bonusModeBtn');
-const teacherBtn=document.getElementById('teacherBtn');
-const teacherBadge=document.getElementById('teacherBadge');
-
-const confettiLayer=document.getElementById('confetti');
-
-/* ---------------- State ---------------- */
+/* ================== STATE ================== */
 let timerSeconds=30, currentTime=30, timerId=null, timerRunning=false;
-let currentPromptKey='', isBonus=false, currentFoodIndex=null;
-let forceBonusMode=false; // NEW: When true, every question is bonus
-let bonusCredits=0;       // Earned from streaks; required to toggle Bonus Mode
-let directionMode='EN2SY';  // EN2SY | SY2EN | BOTH
-let qtype='FREE';           // FREE | MC | MIXED
-let players=2;              // 2 | 3
-let score=[0,0,0,0];        // 1-indexed (negatives allowed)
-let streak=[0,0,0,0];
+let directionMode='EN2SY', qtype='FREE', players=2;
+let currentPromptKey='', lastRenderedDir='EN2SY', lastRenderedMode='FREE';
+let isBonus=false, currentFoodIndex=null;       // per-question
+let forceBonusForTeam=0;                        // team id that activated bonus for NEXT question
+let canShowAnswer=false, answerUnlockTimeout=null, mcEnabled=false, selectedTeam=0, teamSelectable=true, teacherMode=false;
+let score=[0,0,0,0];                            // negatives allowed
+let streak=[0,0,0,0];                           // per team
+let pu={ reveal:[0,0,0,0], extraTime:[0,0,0,0], freeze:[0,0,0,0] };  // power-ups by team
+let bonusCredits=[0,0,0,0];                     // per-team
 let gamesWon=[0,0,0,0];
-let totalRounds=10, currentRound=1;
-let promptsPool=Object.keys(PHRASES), unusedPrompts=[...promptsPool];
-let roundStartScores=[0,0,0,0];
-let justFinishedGame=false;
+let totalRounds=10, currentRound=1, roundStartScores=[0,0,0,0], justFinishedGame=false;
+let mcOptions=[], pendingMCOutcome=null;        // MC handling
+let unusedPrompts = Object.keys(PHRASES);
+let noRepeat = document.getElementById('noRepeat');
+let buzzLock=false, buzzOwner=0, buzzTimer=null;
+let eventsLog=[]; // for CSV / stats  {ts, round, dir, mode, bonus, promptKey, promptText, correctKey, answerShownAt, answeredAt, teamAwarded, correct, delta}
 
-/* Gating */
-let canShowAnswer=false, answerUnlockTimeout=null;
-let mcEnabled=false;
-let lastRenderedDir='EN2SY';
-let lastRenderedMode='FREE';
-let selectedTeam=0;
-let teamSelectable=true; // disabled in FREE
-let teacherMode=false;
-
-/* For MC options + retro scoring */
-let mcOptions = []; // [{text, correct:boolean, button:HTMLElement}]
-let pendingMCOutcome = null; // {correct:boolean, delta:number, applied:boolean}
-
-/* History (read-only snapshots) */
-const history = []; // { round, dir, mode, isBonus, foodIdx, prompt, answerText, mcOptions:[{text,correct}] }
-const MAX_HISTORY = 100;
-
-/* ---------------- Utils ---------------- */
-function hexToRgba(hex, alpha){
-  const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if(!m) return `rgba(0,0,0,${alpha})`;
-  const r=parseInt(m[1],16), g=parseInt(m[2],16), b=parseInt(m[3],16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
-function teamName(i){ return (i===1?t1Name.value.trim():i===2?t2Name.value.trim():t3Name.value.trim()) || `Team ${i}`; }
-function teamColor(i){ return i===1?t1Color.value:i===2?t2Color.value:t3Color.value; }
-function tintPill(el, color){
-  el.style.background = hexToRgba(color, 0.12);
-  el.style.color = '#0F172A';
-  el.style.borderColor = hexToRgba(color, 0.6);
-}
+/* ================== UTILS ================== */
+const now=()=>Date.now();
+function hexToRgba(hex,a){const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);if(!m)return`rgba(0,0,0,${a})`;const r=parseInt(m[1],16),g=parseInt(m[2],16),b=parseInt(m[3],16);return`rgba(${r},${g},${b},${a})`;}
+const teamName=(i)=> (i===1?t1Name.value.trim():i===2?t2Name.value.trim():t3Name.value.trim())||`Team ${i}`;
+const teamColor=(i)=> i===1?t1Color.value:i===2?t2Color.value:t3Color.value;
+function tintPill(el,color){el.style.background=hexToRgba(color,.12);el.style.color='#0F172A';el.style.borderColor=hexToRgba(color,.6);}
 function setActiveTeamHighlight(){
-  [t1Card,t2Card,t3Card].forEach((el,idx)=>{
-    if(!el) return;
-    const i=idx+1;
-    el.classList.toggle('active', teamSelectable && selectedTeam===i);
-  });
-  if(!teamSelectable || selectedTeam===0){
-    currentTeamPill.classList.add('hidden');
-    currentTeamPill.textContent='Current Team: —';
-  }else{
-    currentTeamPill.textContent = `Current Team: ${teamName(selectedTeam)}`;
-    tintPill(currentTeamPill, teamColor(selectedTeam));
-    currentTeamPill.classList.remove('hidden');
-  }
-
-  // If we have a pending MC result and choose a team after answering, apply it now
-  tryApplyPendingMCOutcome();
-}
-
-/* Prompt helpers */
-function randomPromptFromPool(){
-  if(noRepeat.checked){
-    if(unusedPrompts.length===0) unusedPrompts=[...promptsPool];
-    const i=Math.floor(Math.random()*unusedPrompts.length);
-    return unusedPrompts.splice(i,1)[0];
-  }
-  const keys=promptsPool;
-  return keys[Math.floor(Math.random()*keys.length)];
+  [t1Card,t2Card,players===3?t3Card:null].filter(Boolean).forEach((el,idx)=>el.classList.toggle('active', teamSelectable && selectedTeam===idx+1));
+  if(!teamSelectable||selectedTeam===0){currentTeamPill.classList.add('hidden');currentTeamPill.textContent='Current Team: —';}
+  else{currentTeamPill.textContent=`Current Team: ${teamName(selectedTeam)}`;tintPill(currentTeamPill,teamColor(selectedTeam));currentTeamPill.classList.remove('hidden');}
+  tryApplyPendingMCOutcome(); // retro-scoring
 }
 function isFuture(key){ return key.toLowerCase().includes('will'); }
-function detectPronounSyFromKey(key){
+function detectPronSy(key){
   const p=key.toLowerCase();
   if(p.startsWith('i ')) return p.includes('(fem')?PRONOUNS.i_fem:PRONOUNS.i_masc;
   if(p.startsWith('you ')) return p.includes('(fem')?PRONOUNS.you_fem:PRONOUNS.you_masc;
@@ -522,149 +422,328 @@ function detectPronounSyFromKey(key){
   return '';
 }
 function buildSyAnswerFromKey(key, foodIndex){
-  const base=PHRASES[key]||'';
-  const fut=isFuture(key);
-  const pron=detectPronounSyFromKey(key);
+  const base=PHRASES[key]||''; const fut=isFuture(key); const pron=detectPronSy(key);
   const verb=base.replace(/\s*ܒܸܕ\s*$/,'').trim();
   let out=fut?`${pron}  ܒܸܕ  ${verb}`:`${pron}  ${verb}`;
   if(foodIndex!=null) out+=`  ${FOODS_SY[foodIndex]}`;
   return out;
 }
-function englishPronounFromKey(key){
-  if(key.toLowerCase().startsWith('y’all')) return "y’all";
-  return key.split(' ')[0].replace('(masc.)','').replace('(fem.)','').trim();
-}
+function englishPronounFromKey(key){ if(key.toLowerCase().startsWith('y’all'))return"y’all"; return key.split(' ')[0].replace('(masc.)','').replace('(fem.)','').trim(); }
 function buildEnAnswerFromKey(key){
-  const fut=isFuture(key);
-  let pron=englishPronounFromKey(key);
-  let base=fut?'will order':'orders';
-  const p=pron.toLowerCase();
-  if(!fut && (p==='i'||p==='we'||p==='they'||p==='y’all')) base='order';
+  const fut=isFuture(key); let pron=englishPronounFromKey(key); let base=fut?'will order':'orders';
+  const p=pron.toLowerCase(); if(!fut&&(p==='i'||p==='we'||p==='they'||p==='y’all')) base='order';
   return `${pron} ${base}`;
 }
-
-/* Timer */
-function updateTimerLabel(){ timerLabel.textContent=isBonus?'--':`${currentTime} sec`; }
-function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } timerRunning=false; }
-function startTimer(){
-  if(isBonus) return;
-  stopTimer();
-  timerRunning=true;
-  timerId=setInterval(()=>{
-    if(currentTime>0){
-      currentTime--; updateTimerLabel();
-      if(!canShowAnswer && (teacherMode || currentTime<=timerSeconds-10)){ unlockAfterDelay(); }
-    } else { stopTimer(); }
-  },1000);
+function randomPromptFromPool(){
+  const all=Object.keys(PHRASES);
+  if(noRepeat.checked){
+    if(unusedPrompts.length===0) unusedPrompts=[...all];
+    const i=Math.floor(Math.random()*unusedPrompts.length);
+    return unusedPrompts.splice(i,1)[0];
+  }
+  return all[Math.floor(Math.random()*all.length)];
 }
 
-/* Confetti */
-function confettiBurst(colorA,colorB){
-  const COUNT=80;
-  for(let i=0;i<COUNT;i++){
-    const d=document.createElement('div');
-    d.className='piece';
-    const x=Math.random()*100+'vw';
-    const dx=(Math.random()*40-20)+'vw';
-    d.style.setProperty('--x',x);
-    d.style.setProperty('--dx',dx);
-    d.style.left=Math.random()*100+'%';
-    d.style.background=Math.random()<0.5?colorA:colorB;
-    confettiLayer.appendChild(d);
-    setTimeout(()=>d.remove(),1600);
+/* ================== TIMER ================== */
+function updateTimerLabel(){ timerLabel.textContent=isBonus?'45 sec':`${currentTime} sec`; }
+function stopTimer(){ if(timerId){clearInterval(timerId);timerId=null;} timerRunning=false; }
+function startTimer(){
+  if(isBonus){ currentTime=45; } else { currentTime=timerSeconds; }
+  updateTimerLabel();
+  stopTimer(); timerRunning=true;
+  timerId=setInterval(()=>{ if(currentTime>0){ currentTime--; updateTimerLabel(); if(!canShowAnswer && (teacherMode || (!isBonus && currentTime<=timerSeconds-10) || (isBonus && currentTime<=45-10))){ unlockAfterDelay(); } } else { stopTimer(); } },1000);
+}
+
+/* ================== POWER-UPS & STREAKS ================== */
+function incStreak(team, gotCorrect){
+  streak[team]=gotCorrect?streak[team]+1:0;
+  (team===1?t1StreakEl:team===2?t2StreakEl:t3StreakEl).textContent=`Streak: ${streak[team]}`;
+  if(streak[team] && streak[team]%3===0){
+    // +1 point, +1 bonus credit, +1 to each power-up
+    score[team]+=1;
+    bonusCredits[team]+=1;
+    pu.reveal[team]+=1; pu.extraTime[team]+=1; pu.freeze[team]+=1;
+    renderScores(); renderPUButtons();
+    addBadge(team, '3-in-a-row');
   }
 }
+function renderPUButtons(){
+  t1PUReveal.textContent=`Reveal Wrong (${pu.reveal[1]||0})`;
+  t1PUTime.textContent=`+5 sec (${pu.extraTime[1]||0})`;
+  t1PUFreeze.textContent=`Freeze 3s (${pu.freeze[1]||0})`;
+  t1BonusBtn.textContent=`Activate Bonus (${bonusCredits[1]||0})`;
+  t1BonusBtn.disabled = !(bonusCredits[1]>0);
 
-/* Scores / Streaks */
-function renderScores(){
-  t1ScoreEl.textContent=String(score[1]);
-  t2ScoreEl.textContent=String(score[2]);
-  if(players===3) t3ScoreEl.textContent=String(score[3]);
+  t2PUReveal.textContent=`Reveal Wrong (${pu.reveal[2]||0})`;
+  t2PUTime.textContent=`+5 sec (${pu.extraTime[2]||0})`;
+  t2PUFreeze.textContent=`Freeze 3s (${pu.freeze[2]||0})`;
+  t2BonusBtn.textContent=`Activate Bonus (${bonusCredits[2]||0})`;
+  t2BonusBtn.disabled = !(bonusCredits[2]>0);
 
-  // Progress bars based on absolute values so negatives still show a proportion
+  if(players===3){
+    t3PUReveal.textContent=`Reveal Wrong (${pu.reveal[3]||0})`;
+    t3PUTime.textContent=`+5 sec (${pu.extraTime[3]||0})`;
+    t3PUFreeze.textContent=`Freeze 3s (${pu.freeze[3]||0})`;
+    t3BonusBtn.textContent=`Activate Bonus (${bonusCredits[3]||0})`;
+    t3BonusBtn.disabled = !(bonusCredits[3]>0);
+  }
+}
+function spendPU(team, type){
+  if(type==='reveal' && pu.reveal[team]>0 && mcOptions.length){
+    pu.reveal[team]--;
+    // hide one wrong enabled option
+    const wrong = mcOptions.find(o=>!o.correct && o.button && !o.button.classList.contains('hidden'));
+    if(wrong){ wrong.button.classList.add('hidden'); }
+  }
+  if(type==='extraTime' && pu.extraTime[team]>0){
+    pu.extraTime[team]--;
+    currentTime += 5; updateTimerLabel();
+  }
+  if(type==='freeze' && pu.freeze[team]>0){
+    pu.freeze[team]--;
+    freezeOtherBuzzers(team, 3000);
+  }
+  renderPUButtons();
+}
+function activateTeamBonus(team){
+  if(bonusCredits[team]<=0) return;
+  bonusCredits[team]--; forceBonusForTeam=team; renderPUButtons();
+  addBadge(team, 'Bonus Caller');
+}
+
+/* ================== ACHIEVEMENTS ================== */
+const badges = { 1:new Set(), 2:new Set(), 3:new Set() };
+function addBadge(team, label){
+  if(badges[team].has(label)) return;
+  badges[team].add(label);
+  const container = team===1?t1Badges:team===2?t2Badges:t3Badges;
+  const b=document.createElement('span'); b.className='badge'; b.textContent=label; container.appendChild(b);
+}
+
+/* ================== BUZZERS ================== */
+function setBuzzLock(on, owner=0){
+  buzzLock=on; buzzOwner=owner;
+  [buzz1,buzz2,players===3?buzz3:null].filter(Boolean).forEach((b,i)=>{
+    const id=i+1;
+    b.classList.toggle('locked', on && id!==owner);
+  });
+  buzzInfo.textContent = on ? `Buzzer: ${teamName(owner)} locked in` : 'Buzzer open';
+}
+function freezeOtherBuzzers(team, ms){
+  [1,2].concat(players===3?[3]:[]).forEach(t=>{
+    const btn = t===1?buzz1:t===2?buzz2:buzz3;
+    if(t!==team){ btn.classList.add('locked'); }
+  });
+  setTimeout(()=>{ if(!buzzLock){ [buzz1,buzz2,(players===3?buzz3:null)].filter(Boolean).forEach(b=>b.classList.remove('locked')); } }, ms);
+}
+[buzz1,buzz2,buzz3].forEach((btn,idx)=>{ if(!btn) return; const t=idx+1;
+  btn.onclick=()=>{ if(btn.classList.contains('locked')) return;
+    setBuzzLock(true, t);
+    clearTimeout(buzzTimer);
+    buzzTimer=setTimeout(()=>setBuzzLock(false,0), 3000);
+  };
+});
+document.addEventListener('keydown',(e)=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+  if(e.key==='1' && !buzz1.classList.contains('hidden')) buzz1.click();
+  if(e.key==='2' && !buzz2.classList.contains('hidden')) buzz2.click();
+  if(e.key==='3' && players===3 && !buzz3.classList.contains('hidden')) buzz3.click();
+});
+
+/* ================== MC RENDER & CLICK ================== */
+function getUniqueDistractorKeys(correctKey, n){
+  const pool=Object.keys(PHRASES).filter(k=>k!==correctKey); const out=new Set();
+  while(out.size<n && pool.length){ out.add(pool.splice(Math.floor(Math.random()*pool.length),1)[0]); }
+  return [...out];
+}
+function uniqueFoodIndices(count, excludeIndex){
+  const ex = excludeIndex==null?new Set():new Set([excludeIndex]);
+  const pool=[...Array(FOODS_EN.length).keys()].filter(i=>!ex.has(i));
+  const res=[]; while(res.length<count && pool.length){ res.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]); }
+  return res;
+}
+function ensureUniqueOptionTexts(build){
+  for(let i=0;i<15;i++){ const opts=build(); const set=new Set(opts.map(o=>o.text)); if(set.size===opts.length) return opts; }
+  return build();
+}
+function renderMC_EN2SY(correctKey){
+  const isBonusRound = isBonus && currentFoodIndex!=null;
+  const mode = isBonusRound ? (Math.random()<0.5?'ALL':'HALF') : 'NONE';
+  const build=()=>{
+    const D=getUniqueDistractorKeys(correctKey,3);
+    if(mode==='ALL'){
+      const foods=uniqueFoodIndices(3,currentFoodIndex);
+      return [
+        {text:buildSyAnswerFromKey(correctKey,currentFoodIndex),correct:true},
+        {text:buildSyAnswerFromKey(D[0],foods[0]),correct:false},
+        {text:buildSyAnswerFromKey(D[1],foods[1]),correct:false},
+        {text:buildSyAnswerFromKey(D[2],foods[2]),correct:false},
+      ].sort(()=>Math.random()-0.5);
+    } else if(mode==='HALF'){
+      const f=uniqueFoodIndices(1,currentFoodIndex)[0];
+      return [
+        {text:buildSyAnswerFromKey(correctKey,currentFoodIndex),correct:true},
+        {text:buildSyAnswerFromKey(D[0],f),correct:false},
+        {text:buildSyAnswerFromKey(D[1],null),correct:false},
+        {text:buildSyAnswerFromKey(D[2],null),correct:false},
+      ].sort(()=>Math.random()-0.5);
+    } else {
+      return [
+        {text:buildSyAnswerFromKey(correctKey,null),correct:true},
+        {text:buildSyAnswerFromKey(D[0],null),correct:false},
+        {text:buildSyAnswerFromKey(D[1],null),correct:false},
+        {text:buildSyAnswerFromKey(D[2],null),correct:false},
+      ].sort(()=>Math.random()-0.5);
+    }
+  };
+  mcOptions=ensureUniqueOptionTexts(build);
+  mcWrap.innerHTML=''; mcOptions.forEach((opt,idx)=>{ const b=document.createElement('button'); b.className='opt'; b.textContent=opt.text; b.onclick=()=>onMCClick(idx); opt.button=b; mcWrap.appendChild(b); });
+  enableMCOptions(teacherMode); // teacher unlocks immediately
+}
+function renderMC_SY2EN(correctKey){
+  const D=getUniqueDistractorKeys(correctKey,3);
+  const build=()=>[
+    {text:buildEnAnswerFromKey(correctKey),correct:true},
+    {text:buildEnAnswerFromKey(D[0]),correct:false},
+    {text:buildEnAnswerFromKey(D[1]),correct:false},
+    {text:buildEnAnswerFromKey(D[2]),correct:false},
+  ].sort(()=>Math.random()-0.5);
+  mcOptions=ensureUniqueOptionTexts(build);
+  mcWrap.innerHTML=''; mcOptions.forEach((o,i)=>{ const b=document.createElement('button'); b.className='opt'; b.textContent=o.text; b.onclick=()=>onMCClick(i); o.button=b; mcWrap.appendChild(b); });
+  enableMCOptions(teacherMode);
+}
+function enableMCOptions(on){ mcEnabled=on; mcWrap.classList.toggle('hidden', !on && lastRenderedMode==='MC'); mcOptions.forEach(o=>{ o.button.classList.toggle('enabled', on); o.button.style.cursor=on?'pointer':'not-allowed'; }); }
+function tryApplyPendingMCOutcome(){
+  if(!pendingMCOutcome || pendingMCOutcome.applied) return;
+  if(selectedTeam===0) return;
+  const delta = pendingMCOutcome.correct ? pendingMCOutcome.delta : -1;
+  score[selectedTeam] += delta;  // negatives allowed
+  incStreak(selectedTeam, pendingMCOutcome.correct);
+  renderScores();
+  pendingMCOutcome.applied=true;
+}
+function onMCClick(idx){
+  if(!mcEnabled) return;
+  stopTimer();
+  mcOptions.forEach(o=>{ if(o.correct) o.button.classList.add('correct'); });
+  if(!mcOptions[idx].correct) mcOptions[idx].button.classList.add('wrong');
+  enableMCOptions(false);
+  const deltaCorrect = isBonus?2:1;
+  pendingMCOutcome = {correct: mcOptions[idx].correct, delta: deltaCorrect, applied:false};
+  tryApplyPendingMCOutcome();
+  nextBtn.disabled=false;
+
+  // log
+  eventsLog.push({ts:now(), round:currentRound, dir:lastRenderedDir, mode:lastRenderedMode, bonus:isBonus, promptKey:currentPromptKey,
+    promptText:promptLabel.textContent, correctKey:currentPromptKey, answeredAt:now(), teamAwarded:selectedTeam||null, correct:mcOptions[idx].correct, delta:mcOptions[idx].correct?deltaCorrect:-1});
+}
+
+/* ================== ROUNDS / FLOW ================== */
+function setupLocksForNewQuestion(){
+  nextBtn.disabled=true;
+  setTeamSelectable(lastRenderedMode!=='FREE');
+  showAnswerBtn.disabled=(lastRenderedMode==='FREE' && !teacherMode);
+  canShowAnswer = teacherMode; // teacher bypass
+  if(answerUnlockTimeout){clearTimeout(answerUnlockTimeout);answerUnlockTimeout=null;}
+  if(!teacherMode){ answerUnlockTimeout=setTimeout(unlockAfterDelay, 10000); } else { unlockAfterDelay(); }
+  if(lastRenderedMode==='FREE'){ showAnswerBtn.classList.remove('hidden'); answerLabel.classList.remove('hidden'); mcWrap.classList.add('hidden'); }
+  else { showAnswerBtn.classList.add('hidden'); answerLabel.classList.add('hidden'); mcWrap.classList.remove('hidden'); enableMCOptions(teacherMode); }
+  setBuzzLock(false,0);
+}
+function unlockAfterDelay(){ canShowAnswer=true; if(lastRenderedMode==='MC') enableMCOptions(true); else showAnswerBtn.disabled=false; }
+function setTeamSelectable(on){ teamSelectable=on; if(!on) selectedTeam=0; setActiveTeamHighlight(); }
+function updateBars(){
+  t1ScoreEl.textContent=score[1]; t2ScoreEl.textContent=score[2]; if(players===3) t3ScoreEl.textContent=score[3];
   const total=Math.max(1, Math.abs(score[1])+Math.abs(score[2])+(players===3?Math.abs(score[3]):0));
   t1Bar.style.width=(Math.abs(score[1])/total*100).toFixed(0)+'%';
   t2Bar.style.width=(Math.abs(score[2])/total*100).toFixed(0)+'%';
   t3Bar.style.width=(players===3?(Math.abs(score[3])/total*100).toFixed(0):'0')+'%';
 }
-function updateStreak(team,deltaPositive){
-  streak[team]=deltaPositive?streak[team]+1:0;
-  const el = team===1?t1StreakEl:team===2?t2StreakEl:t3StreakEl;
-  el.textContent=`Streak: ${streak[team]}`;
-  if(streak[team] >= 3){
-    // Reward: +1 point and +1 bonus credit; reset streak
-    score[team]+=1;
-    streak[team]=0;
-    el.textContent=`Streak: 0 (earned Bonus Credit)`;
-    bonusCredits += 1;
-    updateBonusButton();
-    renderScores();
-  }
-}
-function updateBonusButton(){
-  bonusModeBtn.textContent = (forceBonusMode ? 'Deactivate Bonus Mode' : `Activate Bonus Mode (${bonusCredits})`);
-  bonusModeBtn.disabled = (!forceBonusMode && bonusCredits<=0);
-}
-
-/* Rounds / Games */
-function setRounds(n){
-  totalRounds=n;
-  roundTotalEl.textContent=String(totalRounds);
-  currentRound=1;
-  roundNowEl.textContent=String(currentRound);
-  roundFillEl.style.width=(currentRound-1)/Math.max(1,totalRounds)*100+'%';
-  banner.classList.add('hidden');
-  roundStartScores=[0, score[1], score[2], (players===3?score[3]:0)];
-  endNote.classList.add('hidden');
-  nextBtn.textContent='Next Question';
-  justFinishedGame=false;
-}
+function renderScores(){ updateBars(); }
+function chooseActualMode(){ return qtype==='MIXED' ? (Math.random()<0.5?'FREE':'MC') : qtype; }
 function finishRoundAndAdvance(){
   const d=[0, score[1]-roundStartScores[1], score[2]-roundStartScores[2], players===3?score[3]-roundStartScores[3]:-Infinity];
-  let winTeam=0, maxDelta=-Infinity;
-  [1,2].concat(players===3?[3]:[]).forEach(t=>{ if(d[t]>maxDelta){maxDelta=d[t]; winTeam=t;} });
-  banner.textContent = (maxDelta<=0) ? 'Round tied' : `Round winner: ${teamName(winTeam)}`;
-  banner.classList.remove('hidden');
+  let winTeam=0,max=-Infinity; [1,2].concat(players===3?[3]:[]).forEach(t=>{ if(d[t]>max){max=d[t];winTeam=t;} });
+  banner.textContent=(max<=0)?'Round tied':`Round winner: ${teamName(winTeam)}`; banner.classList.remove('hidden');
 
   if(currentRound>=totalRounds){
-    const vals=[1,2].concat(players===3?[3]:[]).map(t=>({t, s:score[t]}));
-    const maxScore=Math.max(...vals.map(v=>v.s));
-    const winners=vals.filter(v=>v.s===maxScore).map(v=>v.t);
-    if(winners.length===1){
-      gamesWon[winners[0]]++;
-      modalTitle.textContent='Congratulations!';
-      modalBody.textContent=`Game winner: ${teamName(winners[0])}`;
-      modalWrap.classList.remove('hidden');
-      confettiBurst(teamColor(winners[0]),'#ffffff');
-    }else{
-      modalTitle.textContent='Game Tied';
-      modalBody.textContent='No game winner this time.';
-      modalWrap.classList.remove('hidden');
-    }
+    const arr=[1,2].concat(players===3?[3]:[]).map(t=>({t,s:score[t]}));
+    const m=Math.max(...arr.map(v=>v.s)); const winners=arr.filter(v=>v.s===m).map(v=>v.t);
+    if(winners.length===1){ gamesWon[winners[0]]++; modalTitle.textContent='Congratulations!'; modalBody.textContent=`Game winner: ${teamName(winners[0])}`; modalWrap.classList.remove('hidden'); }
+    else { modalTitle.textContent='Game Tied'; modalBody.textContent='No game winner this time.'; modalWrap.classList.remove('hidden'); }
     updateGamesPanel();
     endNote.innerHTML='Please call over Mr. Sargool and show your results before clicking <strong>Next Question</strong>.<br>(Next game will begin and scores will be reset, but you can see the games counter below.)';
     endNote.classList.remove('hidden');
     nextBtn.textContent='Next Question (Next game will begin and scores will be reset …)';
     justFinishedGame=true;
   }
-
   if(currentRound<totalRounds){
-    currentRound++;
-    roundNowEl.textContent=String(currentRound);
+    currentRound++; roundNowEl.textContent=String(currentRound);
     roundFillEl.style.width=((currentRound-1)/Math.max(1,totalRounds))*100+'%';
-    roundStartScores=[0, score[1], score[2], (players===3?score[3]:0)];
+    roundStartScores=[0, score[1], score[2], players===3?score[3]:0];
   }
 }
 function updateGamesPanel(){
   const parts=[1,2].concat(players===3?[3]:[]).map(t=>`${teamName(t)}: ${gamesWon[t]}`);
-  gamesTally.textContent=parts.join('  •  ');
-  const maxVal=Math.max(...[1,2].concat(players===3?[3]:[]).map(t=>gamesWon[t]));
-  const leaders=[1,2].concat(players===3?[3]:[]).filter(t=>gamesWon[t]===maxVal);
-  gameLeader.textContent = (leaders.length>1) ? 'Games leader: tied' : `Games leader: ${teamName(leaders[0])}`;
+  el('gamesTally').textContent=parts.join(' • ');
+  const max=Math.max(...[1,2].concat(players===3?[3]:[]).map(t=>gamesWon[t]));
+  const leaders=[1,2].concat(players===3?[3]:[]).filter(t=>gamesWon[t]===max);
+  el('gameLeader').textContent=(leaders.length>1)?'Games leader: tied':`Games leader: ${teamName(leaders[0])}`;
+}
+function decideBonusForThisQuestion(){
+  if(forceBonusForTeam){ const t=forceBonusForTeam; forceBonusForTeam=0; return true; }
+  return Math.random()<0.20;
+}
+function nextQuestion(){
+  if(!modalWrap.classList.contains('hidden')) return;
+  if(justFinishedGame){ startNewGameHardReset(); return; }
+
+  // history snapshot
+  if(promptLabel.textContent) pushHistory();
+
+  finishRoundAndAdvance();
+
+  // bonus decide
+  isBonus = decideBonusForThisQuestion();
+  if(isBonus){
+    currentFoodIndex = Math.floor(Math.random()*FOODS_EN.length);
+    foodLabel.textContent=`Bonus Round: ${FOODS_EN[currentFoodIndex]}`;
+    bonusPill.classList.remove('hidden');
+  } else {
+    currentFoodIndex=null; foodLabel.textContent=''; bonusPill.classList.add('hidden');
+  }
+
+  // reset UI
+  answerLabel.textContent=''; mcWrap.innerHTML=''; mcOptions=[]; pendingMCOutcome=null;
+
+  directionMode=dirSelect.value; qtype=qtypeSelect.value; lastRenderedMode=chooseActualMode();
+  lastRenderedDir = directionMode==='BOTH' ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionMode;
+  setupLocksForNewQuestion();
+
+  currentPromptKey = randomPromptFromPool();
+  if(lastRenderedDir==='EN2SY'){
+    promptLabel.textContent=currentPromptKey;
+    if(lastRenderedMode==='FREE'){ startTimer(); }
+    else { renderMC_EN2SY(currentPromptKey); startTimer(); }
+  } else {
+    promptLabel.textContent = buildSyAnswerFromKey(currentPromptKey, currentFoodIndex);
+    if(lastRenderedMode==='FREE'){ startTimer(); }
+    else { renderMC_SY2EN(currentPromptKey); startTimer(); }
+  }
+}
+function showAnswer(){
+  if(lastRenderedMode!=='FREE') return;
+  if(!canShowAnswer && !teacherMode) return;
+  stopTimer();
+  answerLabel.textContent = (lastRenderedDir==='EN2SY') ? buildSyAnswerFromKey(currentPromptKey, currentFoodIndex) : buildEnAnswerFromKey(currentPromptKey);
+  nextBtn.disabled=false;
 }
 function startNewGameHardReset(){
   score=[0,0,0,0]; streak=[0,0,0,0];
-  t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0'; if(players===3) t3StreakEl.textContent='Streak: 0';
+  pu={reveal:[0,0,0,0],extraTime:[0,0,0,0],freeze:[0,0,0,0]};
+  bonusCredits=[0,0,0,0]; badges[1].clear(); badges[2].clear(); badges[3].clear();
+  [t1Badges,t2Badges,t3Badges].forEach(b=>b.innerHTML='');
+  renderPUButtons();
   renderScores();
   currentRound=1; roundNowEl.textContent='1'; roundFillEl.style.width='0%';
   banner.classList.add('hidden'); endNote.classList.add('hidden'); modalWrap.classList.add('hidden');
@@ -672,546 +751,202 @@ function startNewGameHardReset(){
   setRounds(parseInt(roundsSelect.value,10));
   initFirstQuestion(true);
 }
-
-/* Locks / gating */
-function setTeamSelectable(on){
-  teamSelectable = on;
-  if(!on){ selectedTeam=0; }
-  setActiveTeamHighlight();
-}
-function setupLocksForNewQuestion(){
-  nextBtn.disabled=true;
-
-  // FREE: disable team selection entirely; MC: enable it
-  setTeamSelectable(lastRenderedMode !== 'FREE');
-
-  // FREE: Show Answer is time-gated; MC: hidden
-  showAnswerBtn.disabled = (lastRenderedMode==='FREE' && !teacherMode);
-
-  canShowAnswer = teacherMode; // if teacher mode, unlock immediately
-  mcEnabled=false;
-  mcLock.classList.add('hidden');
-
-  // Team prompt only meaningful in MC
-  teamLock.classList.toggle('hidden', lastRenderedMode!=='MC');
-
-  if(answerUnlockTimeout){ clearTimeout(answerUnlockTimeout); answerUnlockTimeout=null; }
-  if(!teacherMode){
-    answerUnlockTimeout=setTimeout(unlockAfterDelay, 10000);
-  }else{
-    // Teacher mode: unlock immediately
-    unlockAfterDelay();
-  }
-
-  if(lastRenderedMode==='FREE'){
-    showAnswerBtn.classList.remove('hidden');
-    answerLabel.classList.remove('hidden');
-    mcWrap.classList.add('hidden');
-    mcLock.classList.add('hidden');
-    teamLock.classList.add('hidden');
-  }else{
-    showAnswerBtn.classList.add('hidden');
-    answerLabel.classList.add('hidden');
-    mcWrap.classList.remove('hidden');
-    if(!teacherMode) mcLock.classList.remove('hidden');
-    enableMCOptions(teacherMode); // teacher mode enables immediately
-  }
-}
-function unlockAfterDelay(){
-  canShowAnswer=true;
-  if(lastRenderedMode==='FREE'){
-    showAnswerBtn.disabled=false;
-    teamLock.classList.add('hidden');
-  }else{
-    maybeEnableMC();
-    mcLock.classList.add('hidden');
-  }
-}
-function maybeEnableMC(){
-  const ready = canShowAnswer || teacherMode;
-  enableMCOptions(ready);
-  const showTeamNag = (lastRenderedMode==='MC') && ready && (selectedTeam===0);
-  teamLock.classList.toggle('hidden', !showTeamNag);
+function setRounds(n){
+  totalRounds=n; roundTotalEl.textContent=String(totalRounds);
+  currentRound=1; roundNowEl.textContent='1'; roundFillEl.style.width='0%';
+  banner.classList.add('hidden'); endNote.classList.add('hidden'); nextBtn.textContent='Next Question';
+  roundStartScores=[0, score[1], score[2], players===3?score[3]:0];
 }
 
-/* Multiple choice helpers (NO REPEATS) */
-function uniqueFoodIndices(count, excludeIndex){
-  const exclude = Array.isArray(excludeIndex) ? new Set(excludeIndex) :
-                  (excludeIndex==null ? new Set() : new Set([excludeIndex]));
-  const all=[...Array(FOODS_EN.length).keys()];
-  const pool=all.filter(i=>!exclude.has(i));
-  const picks=[];
-  while(picks.length<count && pool.length){
-    const idx=Math.floor(Math.random()*pool.length);
-    picks.push(pool.splice(idx,1)[0]);
-  }
-  return picks;
-}
-function getUniqueDistractorKeys(correctKey, needed){
-  const pool = Object.keys(PHRASES).filter(k=>k!==correctKey);
-  const picks = new Set();
-  while(picks.size < needed && pool.length){
-    const k = pool.splice(Math.floor(Math.random()*pool.length),1)[0];
-    picks.add(k);
-  }
-  return Array.from(picks);
-}
-function ensureUniqueOptionTexts(optionsBuilder){
-  for(let tries=0; tries<15; tries++){
-    const opts = optionsBuilder();
-    const texts = opts.map(o=>o.text);
-    const uniq = new Set(texts);
-    if(uniq.size === texts.length) return opts;
-  }
-  return optionsBuilder(); // fallback
-}
-
-/* MC renderers (harder bonus mixing, no repeats) */
-function renderMC_EN2SY(correctKey){
-  const isBonusRound = isBonus && currentFoodIndex != null;
-  const mode = isBonusRound ? (Math.random() < 0.5 ? 'ALL' : 'HALF') : 'NONE';
-
-  const build = ()=>{
-    const distractorKeys = getUniqueDistractorKeys(correctKey, 3);
-    if (mode === 'ALL'){
-      const otherFoods = uniqueFoodIndices(3, currentFoodIndex);
-      return [
-        { text: buildSyAnswerFromKey(correctKey, currentFoodIndex), correct:true },
-        { text: buildSyAnswerFromKey(distractorKeys[0], otherFoods[0]), correct:false },
-        { text: buildSyAnswerFromKey(distractorKeys[1], otherFoods[1]), correct:false },
-        { text: buildSyAnswerFromKey(distractorKeys[2], otherFoods[2]), correct:false },
-      ].sort(()=>Math.random()-0.5);
-    } else if (mode === 'HALF'){
-      const oneOtherFood = uniqueFoodIndices(1, currentFoodIndex)[0];
-      return [
-        { text: buildSyAnswerFromKey(correctKey, currentFoodIndex), correct:true },
-        { text: buildSyAnswerFromKey(distractorKeys[0], oneOtherFood), correct:false },
-        { text: buildSyAnswerFromKey(distractorKeys[1], null), correct:false },
-        { text: buildSyAnswerFromKey(distractorKeys[2], null), correct:false },
-      ].sort(()=>Math.random()-0.5);
-    } else {
-      return [
-        { text: buildSyAnswerFromKey(correctKey, null), correct:true },
-        { text: buildSyAnswerFromKey(distractorKeys[0], null), correct:false },
-        { text: buildSyAnswerFromKey(distractorKeys[1], null), correct:false },
-        { text: buildSyAnswerFromKey(distractorKeys[2], null), correct:false },
-      ].sort(()=>Math.random()-0.5);
-    }
-  };
-
-  const options = ensureUniqueOptionTexts(build);
-  mcOptions = options;
-  mcWrap.innerHTML='';
-  options.forEach((opt, idx)=>{
-    const btn=document.createElement('button');
-    btn.className='opt';
-    btn.textContent=opt.text;
-    btn.onclick=()=>onMCClick(idx);
-    opt.button = btn;
-    mcWrap.appendChild(btn);
-  });
-  enableMCOptions(teacherMode); // if teacher mode, enabled immediately
-}
-function renderMC_SY2EN(correctKey){
-  const distractorKeys = getUniqueDistractorKeys(correctKey, 3);
-
-  const build = ()=>[
-    { text: buildEnAnswerFromKey(correctKey), correct:true },
-    { text: buildEnAnswerFromKey(distractorKeys[0]), correct:false },
-    { text: buildEnAnswerFromKey(distractorKeys[1]), correct:false },
-    { text: buildEnAnswerFromKey(distractorKeys[2]), correct:false },
-  ].sort(()=>Math.random()-0.5);
-
-  const options = ensureUniqueOptionTexts(build);
-  mcOptions = options;
-  mcWrap.innerHTML='';
-  options.forEach((opt, idx)=>{
-    const btn=document.createElement('button');
-    btn.className='opt';
-    btn.textContent=opt.text;
-    btn.onclick=()=>onMCClick(idx);
-    opt.button = btn;
-    mcWrap.appendChild(btn);
-  });
-  enableMCOptions(teacherMode);
-}
-function enableMCOptions(on){
-  mcEnabled=on;
-  mcOptions.forEach(opt=>{
-    opt.button.classList.toggle('enabled', on);
-    opt.button.style.cursor = on ? 'pointer' : 'not-allowed';
-  });
-}
-function pulseTeamCards(){
-  [t1Card, t2Card, players===3 ? t3Card : null].filter(Boolean).forEach(el=>{
-    el.style.transition='transform 120ms';
-    el.style.transform='scale(1.02)';
-    setTimeout(()=>{ el.style.transform='scale(1)'; }, 140);
-  });
-}
-
-/* Retro scoring support */
-function tryApplyPendingMCOutcome(){
-  if(!pendingMCOutcome || pendingMCOutcome.applied) return;
-  if(selectedTeam===0) return;
-  const delta = pendingMCOutcome.correct ? pendingMCOutcome.delta : -1;
-  score[selectedTeam] = score[selectedTeam] + delta; // negatives allowed
-  updateStreak(selectedTeam, pendingMCOutcome.correct);
-  renderScores();
-  pendingMCOutcome.applied = true;
-}
-
-/* Clicking MC option */
-function onMCClick(idx){
-  if(!mcEnabled) return;
-  stopTimer();
-
-  // Paint results immediately
-  mcOptions.forEach(opt => { if (opt.correct) opt.button.classList.add('correct'); });
-  if (!mcOptions[idx].correct) mcOptions[idx].button.classList.add('wrong');
-
-  enableMCOptions(false);
-  mcEnabled=false;
-
-  // Prepare a pending outcome; apply now if team is selected, or later if team selected after
-  const deltaCorrect = isBonus ? 2 : 1;
-  pendingMCOutcome = { correct: mcOptions[idx].correct, delta: deltaCorrect, applied:false };
-  tryApplyPendingMCOutcome();
-
-  // If no team selected yet, remind but allow awarding after selection
-  if(!teamSelectable || selectedTeam===0){
-    teamLock.classList.remove('hidden');
-    pulseTeamCards();
-  } else {
-    // Confetti if correct and applied right away
-    if(pendingMCOutcome.correct){
-      confettiBurst(teamColor(selectedTeam),'#ffffff');
-    }
-  }
-
-  nextBtn.disabled=false;
-}
-
-/* History */
-function pushHistorySnapshot(){
+/* ================== HISTORY & STATS ================== */
+const history=[];
+function pushHistory(){
   const snapshot = {
-    round: currentRound,
-    dir: lastRenderedDir,
-    mode: lastRenderedMode,
-    isBonus: isBonus,
-    foodIdx: currentFoodIndex,
-    prompt: promptLabel.textContent,
-    answerText: (lastRenderedDir==='EN2SY'
-      ? buildSyAnswerFromKey(currentPromptKey, currentFoodIndex)
-      : buildEnAnswerFromKey(currentPromptKey)),
-    mcOptions: mcOptions.map(o=>({text:o.text, correct:o.correct})),
+    ts: now(), round: currentRound, dir: lastRenderedDir, mode: lastRenderedMode, isBonus,
+    foodIdx: currentFoodIndex, prompt: promptLabel.textContent,
+    answerText: (lastRenderedDir==='EN2SY'?buildSyAnswerFromKey(currentPromptKey,currentFoodIndex):buildEnAnswerFromKey(currentPromptKey)),
+    mcOptions: mcOptions.map(o=>({text:o.text, correct:o.correct}))
   };
-  history.push(snapshot);
-  if(history.length>MAX_HISTORY) history.shift();
-  renderHistoryList();
+  history.push(snapshot); if(history.length>500) history.shift();
+  renderHistoryList(); renderStats();
 }
 function renderHistoryList(){
-  historyCount.textContent = `${history.length} item${history.length===1?'':'s'}`;
+  historyCount.textContent=`${history.length} item${history.length===1?'':'s'}`;
   historyList.innerHTML='';
-  history.forEach((h, i)=>{
-    const row=document.createElement('div');
-    row.className='history-item';
-    const left=document.createElement('div');
-    left.innerHTML = `<div><strong>Q${i+1}</strong> • Round ${h.round} • ${h.dir} • ${h.mode}${h.isBonus?' • Bonus':''}</div>
-                      <div class="meta">${h.prompt}</div>`;
-    const right=document.createElement('div');
-    const btn=document.createElement('button');
-    btn.className='btn neutral';
-    btn.textContent='View';
+  history.forEach((h,i)=>{
+    const row=document.createElement('div'); row.className='row'; row.style.marginBottom='6px';
+    row.innerHTML=`<div><strong>Q${i+1}</strong> • Round ${h.round} • ${h.dir} • ${h.mode}${h.isBonus?' • Bonus':''}<div class="note">${h.prompt}</div></div>`;
+    const btn=document.createElement('button'); btn.className='btn neutral'; btn.textContent='View';
     btn.onclick=()=>openHistoryModal(h);
-    right.appendChild(btn);
-    row.appendChild(left); row.appendChild(right);
-    historyList.appendChild(row);
+    const wrap=document.createElement('div'); wrap.className='spacer';
+    const right=document.createElement('div'); right.appendChild(btn);
+    const container=document.createElement('div'); container.className='row'; container.style.width='100%';
+    container.appendChild(row.firstChild); container.appendChild(right);
+    const box=document.createElement('div'); box.className='card'; box.style.padding='8px'; box.appendChild(container);
+    historyList.appendChild(box);
   });
 }
-function clearHistory(){
-  history.length = 0;
-  renderHistoryList();
-}
 function openHistoryModal(h){
-  histMeta.textContent = `Round ${h.round} • ${h.dir} • ${h.mode}${h.isBonus?' • Bonus':''}`;
-  histPrompt.textContent = h.prompt;
-  histFood.textContent = (h.isBonus && h.foodIdx!=null) ? `Bonus Food: ${FOODS_EN[h.foodIdx]}` : '';
-  histAnswer.textContent = h.answerText;
+  histMeta.textContent=`Round ${h.round} • ${h.dir} • ${h.mode}${h.isBonus?' • Bonus':''}`;
+  histPrompt.textContent=h.prompt;
+  histFood.textContent=(h.isBonus&&h.foodIdx!=null)?`Bonus Food: ${FOODS_EN[h.foodIdx]}`:'';
+  histAnswer.textContent=h.answerText;
   histMC.innerHTML='';
   if(h.mode==='MC' && h.mcOptions.length){
     h.mcOptions.forEach(o=>{
-      const div=document.createElement('div');
-      div.className='opt ' + (o.correct ? 'correct':'wrong');
-      div.textContent = o.text;
-      histMC.appendChild(div);
+      const d=document.createElement('div'); d.className='opt '+(o.correct?'correct':'wrong'); d.textContent=o.text;
+      histMC.appendChild(d);
     });
   }
   historyModalWrap.classList.remove('hidden');
 }
-
-/* Flow */
-function chooseActualMode(){
-  if(qtype==='MIXED'){
-    return Math.random()<0.5 ? 'FREE' : 'MC';
-  }
-  return qtype;
+el('historyClose').onclick=()=>historyModalWrap.classList.add('hidden');
+clearHistoryBtn.onclick=()=>{ history.length=0; eventsLog.length=0; renderHistoryList(); renderStats(); };
+function renderStats(){
+  // Simple aggregate
+  const totalMC=eventsLog.filter(e=>e.mode!=='FREE').length;
+  const correct=eventsLog.filter(e=>e.correct).length;
+  const acc = totalMC? Math.round((correct/totalMC)*100):0;
+  const misses={}; eventsLog.filter(e=>!e.correct && e.promptKey).forEach(e=>{ misses[e.promptKey]=(misses[e.promptKey]||0)+1; });
+  const topMiss = Object.entries(misses).sort((a,b)=>b[1]-a[1])[0];
+  statsBox.innerHTML = `
+    Total MC: ${totalMC}<br>
+    Accuracy: ${acc}%<br>
+    Most-missed: ${topMiss?`${topMiss[0]} (${topMiss[1]})`:'—'}
+  `;
 }
-function decideBonusForThisQuestion(){
-  if(forceBonusMode) return true; // teacher/credit-activated mode forces bonus
-  return Math.random() < 0.20;
-}
-function nextQuestion(){
-  if(!modalWrap.classList.contains('hidden')) return;
-  if(justFinishedGame){ startNewGameHardReset(); return; }
-
-  // Save the just-finished question to history (if any was onscreen)
-  if(promptLabel.textContent){
-    pushHistorySnapshot();
-  }
-
-  finishRoundAndAdvance();
-
-  currentTime=timerSeconds; updateTimerLabel();
-  answerLabel.textContent='';
-  mcWrap.innerHTML=''; mcOptions=[];
-  pendingMCOutcome=null;
-
-  directionMode=document.getElementById('dirSelect').value;
-  const dir = (directionMode==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionMode;
-  lastRenderedDir = dir;
-
-  qtype = document.getElementById('qtypeSelect').value;
-  lastRenderedMode = chooseActualMode();
-
-  // BONUS selection BEFORE rendering
-  if(decideBonusForThisQuestion()){
-    currentFoodIndex=Math.floor(Math.random()*FOODS_EN.length);
-    foodLabel.textContent=`Bonus Round: ${FOODS_EN[currentFoodIndex]}`;
-    bonusPill.classList.remove('hidden');
-    isBonus=true;
-    stopTimer();
-  }else{
-    currentFoodIndex=null; foodLabel.textContent='';
-    bonusPill.classList.add('hidden');
-    isBonus=false;
-  }
-
-  // Setup locks for this question
-  setupLocksForNewQuestion();
-
-  // New prompt
-  currentPromptKey=randomPromptFromPool();
-
-  if(dir==='EN2SY'){
-    promptLabel.textContent = currentPromptKey;
-    if(lastRenderedMode==='FREE'){
-      answerLabel.textContent='';
-      if(!isBonus) startTimer();
-    }else{
-      renderMC_EN2SY(currentPromptKey);
-      if(!isBonus) startTimer();
-    }
-  }else{
-    const promptSY = buildSyAnswerFromKey(currentPromptKey, currentFoodIndex);
-    promptLabel.textContent = promptSY;
-    if(lastRenderedMode==='FREE'){
-      answerLabel.textContent='';
-      if(!isBonus) startTimer();
-    }else{
-      renderMC_SY2EN(currentPromptKey);
-      if(!isBonus) startTimer();
-    }
-  }
-}
-
-function showAnswer(){
-  if(lastRenderedMode!=='FREE') return;
-  if(!canShowAnswer && !teacherMode) return;
-  stopTimer();
-  if(lastRenderedDir==='EN2SY'){
-    answerLabel.textContent = buildSyAnswerFromKey(currentPromptKey, currentFoodIndex);
-  }else{
-    answerLabel.textContent = buildEnAnswerFromKey(currentPromptKey);
-  }
-  nextBtn.disabled=false;
-}
-
-/* Buttons */
-function addPoints(team,delta){
-  score[team] = score[team] + delta; // negatives allowed
-  renderScores();
-  updateStreak(team, delta>0);
-}
-function addBonus(team){
-  if(!isBonus) return;
-  addPoints(team,2);
-  confettiBurst(teamColor(team),'#ffffff');
-}
-t1Plus.onclick=()=>addPoints(1,1);
-t1Minus.onclick=()=>addPoints(1,-1);
-t1Bonus.onclick=()=>addBonus(1);
-t2Plus.onclick=()=>addPoints(2,1);
-t2Minus.onclick=()=>addPoints(2,-1);
-t2Bonus.onclick=()=>addBonus(2);
-if(t3Plus) t3Plus.onclick=()=>addPoints(3,1);
-if(t3Minus) t3Minus.onclick=()=>addPoints(3,-1);
-if(t3Bonus) t3Bonus.onclick=()=>addBonus(3);
-
-resetScoresBtn.onclick=()=>{ score=[0,0,0,0]; streak=[0,0,0,0]; t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0'; if(players===3) t3StreakEl.textContent='Streak: 0'; renderScores(); banner.classList.add('hidden'); roundStartScores=[0,score[1],score[2],(players===3?score[3]:0)]; };
-resetGameBtn.onclick=startNewGameHardReset;
-
-document.getElementById('clearHistoryBtn').onclick=clearHistory;
-showAnswerBtn.onclick=showAnswer;
-nextBtn.onclick=nextQuestion;
-
-/* Selects */
-timerSelect.onchange=(e)=>{ timerSeconds=parseInt(e.target.value,10); currentTime=timerSeconds; updateTimerLabel(); };
-roundsSelect.onchange=(e)=>{ setRounds(parseInt(e.target.value,10)); };
-qtypeSelect.onchange=()=>{};
-dirSelect.onchange=()=>{};
-playersSelect.onchange=()=>{
-  players = parseInt(playersSelect.value,10);
-  const t3Visible = (players===3);
-  t3Card.classList.toggle('hidden', !t3Visible);
-  if(!t3Visible && selectedTeam===3) selectedTeam=0;
-  setActiveTeamHighlight();
-  renderScores(); updateGamesPanel();
+exportCsvBtn.onclick=()=>{
+  const rows=[["timestamp","round","dir","mode","bonus","promptKey","promptText","teamAwarded","correct","delta"]];
+  eventsLog.forEach(e=>rows.push([new Date(e.ts).toISOString(),e.round,e.dir,e.mode,e.bonus,e.promptKey,(e.promptText||'').replace(/\n/g,' '),e.teamAwarded??'',e.correct?'true':'false',e.delta??'']));
+  const csv=rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='assyrian_game_stats.csv'; a.click(); URL.revokeObjectURL(url);
 };
 
-/* Bonus Mode toggle (spends/returns credits) */
-bonusModeBtn.onclick=()=>{
-  if(forceBonusMode){
-    forceBonusMode=false;
-    updateBonusButton();
-  }else{
-    if(bonusCredits>0){
-      bonusCredits -= 1;
-      forceBonusMode=true;
-      updateBonusButton();
-    }
-  }
-};
-
-/* Teacher Mode */
+/* ================== TEACHER & MISC ================== */
 teacherBtn.onclick=()=>{
-  if(teacherMode){
-    teacherMode=false;
-    teacherBadge.classList.add('hidden');
-    updateBonusButton();
-  }else{
-    const pw=prompt('Enter teacher password:');
-    if(pw==='mrsargool'){
-      teacherMode=true;
-      teacherBadge.classList.remove('hidden');
-      // Immediately unlock current question UI
-      canShowAnswer=true;
-      showAnswerBtn.disabled=false;
-      enableMCOptions(true);
-      mcLock.classList.add('hidden');
-    }else if(pw!==null){
-      alert('Incorrect password.');
-    }
-  }
+  if(teacherMode){ teacherMode=false; teacherBadge.classList.add('hidden'); }
+  else{ const pw=prompt('Enter teacher password:'); if(pw==='mrsargool'){ teacherMode=true; teacherBadge.classList.remove('hidden'); canShowAnswer=true; enableMCOptions(true); } else if(pw!==null){ alert('Incorrect password.'); } }
 };
-
-/* Team selection (ignored in FREE) */
-[t1Card, t2Card, t3Card].forEach((el,idx)=>{
-  if(!el) return;
-  const team=idx+1;
-  el.onclick=()=>{
-    if(!teamSelectable) return;
-    if(team===3 && players!==3) return;
-    selectedTeam = team;
-    setActiveTeamHighlight();
-    if(lastRenderedMode==='MC') maybeEnableMC();
-  };
-});
-
-/* Team live updates */
-function updateTeamTitle(which){
-  const nm=teamName(which);
-  (which===1? t1Title : which===2? t2Title : t3Title).textContent=nm;
-  if(selectedTeam===which) setActiveTeamHighlight();
-  updateGamesPanel();
-}
-t1Name.addEventListener('input', ()=>updateTeamTitle(1));
-t2Name.addEventListener('input', ()=>updateTeamTitle(2));
-t3Name.addEventListener('input', ()=>updateTeamTitle(3));
-
-function applyTeamColor(which){
-  const color=teamColor(which);
-  const card=which===1? t1Card : which===2? t2Card : t3Card;
-  const bar=which===1? t1Bar : which===2? t2Bar : t3Bar;
-  card.style.background=hexToRgba(color,0.10);
-  card.style.borderColor=hexToRgba(color,0.6);
-  bar.style.background=color;
-  if(teamSelectable && selectedTeam===which) tintPill(currentTeamPill,color);
-}
-[t1Color,t2Color,t3Color].forEach((el,i)=>{ if(el) el.oninput=()=>applyTeamColor(i+1); });
-
-/* Instructions toggle */
+fullscreenBtn.onclick=()=>{ const de=document.documentElement; if(!document.fullscreenElement) de.requestFullscreen?.(); else document.exitFullscreen?.(); };
 instructionsBtn.onclick=()=>{ instrBody.classList.toggle('hidden'); };
-toggleInstr.onclick=()=>{ 
-  const hide = !instrBody.classList.contains('hidden');
-  instrBody.classList.toggle('hidden', hide);
-  toggleInstr.textContent = hide ? 'Show' : 'Hide';
-};
+toggleInstr.onclick=()=>{ const hide=!instrBody.classList.contains('hidden'); instrBody.classList.toggle('hidden', hide); toggleInstr.textContent=hide?'Show':'Hide'; };
 
-/* Fullscreen */
-fullscreenBtn.onclick=()=>{
-  const el=document.documentElement;
-  if(!document.fullscreenElement){ el.requestFullscreen?.(); } else { document.exitFullscreen?.(); }
-};
+/* ================== BUTTON WIRING ================== */
+t1Plus.onclick=()=>{ score[1]+=1; renderScores(); incStreak(1,true); };
+t1Minus.onclick=()=>{ score[1]-=1; renderScores(); incStreak(1,false); };
+t2Plus.onclick=()=>{ score[2]+=1; renderScores(); incStreak(2,true); };
+t2Minus.onclick=()=>{ score[2]-=1; renderScores(); incStreak(2,false); };
+if(t3Plus) t3Plus.onclick=()=>{ score[3]+=1; renderScores(); incStreak(3,true); };
+if(t3Minus) t3Minus.onclick=()=>{ score[3]-=1; renderScores(); incStreak(3,false); };
 
-/* Modals */
-modalClose.onclick=()=>{ modalWrap.classList.add('hidden'); justFinishedGame=true; };
-document.getElementById('historyClose').onclick=()=>{ historyModalWrap.classList.add('hidden'); };
+t1PUReveal.onclick=()=>spendPU(1,'reveal'); t1PUTime.onclick=()=>spendPU(1,'extraTime'); t1PUFreeze.onclick=()=>spendPU(1,'freeze'); t1BonusBtn.onclick=()=>activateTeamBonus(1);
+t2PUReveal.onclick=()=>spendPU(2,'reveal'); t2PUTime.onclick=()=>spendPU(2,'extraTime'); t2PUFreeze.onclick=()=>spendPU(2,'freeze'); t2BonusBtn.onclick=()=>activateTeamBonus(2);
+if(t3PUReveal) t3PUReveal.onclick=()=>spendPU(3,'reveal');
+if(t3PUTime)   t3PUTime.onclick=()=>spendPU(3,'extraTime');
+if(t3PUFreeze) t3PUFreeze.onclick=()=>spendPU(3,'freeze');
+if(t3BonusBtn) t3BonusBtn.onclick=()=>activateTeamBonus(3);
 
-/* Keyboard shortcuts */
+[t1Card,t2Card,t3Card].forEach((el,idx)=>{ if(!el)return; const t=idx+1; el.onclick=()=>{ if(!teamSelectable) return; if(t===3 && players!==3) return; selectedTeam=t; setActiveTeamHighlight(); }; });
+[t1Name,t2Name,t3Name].forEach((inp,i)=>{ if(!inp) return; inp.addEventListener('input',()=>{ const t=i+1; (t===1?t1Title:t===2?t2Title:t3Title).textContent=teamName(t); setActiveTeamHighlight(); updateGamesPanel(); }); });
+[t1Color,t2Color,t3Color].forEach((inp,i)=>{ if(!inp) return; inp.oninput=()=>{ const t=i+1; const card=t===1?t1Card:t===2?t2Card:t3Card; const bar=t===1?t1Bar:t===2?t2Bar:t3Bar; card.style.background=hexToRgba(inp.value,.10); card.style.borderColor=hexToRgba(inp.value,.6); bar.style.background=inp.value; if(selectedTeam===t) tintPill(currentTeamPill, inp.value); }; });
+
+resetScoresBtn.onclick=()=>{ score=[0,0,0,0]; streak=[0,0,0,0]; t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0'; if(players===3) t3StreakEl.textContent='Streak: 0'; renderScores(); banner.classList.add('hidden'); roundStartScores=[0,score[1],score[2],players===3?score[3]:0]; };
+el('resetGameBtn').onclick=startNewGameHardReset;
+nextBtn.onclick=nextQuestion;
+showAnswerBtn.onclick=showAnswer;
+
+timerSelect.onchange=(e)=>{ timerSeconds=parseInt(e.target.value,10); };
+roundsSelect.onchange=(e)=>{ setRounds(parseInt(e.target.value,10)); };
+playersSelect.onchange=()=>{ players=parseInt(playersSelect.value,10); t3Card.classList.toggle('hidden', players!==3); buzz3.classList.toggle('hidden', players!==3); renderScores(); updateGamesPanel(); };
+dirSelect.onchange=()=>{};
+qtypeSelect.onchange=()=>{};
+
+/* ================== KEYBOARD ================== */
 document.addEventListener('keydown',(e)=>{
-  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.isContentEditable) return;
-  if(e.key===' '){ e.preventDefault(); if(isBonus){ return; } if(timerRunning){ stopTimer(); } else { startTimer(); } }
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+  if(e.key===' '){ e.preventDefault(); if(isBonus) return; if(timerRunning){ stopTimer(); } else { startTimer(); } }
   if(e.key==='Enter'){ e.preventDefault(); if(!nextBtn.disabled) nextQuestion(); }
-  if(e.key.toLowerCase()==='a'){ e.preventDefault(); if(lastRenderedMode==='FREE' && (canShowAnswer||teacherMode)) showAnswer(); }
+  if(e.key.toLowerCase()==='a'){ e.preventDefault(); if(lastRenderedMode==='FREE'&&(canShowAnswer||teacherMode)) showAnswer(); }
 });
 
-/* Init */
-function initFirstQuestion(forceFresh=false){
-  timerSeconds=parseInt(timerSelect.value,10);
-  currentTime=timerSeconds;
-  totalRounds=parseInt(roundsSelect.value,10);
-  roundTotalEl.textContent=String(totalRounds);
-  if(forceFresh){ currentRound=1; roundNowEl.textContent='1'; roundFillEl.style.width='0%'; }
-  renderScores(); updateGamesPanel(); updateTimerLabel();
-  updateBonusButton();
-
-  const directionModeInit=dirSelect.value;
-  const qtypeInit=qtypeSelect.value;
-  lastRenderedDir = (directionModeInit==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionModeInit;
-  lastRenderedMode = (qtypeInit==='MIXED') ? (Math.random()<0.5?'FREE':'MC') : qtypeInit;
-
-  isBonus=false; currentFoodIndex=null; foodLabel.textContent=''; bonusPill.classList.add('hidden');
-
-  setupLocksForNewQuestion();
-
-  currentPromptKey=randomPromptFromPool();
-  if(lastRenderedDir==='EN2SY'){
-    promptLabel.textContent=currentPromptKey;
-    if(lastRenderedMode==='MC'){ renderMC_EN2SY(currentPromptKey); }
-  }else{
-    promptLabel.textContent=buildSyAnswerFromKey(currentPromptKey, currentFoodIndex);
-    if(lastRenderedMode==='MC'){ renderMC_SY2EN(currentPromptKey); }
-  }
-
+/* ================== ONLINE (FIREBASE OPTIONAL) ================== */
+let online=false, isHost=false, gameId=null, db=null, gameRef=null;
+async function maybeInitFirebase(){
+  const block=document.getElementById('firebaseBlock').textContent;
+  if(!block.includes('firebaseConfig')) return false;
+  // Import
+  const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+  const { getFirestore, doc, setDoc, updateDoc, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+  // eslint-disable-next-line no-eval
+  const cfgEval = (new Function(block.replace('/***','').replace('***/','')+'; return firebaseConfig;'))();
+  const app = initializeApp(cfgEval);
+  db = getFirestore(app);
+  return {doc,setDoc,updateDoc,onSnapshot};
+}
+createGameBtn.onclick=async()=>{
+  const fb=await maybeInitFirebase(); if(!fb){ alert('Add Firebase config first (see FIREBASE_CONFIG block).'); return; }
+  isHost=true; online=true; gameId = Math.random().toString(36).slice(2,8).toUpperCase();
+  onlineInfo.classList.remove('hidden'); onlineInfo.textContent=`HOST • PIN ${gameId}`;
+  const {doc,setDoc,onSnapshot} = fb; gameRef = doc(db,'games',gameId);
+  await setDoc(gameRef,{ state:null, scores:{1:0,2:0,3:0}, ts:Date.now() });
+  onSnapshot(gameRef,(snap)=>{ const g=snap.data(); if(!g) return; if(!isHost && g.state){ applyRemoteState(g.state); } if(g.scores){ score[1]=g.scores[1]; score[2]=g.scores[2]; if(players===3) score[3]=g.scores[3]; renderScores(); } });
+  alert(`Share PIN ${gameId}. Players click Join Online Game and enter the PIN.`);
+};
+joinGameBtn.onclick=async()=>{
+  const fb=await maybeInitFirebase(); if(!fb){ alert('Add Firebase config first.'); return; }
+  const pin=prompt('Enter Game PIN:'); if(!pin) return;
+  isHost=false; online=true; gameId=pin.trim().toUpperCase();
+  onlineInfo.classList.remove('hidden'); onlineInfo.textContent=`PLAYER • PIN ${gameId}`;
+  const {doc,onSnapshot} = fb; gameRef = doc(db,'games',gameId);
+  onSnapshot(gameRef,(snap)=>{ const g=snap.data(); if(!g) return; if(g.state) applyRemoteState(g.state); if(g.scores){ score[1]=g.scores[1]; score[2]=g.scores[2]; if(players===3) score[3]=g.scores[3]; renderScores(); } });
+};
+async function pushHostState(){
+  if(!online||!isHost||!gameRef) return;
+  const state = {
+    round: currentRound, dir:lastRenderedDir, mode:lastRenderedMode, isBonus, timer:isBonus?45:timerSeconds,
+    promptKey: currentPromptKey, promptText: promptLabel.textContent, foodIndex: currentFoodIndex,
+    options: mcOptions.map(o=>({t:o.text,c:o.correct}))
+  };
+  const {updateDoc} = await maybeInitFirebase();
+  await updateDoc(gameRef,{ state, scores:{1:score[1],2:score[2],3:players===3?score[3]:0}, ts:Date.now() });
+}
+function applyRemoteState(s){
+  // players mirror the host state
+  currentRound=s.round; roundNowEl.textContent=String(currentRound);
+  lastRenderedDir=s.dir; lastRenderedMode=s.mode; isBonus=s.isBonus; currentFoodIndex=s.foodIndex; currentPromptKey=s.promptKey;
+  bonusPill.classList.toggle('hidden', !isBonus);
+  promptLabel.textContent=s.promptText; foodLabel.textContent=isBonus?`Bonus Round: ${FOODS_EN[currentFoodIndex]}`:'';
+  // options
+  mcWrap.innerHTML=''; mcOptions = (s.options||[]).map(o=>({text:o.t,correct:o.c}));
+  mcOptions.forEach((opt,i)=>{ const b=document.createElement('button'); b.className='opt enabled'; b.textContent=opt.text; b.onclick=()=>onMCClick(i); opt.button=b; mcWrap.appendChild(b); });
+  enableMCOptions(true);
   startTimer();
 }
 
-(function init(){
-  applyTeamColor(1); applyTeamColor(2); applyTeamColor(3);
-  updateTeamTitle(1); updateTeamTitle(2); updateTeamTitle(3);
+/* push host state after rendering a new question */
+const origNext = nextQuestion;
+nextQuestion = async function(){ origNext(); await pushHostState(); };
+
+/* ================== INIT ================== */
+function initFirstQuestion(forceFresh=false){
+  timerSeconds=parseInt(timerSelect.value,10);
+  totalRounds=parseInt(roundsSelect.value,10); roundTotalEl.textContent=String(totalRounds);
+  if(forceFresh){ currentRound=1; roundNowEl.textContent='1'; roundFillEl.style.width='0%'; }
+  renderScores(); renderPUButtons(); updateGamesPanel();
+  currentPromptKey=randomPromptFromPool();
+  lastRenderedDir=dirSelect.value==='BOTH'?(Math.random()<0.5?'EN2SY':'SY2EN'):dirSelect.value;
+  lastRenderedMode=qtypeSelect.value==='MIXED'?(Math.random()<0.5?'FREE':'MC'):qtypeSelect.value;
+  isBonus=false; currentFoodIndex=null; foodLabel.textContent=''; bonusPill.classList.add('hidden');
+  setupLocksForNewQuestion();
+  if(lastRenderedDir==='EN2SY'){ promptLabel.textContent=currentPromptKey; if(lastRenderedMode==='MC') renderMC_EN2SY(currentPromptKey); }
+  else { promptLabel.textContent=buildSyAnswerFromKey(currentPromptKey,currentFoodIndex); if(lastRenderedMode==='MC') renderMC_SY2EN(currentPromptKey); }
+  startTimer();
+}
+(function(){
   initFirstQuestion();
 })();
+
 </script>
 </body>
 </html>
