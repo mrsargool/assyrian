@@ -359,6 +359,7 @@ const fullscreenBtn=el('fullscreenBtn'), instructionsBtn=el('instructionsBtn'), 
 const currentTeamPill=el('currentTeamPill');
 const modalWrap=el('modalWrap'), modalTitle=el('modalTitle'), modalBody=el('modalBody'), modalClose=el('modalClose');
 const historyModalWrap=el('historyModalWrap'), histMeta=el('histMeta'), histPrompt=el('histPrompt'), histFood=el('histFood'), histAnswer=el('histAnswer'), histMC=el('histMC');
+const noRepeat=el('noRepeat'); /* *** FIX: define noRepeat *** */
 
 /* ================= STATE ================= */
 let timerSeconds=30, currentTime=30, timerId=null, timerRunning=false;
@@ -749,11 +750,11 @@ exportCsvBtn.onclick=()=>{
 };
 
 /* ================= TEACHER & MISC ================= */
-let canShowAnswer = false; // (redeclared to ensure scoped above used)
 teacherBtn.onclick=()=>{
   if(teacherMode){ teacherMode=false; teacherBadge.classList.add('hidden'); }
   else{ const pw=prompt('Enter teacher password:'); if(pw==='mrsargool'){ teacherMode=true; teacherBadge.classList.remove('hidden'); canShowAnswer=true; enableMCOptions(true); } else if(pw!==null){ alert('Incorrect password.'); } }
 };
+modalClose.onclick=()=>{ modalWrap.classList.add('hidden'); };
 fullscreenBtn.onclick=()=>{ const de=document.documentElement; if(!document.fullscreenElement) de.requestFullscreen?.(); else document.exitFullscreen?.(); };
 instructionsBtn.onclick=()=>{ instrBody.classList.toggle('hidden'); };
 toggleInstr.onclick=()=>{ const hide=!instrBody.classList.contains('hidden'); instrBody.classList.toggle('hidden', hide); toggleInstr.textContent=hide?'Show':'Hide'; };
