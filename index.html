@@ -83,6 +83,9 @@
     .history-list{max-height:340px; overflow:auto; margin-top:8px}
     .history-item{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px; border:1px solid var(--line); border-radius:10px; margin-bottom:6px; background:#fff}
     .history-item .meta{font-size:12px; color:#475569}
+
+    /* Teacher Mode */
+    .teacher-on{outline:3px solid #f59e0b; outline-offset:3px; border-radius:10px; padding:2px 6px; background:#FFFBEB; color:#92400E; font-weight:800}
   </style>
 </head>
 <body>
@@ -127,6 +130,9 @@
         <button class="btn warn" id="resetGameBtn" title="Reset rounds, scores, and start from Round 1">Reset Game</button>
         <button class="btn danger" id="resetScoresBtn" title="Reset all teams to 0">Reset Scores</button>
         <button class="btn primary" id="instructionsBtn" title="Show instructions">Instructions</button>
+        <button class="btn success" id="bonusModeBtn" title="Activate Bonus Mode (all questions are bonus)" disabled>Activate Bonus Mode (0)</button>
+        <button class="btn neutral" id="teacherBtn" title="Teacher Mode (disable 10s lock)">Teacher</button>
+        <span id="teacherBadge" class="hidden teacher-on">Teacher Mode</span>
       </div>
     </header>
 
@@ -157,14 +163,14 @@
         <!-- Multiple choice answers -->
         <div id="mcWrap" class="mc hidden"></div>
         <span id="mcLock" class="pill lockpill hidden">Options unlock after 10 sec</span>
-        <span id="teamLock" class="pill lockpill hidden">Select your team to award points</span>
+        <span id="teamLock" class="pill lockpill hidden">Select a team to award points (can be after answering)</span>
 
         <div class="row" style="margin-top:8px">
           <button class="btn success" id="showAnswerBtn" title="Reveal the answer and stop the timer" disabled>Show Answer</button>
           <button class="btn primary" id="nextBtn" title="Next random prompt (auto-starts timer)" disabled>Next Question</button>
           <span id="bonusPill" class="pill hidden">BONUS ROUND</span>
           <div class="spacer"></div>
-          <div class="note">Multiple Choice: select your team first to earn/lose points • Space=Start/Pause • Enter=Next • A=Show</div>
+          <div class="note">Multiple Choice: you may answer first and select your team afterwards to earn/lose points • Space=Start/Pause • Enter=Next • A=Show</div>
         </div>
 
         <!-- Scores -->
@@ -248,17 +254,23 @@
               <li>Select <em>Direction</em>: English → Assyrian, Assyrian → English, or Both.</li>
               <li>Select <em>Type</em>: Free Response, Multiple Choice, or Mixed.</li>
               <li>Click <strong>Next Question</strong> to start. Timer begins automatically (except during Bonus).</li>
-              <li><strong>Free Response</strong>: discuss as a class; the host reveals the answer and assigns points manually.</li>
-              <li><strong>Multiple Choice</strong>: select your team, then choose an answer. Correct = +1 (or +2 in Bonus). Wrong = −1.</li>
-              <li>Bonus rounds may include food items; be careful—choices are mixed to avoid easy tells.</li>
+              <li><strong>Free Response</strong>: the host reveals the answer and assigns points manually.</li>
+              <li><strong>Multiple Choice</strong>: answer first <em>or</em> select your team first — either order works. After answering, select your team to award/deduct points if needed.</li>
+              <li>Bonus rounds may include food items; options are mixed to avoid obvious tells.</li>
+              <li>Build a <strong>streak</strong> of 3 correct answers to earn +1 point and +1 <em>Bonus Credit</em>. Spend a credit to <strong>Activate Bonus Mode</strong> (all upcoming questions are bonus) until you turn it off.</li>
               <li>Use the <strong>History</strong> list to review any previous question and answer.</li>
             </ul>
-            <div class="note">Show Answer unlocks after 10 seconds (Free). Multiple Choice options unlock after 10 seconds (score only if a team is selected).</div>
+            <div class="note">Show Answer (Free) and MC options normally unlock after 10 seconds. Enable <strong>Teacher Mode</strong> to remove the wait.</div>
           </div>
         </div>
 
         <div class="card" style="margin-top:12px">
-          <div class="row"><strong>History</strong><div class="spacer"></div><span class="legend" id="historyCount">0 items</span></div>
+          <div class="row">
+            <strong>History</strong>
+            <div class="spacer"></div>
+            <span class="legend" id="historyCount">0 items</span>
+            <button class="btn danger" id="clearHistoryBtn" title="Clear all history">Clear</button>
+          </div>
           <div class="history-list" id="historyList"></div>
         </div>
       </aside>
@@ -415,15 +427,21 @@ const instructionsBtn=document.getElementById('instructionsBtn');
 const toggleInstr=document.getElementById('toggleInstr');
 const instrBody=document.getElementById('instrBody');
 
+const bonusModeBtn=document.getElementById('bonusModeBtn');
+const teacherBtn=document.getElementById('teacherBtn');
+const teacherBadge=document.getElementById('teacherBadge');
+
 const confettiLayer=document.getElementById('confetti');
 
 /* ---------------- State ---------------- */
 let timerSeconds=30, currentTime=30, timerId=null, timerRunning=false;
 let currentPromptKey='', isBonus=false, currentFoodIndex=null;
+let forceBonusMode=false; // NEW: When true, every question is bonus
+let bonusCredits=0;       // Earned from streaks; required to toggle Bonus Mode
 let directionMode='EN2SY';  // EN2SY | SY2EN | BOTH
 let qtype='FREE';           // FREE | MC | MIXED
 let players=2;              // 2 | 3
-let score=[0,0,0,0];        // 1-indexed
+let score=[0,0,0,0];        // 1-indexed (negatives allowed)
 let streak=[0,0,0,0];
 let gamesWon=[0,0,0,0];
 let totalRounds=10, currentRound=1;
@@ -438,9 +456,11 @@ let lastRenderedDir='EN2SY';
 let lastRenderedMode='FREE';
 let selectedTeam=0;
 let teamSelectable=true; // disabled in FREE
+let teacherMode=false;
 
-/* For MC options */
+/* For MC options + retro scoring */
 let mcOptions = []; // [{text, correct:boolean, button:HTMLElement}]
+let pendingMCOutcome = null; // {correct:boolean, delta:number, applied:boolean}
 
 /* History (read-only snapshots) */
 const history = []; // { round, dir, mode, isBonus, foodIdx, prompt, answerText, mcOptions:[{text,correct}] }
@@ -474,6 +494,9 @@ function setActiveTeamHighlight(){
     tintPill(currentTeamPill, teamColor(selectedTeam));
     currentTeamPill.classList.remove('hidden');
   }
+
+  // If we have a pending MC result and choose a team after answering, apply it now
+  tryApplyPendingMCOutcome();
 }
 
 /* Prompt helpers */
@@ -530,7 +553,7 @@ function startTimer(){
   timerId=setInterval(()=>{
     if(currentTime>0){
       currentTime--; updateTimerLabel();
-      if(!canShowAnswer && currentTime<=timerSeconds-10){ unlockAfterDelay(); }
+      if(!canShowAnswer && (teacherMode || currentTime<=timerSeconds-10)){ unlockAfterDelay(); }
     } else { stopTimer(); }
   },1000);
 }
@@ -557,20 +580,30 @@ function renderScores(){
   t1ScoreEl.textContent=String(score[1]);
   t2ScoreEl.textContent=String(score[2]);
   if(players===3) t3ScoreEl.textContent=String(score[3]);
-  const total=Math.max(1, score[1]+score[2]+(players===3?score[3]:0));
-  t1Bar.style.width=(score[1]/total*100).toFixed(0)+'%';
-  t2Bar.style.width=(score[2]/total*100).toFixed(0)+'%';
-  t3Bar.style.width=(players===3?(score[3]/total*100).toFixed(0):'0')+'%';
+
+  // Progress bars based on absolute values so negatives still show a proportion
+  const total=Math.max(1, Math.abs(score[1])+Math.abs(score[2])+(players===3?Math.abs(score[3]):0));
+  t1Bar.style.width=(Math.abs(score[1])/total*100).toFixed(0)+'%';
+  t2Bar.style.width=(Math.abs(score[2])/total*100).toFixed(0)+'%';
+  t3Bar.style.width=(players===3?(Math.abs(score[3])/total*100).toFixed(0):'0')+'%';
 }
 function updateStreak(team,deltaPositive){
   streak[team]=deltaPositive?streak[team]+1:0;
   const el = team===1?t1StreakEl:team===2?t2StreakEl:t3StreakEl;
   el.textContent=`Streak: ${streak[team]}`;
-  if(streak[team]>=3){
-    score[team]+=1; streak[team]=0;
-    el.textContent=`Streak: 0 (bonus applied)`;
+  if(streak[team] >= 3){
+    // Reward: +1 point and +1 bonus credit; reset streak
+    score[team]+=1;
+    streak[team]=0;
+    el.textContent=`Streak: 0 (earned Bonus Credit)`;
+    bonusCredits += 1;
+    updateBonusButton();
     renderScores();
   }
+}
+function updateBonusButton(){
+  bonusModeBtn.textContent = (forceBonusMode ? 'Deactivate Bonus Mode' : `Activate Bonus Mode (${bonusCredits})`);
+  bonusModeBtn.disabled = (!forceBonusMode && bonusCredits<=0);
 }
 
 /* Rounds / Games */
@@ -653,9 +686,9 @@ function setupLocksForNewQuestion(){
   setTeamSelectable(lastRenderedMode !== 'FREE');
 
   // FREE: Show Answer is time-gated; MC: hidden
-  showAnswerBtn.disabled = (lastRenderedMode==='FREE');
+  showAnswerBtn.disabled = (lastRenderedMode==='FREE' && !teacherMode);
 
-  canShowAnswer=false;
+  canShowAnswer = teacherMode; // if teacher mode, unlock immediately
   mcEnabled=false;
   mcLock.classList.add('hidden');
 
@@ -663,20 +696,25 @@ function setupLocksForNewQuestion(){
   teamLock.classList.toggle('hidden', lastRenderedMode!=='MC');
 
   if(answerUnlockTimeout){ clearTimeout(answerUnlockTimeout); answerUnlockTimeout=null; }
-  answerUnlockTimeout=setTimeout(unlockAfterDelay, 10000);
+  if(!teacherMode){
+    answerUnlockTimeout=setTimeout(unlockAfterDelay, 10000);
+  }else{
+    // Teacher mode: unlock immediately
+    unlockAfterDelay();
+  }
 
   if(lastRenderedMode==='FREE'){
     showAnswerBtn.classList.remove('hidden');
     answerLabel.classList.remove('hidden');
     mcWrap.classList.add('hidden');
     mcLock.classList.add('hidden');
-    teamLock.classList.add('hidden'); // never show in FREE
+    teamLock.classList.add('hidden');
   }else{
     showAnswerBtn.classList.add('hidden');
     answerLabel.classList.add('hidden');
     mcWrap.classList.remove('hidden');
-    mcLock.classList.remove('hidden'); // show “10s” pill
-    enableMCOptions(false);
+    if(!teacherMode) mcLock.classList.remove('hidden');
+    enableMCOptions(teacherMode); // teacher mode enables immediately
   }
 }
 function unlockAfterDelay(){
@@ -690,9 +728,9 @@ function unlockAfterDelay(){
   }
 }
 function maybeEnableMC(){
-  const ready = canShowAnswer;
+  const ready = canShowAnswer || teacherMode;
   enableMCOptions(ready);
-  const showTeamNag = (lastRenderedMode==='MC') && canShowAnswer && (selectedTeam===0);
+  const showTeamNag = (lastRenderedMode==='MC') && ready && (selectedTeam===0);
   teamLock.classList.toggle('hidden', !showTeamNag);
 }
 
@@ -719,7 +757,6 @@ function getUniqueDistractorKeys(correctKey, needed){
   return Array.from(picks);
 }
 function ensureUniqueOptionTexts(optionsBuilder){
-  // Keeps calling optionsBuilder() until all 4 texts are unique (guarded attempts)
   for(let tries=0; tries<15; tries++){
     const opts = optionsBuilder();
     const texts = opts.map(o=>o.text);
@@ -729,7 +766,7 @@ function ensureUniqueOptionTexts(optionsBuilder){
   return optionsBuilder(); // fallback
 }
 
-/* MC renderers (with harder bonus mixing, no repeats) */
+/* MC renderers (harder bonus mixing, no repeats) */
 function renderMC_EN2SY(correctKey){
   const isBonusRound = isBonus && currentFoodIndex != null;
   const mode = isBonusRound ? (Math.random() < 0.5 ? 'ALL' : 'HALF') : 'NONE';
@@ -773,7 +810,7 @@ function renderMC_EN2SY(correctKey){
     opt.button = btn;
     mcWrap.appendChild(btn);
   });
-  enableMCOptions(false);
+  enableMCOptions(teacherMode); // if teacher mode, enabled immediately
 }
 function renderMC_SY2EN(correctKey){
   const distractorKeys = getUniqueDistractorKeys(correctKey, 3);
@@ -796,7 +833,7 @@ function renderMC_SY2EN(correctKey){
     opt.button = btn;
     mcWrap.appendChild(btn);
   });
-  enableMCOptions(false);
+  enableMCOptions(teacherMode);
 }
 function enableMCOptions(on){
   mcEnabled=on;
@@ -812,33 +849,45 @@ function pulseTeamCards(){
     setTimeout(()=>{ el.style.transform='scale(1)'; }, 140);
   });
 }
+
+/* Retro scoring support */
+function tryApplyPendingMCOutcome(){
+  if(!pendingMCOutcome || pendingMCOutcome.applied) return;
+  if(selectedTeam===0) return;
+  const delta = pendingMCOutcome.correct ? pendingMCOutcome.delta : -1;
+  score[selectedTeam] = score[selectedTeam] + delta; // negatives allowed
+  updateStreak(selectedTeam, pendingMCOutcome.correct);
+  renderScores();
+  pendingMCOutcome.applied = true;
+}
+
+/* Clicking MC option */
 function onMCClick(idx){
   if(!mcEnabled) return;
   stopTimer();
 
+  // Paint results immediately
   mcOptions.forEach(opt => { if (opt.correct) opt.button.classList.add('correct'); });
   if (!mcOptions[idx].correct) mcOptions[idx].button.classList.add('wrong');
 
   enableMCOptions(false);
   mcEnabled=false;
 
+  // Prepare a pending outcome; apply now if team is selected, or later if team selected after
+  const deltaCorrect = isBonus ? 2 : 1;
+  pendingMCOutcome = { correct: mcOptions[idx].correct, delta: deltaCorrect, applied:false };
+  tryApplyPendingMCOutcome();
+
+  // If no team selected yet, remind but allow awarding after selection
   if(!teamSelectable || selectedTeam===0){
     teamLock.classList.remove('hidden');
     pulseTeamCards();
-    nextBtn.disabled=false;
-    return;
-  }
-
-  const deltaCorrect = isBonus ? 2 : 1;
-  if (mcOptions[idx].correct) {
-    score[selectedTeam]=Math.max(0, score[selectedTeam] + deltaCorrect);
-    updateStreak(selectedTeam, true);
-    confettiBurst(teamColor(selectedTeam),'#ffffff');
   } else {
-    score[selectedTeam]=Math.max(0, score[selectedTeam] - 1);
-    updateStreak(selectedTeam, false);
+    // Confetti if correct and applied right away
+    if(pendingMCOutcome.correct){
+      confettiBurst(teamColor(selectedTeam),'#ffffff');
+    }
   }
-  renderScores();
 
   nextBtn.disabled=false;
 }
@@ -880,6 +929,10 @@ function renderHistoryList(){
     historyList.appendChild(row);
   });
 }
+function clearHistory(){
+  history.length = 0;
+  renderHistoryList();
+}
 function openHistoryModal(h){
   histMeta.textContent = `Round ${h.round} • ${h.dir} • ${h.mode}${h.isBonus?' • Bonus':''}`;
   histPrompt.textContent = h.prompt;
@@ -904,6 +957,10 @@ function chooseActualMode(){
   }
   return qtype;
 }
+function decideBonusForThisQuestion(){
+  if(forceBonusMode) return true; // teacher/credit-activated mode forces bonus
+  return Math.random() < 0.20;
+}
 function nextQuestion(){
   if(!modalWrap.classList.contains('hidden')) return;
   if(justFinishedGame){ startNewGameHardReset(); return; }
@@ -918,6 +975,7 @@ function nextQuestion(){
   currentTime=timerSeconds; updateTimerLabel();
   answerLabel.textContent='';
   mcWrap.innerHTML=''; mcOptions=[];
+  pendingMCOutcome=null;
 
   directionMode=document.getElementById('dirSelect').value;
   const dir = (directionMode==='BOTH') ? (Math.random()<0.5?'EN2SY':'SY2EN') : directionMode;
@@ -927,7 +985,7 @@ function nextQuestion(){
   lastRenderedMode = chooseActualMode();
 
   // BONUS selection BEFORE rendering
-  if(Math.random()<0.20){
+  if(decideBonusForThisQuestion()){
     currentFoodIndex=Math.floor(Math.random()*FOODS_EN.length);
     foodLabel.textContent=`Bonus Round: ${FOODS_EN[currentFoodIndex]}`;
     bonusPill.classList.remove('hidden');
@@ -969,7 +1027,7 @@ function nextQuestion(){
 
 function showAnswer(){
   if(lastRenderedMode!=='FREE') return;
-  if(!canShowAnswer) return;
+  if(!canShowAnswer && !teacherMode) return;
   stopTimer();
   if(lastRenderedDir==='EN2SY'){
     answerLabel.textContent = buildSyAnswerFromKey(currentPromptKey, currentFoodIndex);
@@ -981,7 +1039,7 @@ function showAnswer(){
 
 /* Buttons */
 function addPoints(team,delta){
-  score[team]=Math.max(0,score[team]+delta);
+  score[team] = score[team] + delta; // negatives allowed
   renderScores();
   updateStreak(team, delta>0);
 }
@@ -1003,6 +1061,7 @@ if(t3Bonus) t3Bonus.onclick=()=>addBonus(3);
 resetScoresBtn.onclick=()=>{ score=[0,0,0,0]; streak=[0,0,0,0]; t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0'; if(players===3) t3StreakEl.textContent='Streak: 0'; renderScores(); banner.classList.add('hidden'); roundStartScores=[0,score[1],score[2],(players===3?score[3]:0)]; };
 resetGameBtn.onclick=startNewGameHardReset;
 
+document.getElementById('clearHistoryBtn').onclick=clearHistory;
 showAnswerBtn.onclick=showAnswer;
 nextBtn.onclick=nextQuestion;
 
@@ -1018,6 +1077,42 @@ playersSelect.onchange=()=>{
   if(!t3Visible && selectedTeam===3) selectedTeam=0;
   setActiveTeamHighlight();
   renderScores(); updateGamesPanel();
+};
+
+/* Bonus Mode toggle (spends/returns credits) */
+bonusModeBtn.onclick=()=>{
+  if(forceBonusMode){
+    forceBonusMode=false;
+    updateBonusButton();
+  }else{
+    if(bonusCredits>0){
+      bonusCredits -= 1;
+      forceBonusMode=true;
+      updateBonusButton();
+    }
+  }
+};
+
+/* Teacher Mode */
+teacherBtn.onclick=()=>{
+  if(teacherMode){
+    teacherMode=false;
+    teacherBadge.classList.add('hidden');
+    updateBonusButton();
+  }else{
+    const pw=prompt('Enter teacher password:');
+    if(pw==='mrsargool'){
+      teacherMode=true;
+      teacherBadge.classList.remove('hidden');
+      // Immediately unlock current question UI
+      canShowAnswer=true;
+      showAnswerBtn.disabled=false;
+      enableMCOptions(true);
+      mcLock.classList.add('hidden');
+    }else if(pw!==null){
+      alert('Incorrect password.');
+    }
+  }
 };
 
 /* Team selection (ignored in FREE) */
@@ -1078,7 +1173,7 @@ document.addEventListener('keydown',(e)=>{
   if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.isContentEditable) return;
   if(e.key===' '){ e.preventDefault(); if(isBonus){ return; } if(timerRunning){ stopTimer(); } else { startTimer(); } }
   if(e.key==='Enter'){ e.preventDefault(); if(!nextBtn.disabled) nextQuestion(); }
-  if(e.key.toLowerCase()==='a'){ e.preventDefault(); if(lastRenderedMode==='FREE' && canShowAnswer) showAnswer(); }
+  if(e.key.toLowerCase()==='a'){ e.preventDefault(); if(lastRenderedMode==='FREE' && (canShowAnswer||teacherMode)) showAnswer(); }
 });
 
 /* Init */
@@ -1089,6 +1184,7 @@ function initFirstQuestion(forceFresh=false){
   roundTotalEl.textContent=String(totalRounds);
   if(forceFresh){ currentRound=1; roundNowEl.textContent='1'; roundFillEl.style.width='0%'; }
   renderScores(); updateGamesPanel(); updateTimerLabel();
+  updateBonusButton();
 
   const directionModeInit=dirSelect.value;
   const qtypeInit=qtypeSelect.value;
