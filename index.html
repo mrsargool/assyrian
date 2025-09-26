@@ -312,7 +312,7 @@
   </div>
 </div>
 
-<!-- SIMPLE INLINE CONFIG: no module imports needed -->
+<!-- SIMPLE INLINE CONFIG -->
 <script id="firebase-config">
   window.firebaseConfig = {
     apiKey: "AIzaSyBPHRt-A17lXnzEDghxQDdXOjdHgkOjpo8",
@@ -440,7 +440,7 @@ function incStreak(team, gotCorrect){
   if(streak[team] && streak[team]%3===0){
     score[team]+=1;
     bonusCredits[team]+=1;
-    renderScores(); renderPUButtons();
+    renderScores(); renderPUButtons(); pushScores();
     addBadge(team, '3-in-a-row');
   }
 }
@@ -552,6 +552,7 @@ function tryApplyPendingMCOutcome(){
   score[selectedTeam] += delta;
   incStreak(selectedTeam, pendingMCOutcome.correct);
   renderScores();
+  pushScores();
   pendingMCOutcome.applied=true;
 }
 
@@ -661,19 +662,23 @@ function nextQuestion(){
 
   pushHostState();
 }
-function showAnswer(){
+async function showAnswer(){
   if(lastRenderedMode!=='FREE') return;
   if(!canShowAnswer && !teacherMode) return;
   stopTimer();
   answerLabel.textContent = (lastRenderedDir==='EN2SY') ? buildSyAnswerFromKey(currentPromptKey, currentFoodIndex) : buildEnAnswerFromKey(currentPromptKey);
   nextBtn.disabled=false;
+
+  if(online && gameRef){
+    try{ await Firebase.updateDoc(gameRef, { 'state.revealed': true, ts: Date.now() }); }catch{}
+  }
 }
 function startNewGameHardReset(){
   score=[0,0,0,0]; streak=[0,0,0,0];
   bonusCredits=[0,0,0,0]; badges[1].clear(); badges[2].clear(); badges[3].clear();
   [t1Badges,t2Badges,t3Badges].forEach(b=>b.innerHTML='');
   renderPUButtons();
-  renderScores();
+  renderScores(); pushScores();
   currentRound=1; roundNowEl.textContent='1'; roundFillEl.style.width='0%';
   banner.classList.add('hidden'); endNote.classList.add('hidden'); modalWrap.classList.add('hidden');
   justFinishedGame=false;
@@ -744,6 +749,7 @@ exportCsvBtn.onclick=()=>{
 };
 
 /* ================= TEACHER & MISC ================= */
+let canShowAnswer = false; // (redeclared to ensure scoped above used)
 teacherBtn.onclick=()=>{
   if(teacherMode){ teacherMode=false; teacherBadge.classList.add('hidden'); }
   else{ const pw=prompt('Enter teacher password:'); if(pw==='mrsargool'){ teacherMode=true; teacherBadge.classList.remove('hidden'); canShowAnswer=true; enableMCOptions(true); } else if(pw!==null){ alert('Incorrect password.'); } }
@@ -753,12 +759,12 @@ instructionsBtn.onclick=()=>{ instrBody.classList.toggle('hidden'); };
 toggleInstr.onclick=()=>{ const hide=!instrBody.classList.contains('hidden'); instrBody.classList.toggle('hidden', hide); toggleInstr.textContent=hide?'Show':'Hide'; };
 
 /* ================= BUTTONS ================= */
-t1Plus.onclick=()=>{ score[1]+=1; renderScores(); incStreak(1,true); };
-t1Minus.onclick=()=>{ score[1]-=1; renderScores(); incStreak(1,false); };
-t2Plus.onclick=()=>{ score[2]+=1; renderScores(); incStreak(2,true); };
-t2Minus.onclick=()=>{ score[2]-=1; renderScores(); incStreak(2,false); };
-if(t3Plus) t3Plus.onclick=()=>{ score[3]+=1; renderScores(); incStreak(3,true); };
-if(t3Minus) t3Minus.onclick=()=>{ score[3]-=1; renderScores(); incStreak(3,false); };
+t1Plus.onclick=()=>{ score[1]+=1; renderScores(); incStreak(1,true); pushScores(); };
+t1Minus.onclick=()=>{ score[1]-=1; renderScores(); incStreak(1,false); pushScores(); };
+t2Plus.onclick=()=>{ score[2]+=1; renderScores(); incStreak(2,true); pushScores(); };
+t2Minus.onclick=()=>{ score[2]-=1; renderScores(); incStreak(2,false); pushScores(); };
+if(t3Plus) t3Plus.onclick=()=>{ score[3]+=1; renderScores(); incStreak(3,true); pushScores(); };
+if(t3Minus) t3Minus.onclick=()=>{ score[3]-=1; renderScores(); incStreak(3,false); pushScores(); };
 
 t1PUTime.onclick=()=>spendExtraTime(1);
 t2PUTime.onclick=()=>spendExtraTime(2);
@@ -769,17 +775,17 @@ t2BonusBtn.onclick=()=>activateTeamBonus(2);
 if(t3BonusBtn) t3BonusBtn.onclick=()=>activateTeamBonus(3);
 
 [t1Card,t2Card,t3Card].forEach((el,idx)=>{ if(!el)return; const t=idx+1; el.onclick=()=>{ if(!teamSelectable) return; if(t===3 && players!==3) return; selectedTeam=t; setActiveTeamHighlight(); }; });
-[t1Name,t2Name,t3Name].forEach((inp,i)=>{ if(!inp) return; inp.addEventListener('input',()=>{ const t=i+1; (t===1?t1Title:t===2?t2Title:t3Title).textContent=teamName(t); setActiveTeamHighlight(); updateGamesPanel(); }); });
-[t1Color,t2Color,t3Color].forEach((inp,i)=>{ if(!inp) return; inp.oninput=()=>{ const t=i+1; const card=t===1?t1Card:t===2?t2Card:t3Card; const bar=t===1?t1Bar:t===2?t2Bar:t3Bar; card.style.background=hexToRgba(inp.value,.10); card.style.borderColor=hexToRgba(inp.value,.6); bar.style.background=inp.value; if(selectedTeam===t) tintPill(currentTeamPill, inp.value); }; });
+[t1Name,t2Name,t3Name].forEach((inp,i)=>{ if(!inp) return; inp.addEventListener('input',()=>{ const t=i+1; (t===1?t1Title:t===2?t2Title:t3Title).textContent=teamName(t); setActiveTeamHighlight(); updateGamesPanel(); pushTeams(); }); });
+[t1Color,t2Color,t3Color].forEach((inp,i)=>{ if(!inp) return; inp.oninput=()=>{ const t=i+1; const card=t===1?t1Card:t===2?t2Card:t3Card; const bar=t===1?t1Bar:t===2?t2Bar:t3Bar; card.style.background=hexToRgba(inp.value,.10); card.style.borderColor=hexToRgba(inp.value,.6); bar.style.background=inp.value; if(selectedTeam===t) tintPill(currentTeamPill, inp.value); pushTeams(); }; });
 
 el('resetGameBtn').onclick=startNewGameHardReset;
-resetScoresBtn.onclick=()=>{ score=[0,0,0,0]; streak=[0,0,0,0]; t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0'; if(players===3) t3StreakEl.textContent='Streak: 0'; renderScores(); banner.classList.add('hidden'); roundStartScores=[0,score[1],score[2],players===3?score[3]:0]; };
+resetScoresBtn.onclick=()=>{ score=[0,0,0,0]; streak=[0,0,0,0]; t1StreakEl.textContent='Streak: 0'; t2StreakEl.textContent='Streak: 0'; if(players===3) t3StreakEl.textContent='Streak: 0'; renderScores(); pushScores(); banner.classList.add('hidden'); roundStartScores=[0,score[1],score[2],players===3?score[3]:0]; };
 nextBtn.onclick=nextQuestion;
 showAnswerBtn.onclick=showAnswer;
 
 timerSelect.onchange=(e)=>{ timerSeconds=parseInt(e.target.value,10); };
 roundsSelect.onchange=(e)=>{ setRounds(parseInt(e.target.value,10)); };
-playersSelect.onchange=()=>{ players=parseInt(playersSelect.value,10); t3Card.classList.toggle('hidden', players!==3); renderScores(); updateGamesPanel(); };
+playersSelect.onchange=()=>{ players=parseInt(playersSelect.value,10); t3Card.classList.toggle('hidden', players!==3); renderScores(); updateGamesPanel(); pushTeams(); };
 
 /* ================= KEYBOARD ================= */
 document.addEventListener('keydown',(e)=>{
@@ -790,7 +796,7 @@ document.addEventListener('keydown',(e)=>{
 });
 
 /* ================= ONLINE (FIREBASE) ================= */
-const _cfg = window.firebaseConfig; // <-- read inline config
+const _cfg = window.firebaseConfig;
 let online=false, isHost=false, gameId=null, db=null, gameRef=null;
 let Firebase=null;
 
@@ -806,16 +812,58 @@ async function initFirebase(){
   return Firebase;
 }
 
+async function pushScores(){
+  if(!online || !gameRef) return;
+  await Firebase.updateDoc(gameRef, {
+    scores: { 1: score[1], 2: score[2], 3: players===3 ? score[3] : 0 },
+    ts: Date.now()
+  });
+}
+async function pushTeams(){
+  if(!online || !gameRef) return;
+  await Firebase.updateDoc(gameRef, {
+    teams: {
+      1: { name: teamName(1), color: t1Color.value },
+      2: { name: teamName(2), color: t2Color.value },
+      3: { name: players===3 ? teamName(3) : '', color: t3Color.value }
+    },
+    players,
+    ts: Date.now()
+  });
+}
+
 createGameBtn.onclick = async ()=>{
   const fb = await initFirebase();
   if(!fb){ alert('Online play: please paste your Firebase config (see the FIREBASE CONFIG block) and try again.'); return; }
   isHost=true; online=true; gameId = Math.random().toString(36).slice(2,8).toUpperCase();
   onlineInfo.classList.remove('hidden'); onlineInfo.textContent=`HOST • PIN ${gameId}`;
   gameRef = Firebase.doc(db,'games',gameId);
-  await Firebase.setDoc(gameRef,{ state:null, scores:{1:0,2:0,3:0}, ts:Date.now() });
-  Firebase.onSnapshot(gameRef,(snap)=>{ const g=snap.data(); if(!g) return; if(!isHost && g.state){ applyRemoteState(g.state); } if(g.scores){ score[1]=g.scores[1]; score[2]=g.scores[2]; score[3]=g.scores[3]; renderScores(); } });
+  await Firebase.setDoc(gameRef,{ state:null, scores:{1:0,2:0,3:0}, teams:{1:{name:'Team 1',color:'#2563EB'},2:{name:'Team 2',color:'#16A34A'},3:{name:'Team 3',color:'#9333EA'}}, players, ts:Date.now() });
+  Firebase.onSnapshot(gameRef,(snap)=>{
+    const g=snap.data(); if(!g) return;
+
+    // sync teams & players
+    if (g.teams) {
+      if (g.teams[1]?.name && t1Name.value !== g.teams[1].name) { t1Name.value = g.teams[1].name; t1Title.textContent = g.teams[1].name; }
+      if (g.teams[2]?.name && t2Name.value !== g.teams[2].name) { t2Name.value = g.teams[2].name; t2Title.textContent = g.teams[2].name; }
+      if (typeof g.players === 'number') { players = g.players; t3Card.classList.toggle('hidden', players !== 3); }
+      if (g.teams[1]?.color) { t1Color.value = g.teams[1].color; t1Bar.style.background = g.teams[1].color; }
+      if (g.teams[2]?.color) { t2Color.value = g.teams[2].color; t2Bar.style.background = g.teams[2].color; }
+      if (players===3 && g.teams[3]) {
+        if (g.teams[3].name && t3Name.value !== g.teams[3].name) { t3Name.value = g.teams[3].name; t3Title.textContent = g.teams[3].name; }
+        if (g.teams[3].color) { t3Color.value = g.teams[3].color; t3Bar.style.background = g.teams[3].color; }
+      }
+      setActiveTeamHighlight();
+      updateGamesPanel();
+    }
+
+    if(!isHost && g.state){ applyRemoteState(g.state); }
+
+    if(g.scores){ score[1]=g.scores[1]; score[2]=g.scores[2]; score[3]=g.scores[3]; renderScores(); }
+  });
   alert(`Share PIN ${gameId}. Students click Join Online Game and enter the PIN.`);
 };
+
 joinGameBtn.onclick = async ()=>{
   const fb = await initFirebase();
   if(!fb){ alert('Online play: please paste your Firebase config (see the FIREBASE CONFIG block) and try again.'); return; }
@@ -823,27 +871,78 @@ joinGameBtn.onclick = async ()=>{
   isHost=false; online=true; gameId=pin.trim().toUpperCase();
   onlineInfo.classList.remove('hidden'); onlineInfo.textContent=`PLAYER • PIN ${gameId}`;
   gameRef = Firebase.doc(db,'games',gameId);
-  Firebase.onSnapshot(gameRef,(snap)=>{ const g=snap.data(); if(!g) return; if(g.state) applyRemoteState(g.state); if(g.scores){ score[1]=g.scores[1]; score[2]=g.scores[2]; score[3]=g.scores[3]; renderScores(); } });
+  Firebase.onSnapshot(gameRef,(snap)=>{
+    const g=snap.data(); if(!g) return;
+
+    // sync teams & players
+    if (g.teams) {
+      if (g.teams[1]?.name && t1Name.value !== g.teams[1].name) { t1Name.value = g.teams[1].name; t1Title.textContent = g.teams[1].name; }
+      if (g.teams[2]?.name && t2Name.value !== g.teams[2].name) { t2Name.value = g.teams[2].name; t2Title.textContent = g.teams[2].name; }
+      if (typeof g.players === 'number') { players = g.players; t3Card.classList.toggle('hidden', players !== 3); }
+      if (g.teams[1]?.color) { t1Color.value = g.teams[1].color; t1Bar.style.background = g.teams[1].color; }
+      if (g.teams[2]?.color) { t2Color.value = g.teams[2].color; t2Bar.style.background = g.teams[2].color; }
+      if (players===3 && g.teams[3]) {
+        if (g.teams[3].name && t3Name.value !== g.teams[3].name) { t3Name.value = g.teams[3].name; t3Title.textContent = g.teams[3].name; }
+        if (g.teams[3].color) { t3Color.value = g.teams[3].color; t3Bar.style.background = g.teams[3].color; }
+      }
+      setActiveTeamHighlight();
+      updateGamesPanel();
+    }
+
+    if(g.state) applyRemoteState(g.state);
+    if(g.scores){ score[1]=g.scores[1]; score[2]=g.scores[2]; score[3]=g.scores[3]; renderScores(); }
+  });
 };
 
 async function pushHostState(){
   if(!online||!isHost||!gameRef) return;
   const state = {
-    round: currentRound, dir:lastRenderedDir, mode:lastRenderedMode, isBonus, timer:isBonus?45:timerSeconds,
-    promptKey: currentPromptKey, promptText: promptLabel.textContent, foodIndex: currentFoodIndex,
-    options: mcOptions.map(o=>({t:o.text,c:o.correct}))
+    round: currentRound,
+    dir: lastRenderedDir,
+    mode: lastRenderedMode,
+    isBonus,
+    timer: isBonus ? 45 : timerSeconds,
+    promptKey: currentPromptKey,
+    promptText: promptLabel.textContent,
+    foodIndex: currentFoodIndex,
+    options: mcOptions.map(o=>({t:o.text,c:o.correct})),
+    revealed: false
   };
-  await Firebase.updateDoc(gameRef,{ state, scores:{1:score[1],2:score[2],3:players===3?score[3]:0}, ts:Date.now() });
+  await Firebase.updateDoc(gameRef,{
+    state,
+    scores:{1:score[1],2:score[2],3:players===3?score[3]:0},
+    teams:{1:{name:teamName(1),color:t1Color.value},2:{name:teamName(2),color:t2Color.value},3:{name:players===3?teamName(3):'',color:t3Color.value}},
+    players,
+    ts: Date.now()
+  });
 }
 function applyRemoteState(s){
   currentRound=s.round; roundNowEl.textContent=String(currentRound);
   lastRenderedDir=s.dir; lastRenderedMode=s.mode; isBonus=s.isBonus; currentFoodIndex=s.foodIndex; currentPromptKey=s.promptKey;
   bonusPill.classList.toggle('hidden', !isBonus);
   promptLabel.textContent=s.promptText; foodLabel.textContent=isBonus?`Bonus Round: ${FOODS_EN[currentFoodIndex]}`:'';
-  mcWrap.innerHTML=''; mcOptions = (s.options||[]).map(o=>({text:o.t,correct:o.c}));
-  mcOptions.forEach((opt,i)=>{ const b=document.createElement('button'); b.className='opt enabled'; b.textContent=opt.text; b.onclick=()=>onMCClick(i); opt.button=b; mcWrap.appendChild(b); });
-  enableMCOptions(true);
-  startTimer();
+  answerLabel.textContent='';
+  mcWrap.innerHTML='';
+  mcOptions = (s.options||[]).map(o=>({text:o.t,correct:o.c}));
+  mcOptions.forEach((opt,i)=>{ const b=document.createElement('button'); b.className='opt'; b.textContent=opt.text; b.onclick=()=>onMCClick(i); opt.button=b; mcWrap.appendChild(b); });
+
+  // lock behavior depending on revealed flag
+  if (s.mode === 'MC') {
+    if (s.revealed) { enableMCOptions(false); stopTimer(); nextBtn.disabled=false; }
+    else { enableMCOptions(teacherMode); }
+  } else { // FREE
+    showAnswerBtn.disabled = !teacherMode; // will unlock at 10s locally, but revealed overrides
+  }
+
+  if (s.revealed) {
+    stopTimer();
+    answerLabel.textContent = (s.dir==='EN2SY')
+      ? buildSyAnswerFromKey(s.promptKey, s.foodIndex)
+      : buildEnAnswerFromKey(s.promptKey);
+    nextBtn.disabled = false;
+  } else {
+    startTimer();
+  }
 }
 
 /* ================= INIT ================= */
