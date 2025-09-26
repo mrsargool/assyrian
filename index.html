@@ -154,7 +154,7 @@
         <div class="note" style="margin-top:8px">MC: answer first or select team first — either order works. Show Answer / MC unlock after 10s (Teacher Mode bypasses).</div>
       </div>
 
-      <!-- Teams row stays visible without scrolling -->
+      <!-- Teams row -->
       <div class="card scores" style="margin-top:14px">
         <div class="row" style="align-items:flex-start">
           <!-- Team 1 -->
@@ -168,13 +168,11 @@
             <div class="team-bar"><div class="fill" id="t1Bar" style="background:#2563EB"></div></div>
             <div class="legend" id="t1Streak">Streak: 0</div>
 
-            <!-- Per-team Bonus + Power-up (+5s only) -->
             <div class="grid" style="margin-top:6px">
               <button class="point" id="t1PUTime">+5 sec (0)</button>
               <button class="point" id="t1BonusCredit" disabled>Activate Bonus (0)</button>
             </div>
 
-            <!-- Manual points -->
             <div class="grid" style="margin-top:6px">
               <button class="point" id="t1Plus">+1</button>
               <button class="point" id="t1Minus">-1</button>
@@ -231,7 +229,6 @@
             <div class="badges" id="t3Badges"></div>
           </div>
 
-          <!-- Games/Stats (compact) -->
           <div class="spacer"></div>
           <div style="min-width:300px">
             <div class="legend">Round & Game Results</div>
@@ -257,7 +254,6 @@
       </div>
     </div>
 
-    <!-- Right: Instructions + History -->
     <aside>
       <div class="card">
         <div class="row">
@@ -316,18 +312,16 @@
   </div>
 </div>
 
-<!-- STEP 3: Paste your Firebase config here (remove the /* */ to enable) -->
-<script type="module" id="firebase-config">
-  
-export const firebaseConfig = {
-  apiKey: "AIzaSyBPHRt-A17lXnzEDghxQDdXOjdHgkOjpo8",
-  authDomain: "verb-to-order-86170.firebaseapp.com",
-  projectId: "verb-to-order-86170",
-  storageBucket: "verb-to-order-86170.appspot.com",
-  messagingSenderId: "701246321735",
-  appId: "1:701246321735:web:882917e49b14bfa4c7ad62"
-};
-
+<!-- SIMPLE INLINE CONFIG: no module imports needed -->
+<script id="firebase-config">
+  window.firebaseConfig = {
+    apiKey: "AIzaSyBPHRt-A17lXnzEDghxQDdXOjdHgkOjpo8",
+    authDomain: "verb-to-order-86170.firebaseapp.com",
+    projectId: "verb-to-order-86170",
+    storageBucket: "verb-to-order-86170.appspot.com",
+    messagingSenderId: "701246321735",
+    appId: "1:701246321735:web:882917e49b14bfa4c7ad62"
+  };
 </script>
 
 <script type="module">
@@ -371,16 +365,16 @@ let timerSeconds=30, currentTime=30, timerId=null, timerRunning=false;
 let directionMode='EN2SY', qtype='FREE', players=2;
 let currentPromptKey='', lastRenderedDir='EN2SY', lastRenderedMode='FREE';
 let isBonus=false, currentFoodIndex=null;
-let forceBonusForTeam=0; // which team made the next question a bonus
+let forceBonusForTeam=0;
 let canShowAnswer=false, answerUnlockTimeout=null, mcEnabled=false, selectedTeam=0, teamSelectable=true, teacherMode=false;
-let score=[0,0,0,0]; // negatives allowed
-let streak=[0,0,0,0]; // per team
-let bonusCredits=[0,0,0,0]; // per-team
+let score=[0,0,0,0];
+let streak=[0,0,0,0];
+let bonusCredits=[0,0,0,0];
 let gamesWon=[0,0,0,0];
 let totalRounds=10, currentRound=1, roundStartScores=[0,0,0,0], justFinishedGame=false;
 let mcOptions=[], pendingMCOutcome=null;
 let unusedPrompts = Object.keys(PHRASES);
-let eventsLog=[]; // for CSV / stats
+let eventsLog=[];
 
 /* ================= UTILS ================= */
 const now=()=>Date.now();
@@ -444,7 +438,6 @@ function incStreak(team, gotCorrect){
   streak[team]=gotCorrect?streak[team]+1:0;
   (team===1?t1StreakEl:team===2?t2StreakEl:t3StreakEl).textContent=`Streak: ${streak[team]}`;
   if(streak[team] && streak[team]%3===0){
-    // +1 point, +1 bonus credit, +5s power-up
     score[team]+=1;
     bonusCredits[team]+=1;
     renderScores(); renderPUButtons();
@@ -466,9 +459,7 @@ function renderPUButtons(){
   }
 }
 function spendExtraTime(team){
-  // consume one +5sec credit if available (based on streaks bucket)
   if(Math.floor((streak[team]||0)/3) <= 0){ return; }
-  // decrement a virtual bucket by reducing streak by 3 (keeps UI simple)
   streak[team] = Math.max(0, streak[team]-3);
   (team===1?t1StreakEl:team===2?t2StreakEl:t3StreakEl).textContent=`Streak: ${streak[team]}`;
   currentTime += 5; updateTimerLabel();
@@ -576,14 +567,12 @@ function onMCClick(idx){
   tryApplyPendingMCOutcome();
   nextBtn.disabled=false;
 
-  // log
   eventsLog.push({ts:now(), round:currentRound, dir:lastRenderedDir, mode:lastRenderedMode, bonus:isBonus, promptKey:currentPromptKey,
     promptText:promptLabel.textContent, correctKey:currentPromptKey, answeredAt:now(), teamAwarded:selectedTeam||null, correct:mcOptions[idx].correct, delta:mcOptions[idx].correct?deltaCorrect:-1});
 }
 
 /* ================= ROUNDS / FLOW ================= */
 function setTeamSelectable(on){ teamSelectable=on; if(!on) selectedTeam=0; setActiveTeamHighlight(); }
-function updateTimerLabel(){ timerLabel.textContent=isBonus?'45 sec':`${currentTime} sec`; }
 function setupLocksForNewQuestion(){
   nextBtn.disabled=true;
   setTeamSelectable(lastRenderedMode!=='FREE');
@@ -670,7 +659,7 @@ function nextQuestion(){
     else { renderMC_SY2EN(currentPromptKey); startTimer(); }
   }
 
-  pushHostState(); // if online host, sync state
+  pushHostState();
 }
 function showAnswer(){
   if(lastRenderedMode!=='FREE') return;
@@ -801,7 +790,7 @@ document.addEventListener('keydown',(e)=>{
 });
 
 /* ================= ONLINE (FIREBASE) ================= */
-import { firebaseConfig as _cfg } from '#firebase-config';
+const _cfg = window.firebaseConfig; // <-- read inline config
 let online=false, isHost=false, gameId=null, db=null, gameRef=null;
 let Firebase=null;
 
@@ -817,20 +806,6 @@ async function initFirebase(){
   return Firebase;
 }
 
-// simple virtual module shim to import config above
-const cfgScript = document.querySelector('#firebase-config');
-const cfgText = cfgScript?.textContent || '';
-const hasCfg = cfgText.includes('export const firebaseConfig');
-const blob = new Blob([cfgText||'export const firebaseConfig = null;'], {type:'text/javascript'});
-const cfgUrl = URL.createObjectURL(blob);
-const moduleMap = new Map(); // trivial loader
-// eslint-disable-next-line no-unused-vars
-const importMapShim = (id)=> (id==='#firebase-config'?cfgUrl:id);
-
-const origImport = window.importShim || ((x)=>import(x));
-window.importShim = async (id)=> origImport(importMapShim(id));
-
-// Hook Create / Join buttons
 createGameBtn.onclick = async ()=>{
   const fb = await initFirebase();
   if(!fb){ alert('Online play: please paste your Firebase config (see the FIREBASE CONFIG block) and try again.'); return; }
@@ -851,7 +826,6 @@ joinGameBtn.onclick = async ()=>{
   Firebase.onSnapshot(gameRef,(snap)=>{ const g=snap.data(); if(!g) return; if(g.state) applyRemoteState(g.state); if(g.scores){ score[1]=g.scores[1]; score[2]=g.scores[2]; score[3]=g.scores[3]; renderScores(); } });
 };
 
-// Host pushes state after rendering a new question
 async function pushHostState(){
   if(!online||!isHost||!gameRef) return;
   const state = {
@@ -873,13 +847,6 @@ function applyRemoteState(s){
 }
 
 /* ================= INIT ================= */
-function updateGamesPanel(){
-  const parts=[1,2].concat(players===3?[3]:[]).map(t=>`${teamName(t)}: ${gamesWon[t]}`);
-  document.getElementById('gamesTally').textContent=parts.join(' • ');
-  const max=Math.max(...[1,2].concat(players===3?[3]:[]).map(t=>gamesWon[t]));
-  const leaders=[1,2].concat(players===3?[3]:[]).filter(t=>gamesWon[t]===max);
-  document.getElementById('gameLeader').textContent=(leaders.length>1)?'Games leader: tied':`Games leader: ${teamName(leaders[0])}`;
-}
 function initFirstQuestion(forceFresh=false){
   timerSeconds=parseInt(timerSelect.value,10);
   totalRounds=parseInt(roundsSelect.value,10); roundTotalEl.textContent=String(totalRounds);
@@ -896,8 +863,6 @@ function initFirstQuestion(forceFresh=false){
 }
 (function(){ initFirstQuestion(); })();
 
-/* Expose for host sync */
-window.pushHostState = pushHostState;
 </script>
 </body>
 </html>
