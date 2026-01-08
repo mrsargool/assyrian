@@ -3,313 +3,145 @@
 <head>
 <meta charset="UTF-8">
 <title>Assyrian Keyboarding 101 Typing Test</title>
-<!-- Noto Sans Syriac Eastern -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Syriac+Eastern&display=swap" rel="stylesheet">
 <style>
-/* ===== Body ===== */
 body {
-  font-family: "Noto Sans Syriac Eastern", sans-serif;
-  background: #f5f5f5;
-  color: #333;
-  margin: 0;
-  padding: 0;
+    font-family: 'Noto Sans Syriac Eastern', sans-serif;
+    background-color: #f7f7f7;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
 }
-
-/* ===== Container ===== */
-.container {
-  width: 900px;
-  margin: 50px auto;
-  background: #fff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+h1 { margin-bottom: 20px; }
+#text-box {
+    border: 2px solid #ddd;
+    padding: 20px;
+    width: 80%;
+    min-height: 150px;
+    font-size: 24px;
+    line-height: 2;
+    background-color: #fff;
+    border-radius: 10px;
 }
-
-/* ===== Header ===== */
-h1 {
-  text-align: center;
-  font-weight: 700;
-  font-size: 32px;
-  margin-bottom: 25px;
-  color: #444;
+#text-box span.correct { color: green; }
+#text-box span.incorrect { color: red; }
+#text-box span.current { background-color: #e0e0e0; }
+#input-box {
+    margin-top: 20px;
+    width: 80%;
+    font-size: 24px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 2px solid #ccc;
 }
-
-/* ===== Controls ===== */
-.controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-select, button {
-  font-family: "Noto Sans Syriac Eastern", sans-serif;
-  font-size: 16px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  outline: none;
-  cursor: pointer;
-  margin-right: 5px;
-  transition: all 0.2s;
-  background: #f0f0f0;
-}
-
-button:hover, select:hover {
-  background: #ddd;
-}
-
-/* ===== Custom text ===== */
-#customText {
-  width: 100%;
-  height: 80px;
-  font-size: 20px;
-  padding: 12px;
-  direction: rtl;
-  text-align: right;
-  margin-bottom: 15px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  outline: none;
-  display: none;
-  background: #fafafa;
-  color: #333;
-}
-
-/* ===== Typing area ===== */
-#text {
-  direction: rtl;
-  text-align: right;
-  font-size: 28px;
-  line-height: 2;
-  min-height: 120px;
-  padding: 12px;
-  background: #f8f8f8;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  overflow-wrap: break-word;
-}
-
-.word {
-  padding: 4px 6px;
-  margin: 2px;
-  border-radius: 6px;
-  display: inline-block;
-  transition: all 0.15s;
-}
-
-.current { background: #cce5ff; }
-.correct { background: #d4edda; color: #155724; }
-.incorrect { background: #f8d7da; color: #721c24; }
-
-/* ===== Input ===== */
-#input {
-  width: 100%;
-  height: 90px;
-  font-size: 24px;
-  padding: 12px;
-  direction: rtl;
-  text-align: right;
-  border-radius: 12px;
-  border: 1px solid #ccc;
-  outline: none;
-  background: #fafafa;
-  color: #333;
-  margin-bottom: 15px;
-}
-
-/* ===== Stats ===== */
 .stats {
-  display: flex;
-  justify-content: space-around;
-  font-size: 18px;
-  margin-top: 10px;
-  font-weight: 600;
+    margin-top: 15px;
+    font-size: 18px;
 }
-
-.stats div {
-  padding: 6px 12px;
-  background: #f0f0f0;
-  border-radius: 8px;
+button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background-color: #87ceeb;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
 }
+button:hover { background-color: #00bfff; }
+#custom-container { display: none; margin-top: 15px; width: 80%; }
+#custom-text { width: 100%; height: 80px; font-size: 20px; padding: 10px; border-radius: 5px; border: 2px solid #ccc; }
 </style>
 </head>
-
 <body>
-<div class="container">
 
 <h1>Assyrian Keyboarding 101 Typing Test</h1>
 
-<div class="controls">
-  <div>
-    <select id="difficulty" onchange="toggleCustomBox()">
-      <option value="easy">Easy</option>
-      <option value="medium">Medium</option>
-      <option value="hard">Hard</option>
-      <option value="custom">Custom</option>
-    </select>
-    <button onclick="shuffle()">Shuffle</button>
-  </div>
-  <div>
-    <button onclick="startTest()">Start</button>
-    <button onclick="endTest()">End</button>
-  </div>
+<label for="difficulty">Select difficulty:</label>
+<select id="difficulty">
+    <option value="easy">Easy</option>
+    <option value="medium">Medium</option>
+    <option value="hard">Hard</option>
+    <option value="custom">Custom</option>
+</select>
+<button id="shuffle">Shuffle</button>
+
+<div id="custom-container">
+    <textarea id="custom-text" placeholder="Enter your own text..."></textarea>
 </div>
 
-<textarea id="customText" placeholder="Paste custom Assyrian text here (optional)"></textarea>
-
-<div id="text"></div>
-
-<textarea id="input" disabled placeholder="ܟܬܘܿܒ̣ ..."></textarea>
+<div id="text-box"></div>
+<input type="text" id="input-box" placeholder="Start typing...">
 
 <div class="stats">
-  <div>WPM: <span id="wpm">0</span></div>
-  <div>Accuracy: <span id="accuracy">100</span>%</div>
-  <div>Time: <span id="time">0s</span></div>
-</div>
-
+    WPM: <span id="wpm">0</span> | Accuracy: <span id="accuracy">0</span>% | Time: <span id="time">0</span>s
 </div>
 
 <script>
 // ===============================
-// DATA
+// FULL DATA BANKS
 // ===============================
-const easyWords = ["ܟܸܦܬܹܐ","ܢܘܼܢܵܐ","ܪܸܙܵܐ","ܒܸܣܪܵܐ","ܡܝܼܵܐ","ܩܲܗܘܵܐ"];
-const mediumSentences = [
-  "ܫܠܵܡܵܐ! ܡܘܿܕܝܼ ܒܸܕ ܛܵܠܒܹܬ؟",
-  "ܐܵܢܵܐ ܒܸܕ ܫܵܬܹܝܢ ܩܲܗܘܵܐ.",
-  "ܡܘܿܕܝܼ ܒܸܕ ܐܵܟ̣ܠܹܬ؟"
-];
+
+// Easy words
+const easyWords = "ܢܘܼܢܵܐ ܟܸܦܬܹ̈ܐ ܪܸܙܵܐ ܛܠܲܦ̮ܚܹ̈ܐ ܟܘܼܒܹ̈ܐ ܟܬܵܝܬܵܐ ܦ̮ܲܬܘܼܫ ܛܘܼܪ̈ܫܝܹܐ ܒܸܤܪܵܐ ܡܝܼܵܐ ܒܸܥܹ̈ܐ ܟܸܪܬܘܿܦܹ̈ܐ ܟ̰ܵܐܝ ܓܸܠܵܠܹ̈ܐ ܤܲܠܵܛܵܐ ܡܝܼܵܐ ܕܚܲܒܘܼܫܹ̈ܐ ܝܲܪ̈ܩܹܐ ܥܸܪܒܵܐ ܡܝܼܵܐ ܕܠܝܼܡܘܿܢܹ̈ܐ (ܚܲܡܘܼܨܵܐ) ܐܸܒܒܵܢܹ̈ܐ ܕܘܿܠܡܵܐ ܡܝܼܵܐ ܕܦܘܼܪܬܵܩܵܠܹ̈ܐ (ܐܸܛܪܘܿܓܵܐ) ܚܲܒܘܼܫܵܐ ܒܲܡܝܵܐ ܡܝܼܵܐ ܕܪܘܼܡܵܢܹ̈ܐ ܡܘܼܙܵܐ ܡܵܫܹ̈ܐ ܫܬܵܝܬܵܐ ܒܲܩܒܸܩܵܢܵܐ (ܟܘܿܟ، ܤܦܪܵܝܬ، ܐܵܤܝܵܐ ܦܸܠܦܸܠܵܐ، ܦ̮ܲܢܬܵܐ ...) ܬܲܡܪܹ̈ܐ ܒܘܼܫܵܠܵܐ ܕܲܘܹ̈ܐ ܪܸܙܵܐ ܤܡܘܿܩܵܐ ܦ̮ܵܠܵܦ̮ܸܠ ܬܵܘܪܵܐ ܤܡܘܿܩܵܐ ܪܸܙܵܐ ܒܚܲܪܛܡܵܢܹ̈ܐ ܟܵܒܵܒܹ̈ܐ ܡܝܼܵܐ ܒܲܩܒܸܩܵܢܵܐ ܡܲܟܕܘܼܤ ܡܲܩܠܘܼܒܹܐ ܚܲܠܒ̣ܵܐ ܒܵܕܸܡܓ̰ܵܢ ܡܲܤܬܵܐ ܩܲܗܘܵܐ ܒܵܕܸܡܓ̰ܵܢܹ̈ܐ ܓܪܝܼܤܹܐ (ܒܵܒܵܐ ܓܲܢܘܼܫ) ܚܲܒ̣ܨܹ̈ܐ ܚܲܪܛܡܵܢܹ̈ܐ ܓܪܝܼܤܹܐ (ܗܲܡܘܿܤ) ܒܘܼܪܲܟ".split(" ");
+
+// Medium sentences
+const mediumSentences = "ܫܠܵܡܵܐ! ܡܘܿܕܝܼ ܒܸܕ ܛܵܠܒܹܬ؟ ܡܘܿܕܝܼ ܒܸܕ ܫܵܬܹܝܬ؟ ܡܘܿܕܝܼ ܒܸܕ ܐܵܟ̣ܠܹܬ؟ ܚܲܕ ܡܸܢܕܝܼ ܐ݇ܚܹܪ݇ܢܵܐ؟ ܗܵܘܹܝܬ ܒܲܤܝܼܡܵܐ! ܐܵܢܵܐ ܒܵܥܹܝܢ... ܐܝܼܬ ܠܘܿܟܼ... ܐܵܢܵܐ ܒܸܕ ܐܵܟ̣ܠܹܢ... ܐܵܢܵܐ ܒܸܕ ܫܵܬܹܝܢ...".split("? ").map(s=>s+"?");
+
+// Hard sentences
 const hardSentences = [
-  "ܚܲܕ ܝܵܘܡܵܐ ܪܵܒܝܼ ܤܲܪܓܘܼܠ ܩܝܼܡ ܠܹܗ ܘܐ݇ܡܝܼܪ ܠܹܗ ܩܵܐ ܓܵܢܹܗ.",
-  "ܪܵܒܝܼ ܟܦܝܼܢܵܐ ܝܼܘܸܢ ܐܲܝܟܵܐ ܡܵܨܹܝܢ ܐܵܙܹܠ݇ܢ ܩܵܐ ܕܐܵܟ̣ܠܹܢ ܟܵܘܸܬܪܵܐ؟",
-  "ܐܝܼܢܵܐ ܩܲܕ݇ܡ ܐܵܗܵܐ ܒܸܕ ܩܵܪܹܐ ܩܵܐ ܚܲܒ̣ܪܹܗ ܤܬܘܼܐܸܪܬ."
+"ܚܲܕ ܝܵܘܡܵܐ ܪܵܒܝܼ ܤܲܪܓܘܼܠ ܩܝܼܡ ܠܹܗ ܘܐ݇ܡܝܼܪ ܠܹܗ ܩܵܐ ܓܵܢܹܗ.",
+"ܪܵܒܵܐ ܟܦܝܼܢܵܐ ܝܼܘܸܢ... ܐܲܝܟܵܐ ܡܵܨܹܝܢ ܐܵܙܹܠ݇ܢ ܩܵܐ ܕܐܵܟ̣ܠܹܢ ܟܵܘܸܬܪܵܐ؟",
+"ܠܵܐ ܫܩܝܼܠ ܠܵܗ̇ ܪܵܒܵܐ ܬܲܚܡܲܢܬܵܐ ܩܵܐ ܪܵܒܝܼ ܤܲܪܓܘܼܠ.",
+"ܒܸܕ ܐܵܙܹܠ ܠܚܕܵܐ ܕܘܼܟܬܵܐ ܕܪܵܒܵܐ ܟܹܐ ܡܲܚܸܒ...",
+"ܐܝܼܢܵܐ ܩܲܕ݇ܡ ܐܵܗܵܐ ܒܸܕ ܩܵܪܹܐ ܩܵܐ ܚܲܒ̣ܪܹܗ ܤܬܘܼܐܸܪܬ ܩܵܐ ܕܐܵܬܹܐ ܡܸܢܹܗ.",
+"ܩܲܝܕܲܡܬܵܟ̣ܝܼ ܒܪܝܼܟ̣ܬܵܐ ܪܘܿܡܝܼ.",
+"ܫܠܵܡܵܐ ܓܪܵܝܤ.",
+"ܩܵܐ ܡܘܿܕܝܼ ܝܼܘܵܬܝ ܓܵܘ ܫܘܼܩܵܐ ܐܸܕܝܘܿܡ؟",
+"ܪܵܒܝܼ ܛܠܝܼܒ ܠܹܗ ܩܵܐ ܕܝܼܝܼ ܩܲܕ ܥܵܒ̣ܕܵܢ ܒܘܼܪܲܟ ܩܵܐ ܤܘܼܪܹܝܬ 3.",
+"ܡܵܨܝܲܢ ܡܗܲܝܪܲܢ؟ ܡܘܿܕܝܼ ܝܼܘܵܬܝ ܤܢܝܼܩܬܵܐ؟",
+"ܗܹܐ. ܤܢܝܼܩܬܵܐ ܝܼܘܵܢ ܪܵܒܵܐ ܡܸܢܕܝܼܵܢܹ̈ܐ.",
+"ܒܸܤܪܵܐ، ܒܸܨܠܵܐ، ܡܸܠܚܵܐ، ܦܸܠܦܸܠܵܐ، ܗܹܪ̈ܘܿܡܹܐ، ܒܲܩܕܘܼܢܝܼܣܵܐ، ܡܸܫܚܵܐ، ܠܲܚܡܵܐ ܡܟܘܼܪܡܟ݂ܵܐ.",
+"ܪܵܒܵܐ ܨܦܵܝ.",
+"ܐܵܢܵܐ ܒܸܕ ܙܵܒ݂ܢܵܢ ܦܲܠܓܵܐ ܘܐܲܢ݇ܬܝ ܗ̇ܘ ܦܲܠܓܵܐ ܐ݇ܚܹܪ݇ܢܵܐ.",
+"ܐܲܢܹ̈ܐ ܟܠܵܝ ܒܸܕ ܗܵܘܝܼ ܩܘܿܪܒܵܐ ܕ150 ܕܘܼܠܵܪܹ̈ܐ.",
+"ܟܡܵܐ ܥܸܕܵܢܵܐ ܟܹܐ ܫܵܩܠܵܐ ܩܵܐ ܥܒ̣ܵܕܵܐ ܐܲܢܹ̈ܐ ܒܘܼܪܵܟܹ̈ܐ؟",
+"ܠܵܐ ܪܵܒܵܐ ܥܸܕܵܢܵܐ.",
+"ܩܘܿܪܒܵܐ ܕ1 ܫܵܥܬܵܐ.",
+"ܒܵܬ݇ܪ ܫܘܼܩܵܐ ܐܵܙܲܠ݇ܚ ܠܤܬܵܪܒܵܟܤ ܩܲܕ ܙܵܒ̣ܢܲܚ ܫܬܵܝܬܵ‍ܐ ܘܲܪܕܵܢܵܝܵܐ.",
+"ܗܹܐ! ܗܵܕܝܼܵܐ ܐܵܙܲܠ݇ܚ ܠܢܵܛܹܪ ܓܲܙܵܐ ܩܲܕ ܙܵܒ̣ܢܲܚ ܐܲܢܹ̈ܐ ܡܸܢܕܝܼܵܢܹ̈ܐ."
 ];
 
 // ===============================
-// HELPERS
+// UTILITY FUNCTIONS
 // ===============================
+function randomSubset(arr, count) {
+    const shuffled = arr.slice().sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+}
 function normalize(str) {
-  return str.replace(/ܤ/g, "ܣ").normalize("NFC").trim();
-}
-
-function randomSubset(arr, min) {
-  const shuffled = [...arr].sort(()=>0.5-Math.random());
-  return shuffled.slice(0, Math.max(min, shuffled.length));
+    return str.replace(/\u200c/g,"").replace(/\s+/g," ").trim();
 }
 
 // ===============================
-// DOM ELEMENTS
+// SELECT ELEMENTS
 // ===============================
-const textDiv = document.getElementById("text");
-const input = document.getElementById("input");
-const difficulty = document.getElementById("difficulty");
-const customText = document.getElementById("customText");
-const wpmSpan = document.getElementById("wpm");
-const accuracySpan = document.getElementById("accuracy");
-const timeSpan = document.getElementById("time");
+const difficulty = document.getElementById('difficulty');
+const textBox = document.getElementById('text-box');
+const inputBox = document.getElementById('input-box');
+const shuffleBtn = document.getElementById('shuffle');
+const customContainer = document.getElementById('custom-container');
+const customText = document.getElementById('custom-text');
+const wpmSpan = document.getElementById('wpm');
+const accSpan = document.getElementById('accuracy');
+const timeSpan = document.getElementById('time');
 
 let words = [];
-let spans = [];
-let index = 0;
-let startTime;
-let timerInterval;
-let correctChars = 0;
-let typedChars = 0;
+let currentIndex = 0;
+let startTime = null;
+let interval;
 
 // ===============================
-// FUNCTIONS
-// ===============================
-function toggleCustomBox() {
-  customText.style.display = (difficulty.value === "custom") ? "block" : "none";
-}
-
-function buildText() {
-  let text = "";
-  if (difficulty.value === "easy") text = randomSubset(easyWords,5).join(" ");
-  else if (difficulty.value === "medium") text = randomSubset(mediumSentences,2).join(" ");
-  else if (difficulty.value === "hard") text = randomSubset(hardSentences,3).join(" ");
-  else text = customText.value || "ܟܬܘܿܒ̣ ܣ";
-  return normalize(text);
-}
-
-function renderWords() {
-  textDiv.innerHTML = "";
-  spans = words.map(w => {
-    const s = document.createElement("span");
-    s.textContent = w;
-    s.className = "word";
-    textDiv.appendChild(s);
-    return s;
-  });
-  index = 0;
-  spans[0]?.classList.add("current");
-}
-
-function startTest() {
-  const text = buildText();
-  words = text.split(" ");
-  renderWords();
-
-  index = 0;
-  input.value = "";
-  input.disabled = false;
-  input.focus();
-
-  correctChars = 0;
-  typedChars = 0;
-
-  startTime = new Date();
-  clearInterval(timerInterval);
-  timerInterval = setInterval(updateStats,1000);
-}
-
-function shuffle() {
-  if (difficulty.value !== "custom") startTest();
-}
-
-function updateStats() {
-  const minutes = (new Date() - startTime)/60000;
-  const wpm = minutes>0 ? Math.round(correctChars/5/minutes) : 0;
-  const accuracy = typedChars>0 ? Math.round(correctChars/typedChars*100) : 100;
-  const seconds = Math.floor((new Date()-startTime)/1000);
-  wpmSpan.textContent = wpm;
-  accuracySpan.textContent = accuracy;
-  timeSpan.textContent = `${seconds}s`;
-}
-
-input.addEventListener("keydown", e=>{
-  if(e.key!==" ") return;
-  e.preventDefault();
-
-  const typed = normalize(input.value);
-  const target = normalize(words[index]);
-  typedChars += typed.length;
-
-  if(typed===target){
-    spans[index].classList.remove("current","incorrect");
-    spans[index].classList.add("correct");
-    correctChars += target.length;
-    index++;
-    if(index>=words.length){
-      endTest();
-      return;
-    }
-    spans[index].classList.add("current");
-    input.value="";
-  }else{
-    spans[index].classList.add("incorrect");
-  }
-
-  updateStats();
-});
-
-function endTest(){
-  input.disabled=true;
-  clearInterval(timerInterval);
-  updateStats();
-  alert(`Test completed\nWPM: ${wpmSpan.textContent}\nAccuracy: ${accuracySpan.textContent}%\nTime: ${timeSpan.textContent}`);
-}
-</script>
-</body>
-</html>
+// BUILD
